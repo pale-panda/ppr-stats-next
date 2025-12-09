@@ -1,65 +1,116 @@
-import Image from "next/image";
+import { Header } from '@/components/header';
+import { HeroSection } from '@/components/hero-section';
+import { StatsBar } from '@/components/stats-bar';
+import { SessionCard } from '@/components/session-card';
+import { Button } from '@/components/ui/button';
+import { ChevronRight, Filter } from 'lucide-react';
+import { Footer } from '@/components/footer';
 
-export default function Home() {
+const sessions = [
+  {
+    id: '1',
+    title: 'Qualifying Session',
+    track: 'Spa-Francorchamps',
+    date: 'Dec 7, 2025',
+    duration: '45:23',
+    laps: 18,
+    bestLap: '1:42.847',
+    status: 'completed' as const,
+    imageUrl: '/spa-francorchamps-race-track-aerial-view.jpg',
+  },
+  {
+    id: '2',
+    title: 'Practice Run 3',
+    track: 'Nürburgring GP',
+    date: 'Dec 5, 2025',
+    duration: '32:15',
+    laps: 12,
+    bestLap: '1:31.204',
+    status: 'completed' as const,
+    imageUrl: '/nurburgring-race-track-sunset.png',
+  },
+  {
+    id: '3',
+    title: 'Endurance Test',
+    track: 'Silverstone Circuit',
+    date: 'Dec 3, 2025',
+    duration: '1:24:45',
+    laps: 42,
+    bestLap: '1:58.331',
+    status: 'completed' as const,
+    imageUrl: '/silverstone-circuit-racing-aerial.jpg',
+  },
+  {
+    id: '4',
+    title: 'Morning Session',
+    track: 'Monza Circuit',
+    date: 'Dec 10, 2025',
+    duration: '--:--',
+    laps: 0,
+    bestLap: '--:--.---',
+    status: 'upcoming' as const,
+    imageUrl: '/monza-circuit-italy-racing.png',
+  },
+  {
+    id: '5',
+    title: 'Live Qualifying',
+    track: 'Circuit de Barcelona',
+    date: 'Live Now',
+    duration: '23:45',
+    laps: 8,
+    bestLap: '1:19.547',
+    status: 'live' as const,
+    imageUrl: '/barcelona-circuit-spain-racing.png',
+  },
+  {
+    id: '6',
+    title: 'Race Simulation',
+    track: 'Suzuka Circuit',
+    date: 'Nov 28, 2025',
+    duration: '1:45:12',
+    laps: 53,
+    bestLap: '1:32.891',
+    status: 'completed' as const,
+    imageUrl: '/suzuka-circuit-japan-racing-aerial.png',
+  },
+];
+
+export default function HomePage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className='min-h-screen bg-background'>
+      <Header />
+      <HeroSection />
+      <StatsBar />
+
+      {/* Sessions Section */}
+      <section className='container mx-auto px-4 py-12'>
+        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8'>
+          <div>
+            <h2 className='text-2xl md:text-3xl font-bold text-foreground'>
+              Your Sessions
+            </h2>
+            <p className='text-muted-foreground mt-1'>
+              Select a session to view detailed analytics
+            </p>
+          </div>
+          <div className='flex gap-2'>
+            <Button variant='outline' size='sm'>
+              <Filter className='w-4 h-4 mr-2' />
+              Filter
+            </Button>
+            <Button variant='ghost' size='sm' className='text-primary'>
+              View All
+              <ChevronRight className='w-4 h-4 ml-1' />
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+          {sessions.map((session) => (
+            <SessionCard key={session.id} {...session} />
+          ))}
         </div>
-      </main>
+      </section>
     </div>
   );
 }
