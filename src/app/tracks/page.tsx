@@ -1,11 +1,8 @@
 import { Header } from '@/components/header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  getAllTracks,
-  getTrackSessions,
-  formatLapTime,
-} from '@/lib/data/sessions';
+import { getAllTracks, getTrackSessions } from '@/lib/data/sessions';
+import { formatLapTime, formatSpeed } from '@/lib/format-utils';
 import {
   MapPin,
   Route,
@@ -248,7 +245,7 @@ export default async function TracksPage() {
                             </div>
                             <p className='text-lg font-bold text-foreground'>
                               {track.stats.avgTopSpeed
-                                ? `${track.stats.avgTopSpeed} km/h`
+                                ? formatSpeed(track.stats.avgTopSpeed)
                                 : '--'}
                             </p>
                           </div>

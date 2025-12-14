@@ -10,24 +10,12 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { formatLapTime } from '@/lib/sessions-data';
+import { formatLapTime, formatSpeed } from '@/lib/format-utils';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-
-interface LapData {
-  lap: number;
-  time: number;
-  sector1: number;
-  sector2: number;
-  sector3: number;
-  maxSpeed: number;
-  minSpeed: number;
-  maxCorneringG: number;
-  maxAccelG: number;
-  maxBrakingG: number;
-}
+import { Laps } from '@/lib/types/response';
 
 interface LapSelectorProps {
-  laps: LapData[];
+  laps: Laps;
   selectedLap: number;
   onSelectLap: (lap: number) => void;
   comparisonLap: number | null;
@@ -47,13 +35,13 @@ export function LapSelector({
 }: LapSelectorProps) {
   const currentLap = laps[selectedLap - 1];
   const bestLap = laps.reduce(
-    (best, lap) => (lap.time < best.time ? lap : best),
+    (best, lap) => (lap.lap_time_seconds < best.lap_time_seconds ? lap : best),
     laps[0]
   );
 
   const getSectorDelta = (
     sector: number,
-    sectorKey: 'sector1' | 'sector2' | 'sector3'
+    sectorKey: 'sector_1' | 'sector_2' | 'sector_3'
   ) => {
     const bestSector = Math.min(...laps.map((l) => l[sectorKey]));
     const delta = sector - bestSector;
@@ -78,13 +66,15 @@ export function LapSelector({
             </SelectTrigger>
             <SelectContent>
               {laps.map((lap) => (
-                <SelectItem key={lap.lap} value={lap.lap.toString()}>
+                <SelectItem
+                  key={lap.lap_number}
+                  value={lap.lap_number.toString()}>
                   <span className='flex items-center gap-2'>
-                    <span>Lap {lap.lap}</span>
+                    <span>Lap {lap.lap_number}</span>
                     <span className='text-muted-foreground'>
-                      {formatLapTime(lap.time)}
+                      {formatLapTime(lap.lap_time_seconds)}
                     </span>
-                    {lap.lap === bestLap.lap && (
+                    {lap.lap_number === bestLap.lap_number && (
                       <span className='text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded'>
                         BEST
                       </span>
@@ -107,7 +97,9 @@ export function LapSelector({
               onToggleComparison(checked);
               if (checked && !comparisonLap) {
                 onSelectComparisonLap(
-                  bestLap.lap !== selectedLap ? bestLap.lap : laps[0].lap
+                  bestLap.lap_number !== selectedLap
+                    ? bestLap.lap_number
+                    : laps[0].lap_number
                 );
               }
             }}
@@ -127,15 +119,17 @@ export function LapSelector({
               </SelectTrigger>
               <SelectContent>
                 {laps
-                  .filter((l) => l.lap !== selectedLap)
+                  .filter((l) => l.lap_number !== selectedLap)
                   .map((lap) => (
-                    <SelectItem key={lap.lap} value={lap.lap.toString()}>
+                    <SelectItem
+                      key={lap.lap_number}
+                      value={lap.lap_number.toString()}>
                       <span className='flex items-center gap-2'>
-                        <span>Lap {lap.lap}</span>
+                        <span>Lap {lap.lap_number}</span>
                         <span className='text-muted-foreground'>
-                          {formatLapTime(lap.time)}
+                          {formatLapTime(lap.lap_time_seconds)}
                         </span>
-                        {lap.lap === bestLap.lap && (
+                        {lap.lap_number === bestLap.lap_number && (
                           <span className='text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded'>
                             BEST
                           </span>
@@ -153,33 +147,29 @@ export function LapSelector({
         <div className='space-y-3 pt-4 border-t border-border'>
           <div className='text-center'>
             <div className='text-xs text-muted-foreground uppercase tracking-wider'>
-              Lap {currentLap.lap} Time
+              Lap {currentLap.lap_number} Time
             </div>
             <div className='text-2xl font-mono font-bold text-primary mt-1'>
-              {formatLapTime(currentLap.time)}
+              {formatLapTime(currentLap.lap_time_seconds)}
             </div>
           </div>
 
           <div className='grid grid-cols-2 gap-3'>
             <StatItem
               label='Max Cornering G'
-              value={currentLap.maxCorneringG.toFixed(2)}
+              value={currentLap.max_g_force_z.toFixed(2)}
             />
             <StatItem
               label='Max Acceleration G'
-              value={currentLap.maxAccelG.toFixed(2)}
+              value={currentLap.max_g_force_x.toFixed(2)}
             />
             <StatItem
               label='Max Braking G'
-              value={currentLap.maxBrakingG.toFixed(2)}
+              value={currentLap.min_g_force_x.toFixed(2)}
             />
             <StatItem
               label='Max Speed'
-              value={`${currentLap.maxSpeed.toFixed(2)} kph`}
-            />
-            <StatItem
-              label='Min Speed'
-              value={`${currentLap.minSpeed.toFixed(2)} kph`}
+              value={formatSpeed(currentLap.max_speed_kmh) as string}
             />
           </div>
 
@@ -187,7 +177,7 @@ export function LapSelector({
             <div className='text-xs text-muted-foreground uppercase tracking-wider'>
               Sector Times
             </div>
-            {(['sector1', 'sector2', 'sector3'] as const).map(
+            {(['sector_1', 'sector_2', 'sector_3'] as const).map(
               (sectorKey, index) => {
                 const {
                   delta,

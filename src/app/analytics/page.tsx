@@ -58,6 +58,7 @@ import {
   Flag,
   Target,
 } from 'lucide-react';
+import { formatSpeed } from '@/lib/format-utils';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -384,7 +385,7 @@ export default function AnalyticsPage() {
                     Top Speed
                   </p>
                   <p className='text-2xl font-mono font-bold text-foreground mt-1'>
-                    {Math.round(allTimeStats.topSpeed)} km/h
+                    {formatSpeed(allTimeStats.topSpeed, { unit: 'kph' })}
                   </p>
                 </div>
                 <div className='w-10 h-10 rounded-lg bg-chart-4/10 flex items-center justify-center'>
@@ -701,26 +702,24 @@ export default function AnalyticsPage() {
                       </TableCell>
                       <TableCell className='font-mono text-foreground'>
                         {session1 &&
-                          Math.round(
+                          formatSpeed(
                             Math.max(
                               ...session1.laps.map((l) => l.max_speed_kmh || 0)
                             )
-                          )}{' '}
-                        km/h
+                          )}
                       </TableCell>
                       <TableCell className='font-mono text-foreground'>
                         {session2 &&
-                          Math.round(
+                          formatSpeed(
                             Math.max(
                               ...session2.laps.map((l) => l.max_speed_kmh || 0)
                             )
-                          )}{' '}
-                        km/h
+                          )}
                       </TableCell>
                       <TableCell>
                         {session1 && session2 && (
                           <Badge variant='secondary'>
-                            {Math.round(
+                            {formatSpeed(
                               Math.max(
                                 ...session1.laps.map(
                                   (l) => l.max_speed_kmh || 0
@@ -731,8 +730,7 @@ export default function AnalyticsPage() {
                                     (l) => l.max_speed_kmh || 0
                                   )
                                 )
-                            )}{' '}
-                            km/h
+                            )}
                           </Badge>
                         )}
                       </TableCell>
@@ -1105,12 +1103,11 @@ export default function AnalyticsPage() {
                           {session.total_laps}
                         </TableCell>
                         <TableCell className='font-mono text-foreground'>
-                          {Math.round(
+                          {formatSpeed(
                             Math.max(
                               ...session.laps.map((l) => l.max_speed_kmh || 0)
                             )
-                          )}{' '}
-                          km/h
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}

@@ -18,13 +18,14 @@ import {
   BarChart3,
 } from 'lucide-react';
 import {
-  getSessionById,
-  getSessionLaps,
-  getSessionStats,
   formatLapTime,
   formatSessionDate,
-  calculateSessionDuration,
-} from '@/lib/data/sessions';
+  formatDuration,
+  formatSpeed,
+  formatLeanAngle,
+  formatTrackLength,
+} from '@/lib/format-utils';
+import { getSession } from '@/lib/data/telemetry';
 
 interface SessionPageProps {
   params: Promise<{ id: string }>;
@@ -32,24 +33,12 @@ interface SessionPageProps {
 
 export default async function SessionPage({ params }: SessionPageProps) {
   const { id } = await params;
-  const [session, laps, stats] = await Promise.all([
-    getSessionById(id),
-    getSessionLaps(id),
-    getSessionStats(id),
-  ]);
+  const session = await getSession(id);
+  const { track, laps } = session;
 
   if (!session) {
     notFound();
   }
-
-  const bestLapTime = session.best_lap_time_seconds;
-  const duration = calculateSessionDuration(laps);
-  const maxSpeed =
-    stats.max_speed || Math.max(...laps.map((l) => l.max_speed_kmh || 0));
-  const avgSpeed =
-    stats.avg_speed ||
-    laps.reduce((sum, l) => sum + (l.max_speed_kmh || 0), 0) / laps.length ||
-    0;
 
   return (
     <div className='min-h-screen bg-background'>
@@ -58,8 +47,8 @@ export default async function SessionPage({ params }: SessionPageProps) {
       {/* Hero Section */}
       <div className='relative h-64 md:h-80 overflow-hidden'>
         <Image
-          src={session.track?.image_url || '/default-track.jpg'}
-          alt={session.track?.name || 'Track'}
+          src={track.image_url ?? '/default-track.jpg'}
+          alt={track.name || 'Track'}
           className='w-full h-full object-cover'
           width={1200}
           height={400}
@@ -80,13 +69,13 @@ export default async function SessionPage({ params }: SessionPageProps) {
                   {session.session_type}
                 </Badge>
                 <h1 className='text-3xl md:text-4xl font-bold text-foreground mt-2 text-balance'>
-                  {session.track?.name || 'Unknown Track'}
+                  {track.name || 'Unknown Track'}
                 </h1>
                 <div className='flex items-center gap-2 text-muted-foreground mt-2'>
                   <MapPin className='w-4 h-4' />
                   <span>
-                    {session.track?.name}
-                    {session.track?.country && `, ${session.track.country}`}
+                    {track.name}
+                    {track.country && `, ${track.country}`}
                   </span>
                   <span className='text-border'>•</span>
                   <span>{formatSessionDate(session.session_date)}</span>
@@ -115,7 +104,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
                 </span>
               </div>
               <p className='text-xl font-mono font-bold text-foreground'>
-                {duration}
+                {formatDuration(session.duration_seconds)}
               </p>
             </CardContent>
           </Card>
@@ -139,7 +128,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
                 </span>
               </div>
               <p className='text-xl font-mono font-bold text-primary'>
-                {formatLapTime(bestLapTime)}
+                {formatLapTime(session.best_lap_time_seconds)}
               </p>
             </CardContent>
           </Card>
@@ -152,7 +141,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
                 </span>
               </div>
               <p className='text-xl font-mono font-bold text-foreground'>
-                {maxSpeed.toFixed(0)} km/h
+                {formatSpeed(session.max_speed)}
               </p>
             </CardContent>
           </Card>
@@ -207,7 +196,8 @@ export default async function SessionPage({ params }: SessionPageProps) {
                   </thead>
                   <tbody>
                     {laps.map((lap) => {
-                      const isFastest = lap.lap_time_seconds === bestLapTime;
+                      const isFastest =
+                        lap.lap_time_seconds === session.best_lap_time_seconds;
                       return (
                         <tr
                           key={lap.id}
@@ -231,14 +221,10 @@ export default async function SessionPage({ params }: SessionPageProps) {
                             )}
                           </td>
                           <td className='py-3 px-2 font-mono text-muted-foreground'>
-                            {lap.max_speed_kmh
-                              ? `${lap.max_speed_kmh.toFixed(0)} km/h`
-                              : 'N/A'}
+                            {formatSpeed(lap.max_speed_kmh)}
                           </td>
                           <td className='py-3 px-2 font-mono text-muted-foreground'>
-                            {lap.max_lean_angle
-                              ? `${lap.max_lean_angle.toFixed(1)}°`
-                              : 'N/A'}
+                            {formatLeanAngle(lap.max_lean_angle)}
                           </td>
                         </tr>
                       );
@@ -258,7 +244,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
               <div className='flex justify-between items-center'>
                 <span className='text-muted-foreground'>Avg Speed</span>
                 <span className='font-mono text-foreground'>
-                  {avgSpeed.toFixed(0)} km/h
+                  {formatSpeed(session.avg_speed)}
                 </span>
               </div>
               <Separator className='bg-border/50' />
@@ -272,25 +258,21 @@ export default async function SessionPage({ params }: SessionPageProps) {
               <div className='flex justify-between items-center'>
                 <span className='text-muted-foreground'>Track Length</span>
                 <span className='font-mono text-foreground'>
-                  {session.track?.length_meters
-                    ? `${(session.track.length_meters / 1000).toFixed(2)} km`
-                    : 'N/A'}
+                  {formatTrackLength(track.length_meters)}
                 </span>
               </div>
               <Separator className='bg-border/50' />
               <div className='flex justify-between items-center'>
                 <span className='text-muted-foreground'>Turns</span>
                 <span className='font-mono text-foreground'>
-                  {session.track?.turns || 'N/A'}
+                  {track.turns || 'N/A'}
                 </span>
               </div>
               <Separator className='bg-border/50' />
               <div className='flex justify-between items-center'>
                 <span className='text-muted-foreground'>Max Lean Angle</span>
                 <span className='font-mono text-foreground'>
-                  {stats.max_lean_angle
-                    ? `${stats.max_lean_angle.toFixed(1)}°`
-                    : 'N/A'}
+                  {formatLeanAngle(session.max_lean_angle)}
                 </span>
               </div>
             </CardContent>

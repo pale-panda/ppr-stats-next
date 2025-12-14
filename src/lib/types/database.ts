@@ -1,3 +1,11 @@
+export interface Profile {
+  id: string;
+  username: string;
+  full_name: string;
+  avatar_url: string | null;
+  updated_at: string;
+}
+
 export interface Track {
   id: string;
   name: string;
@@ -5,10 +13,10 @@ export interface Track {
   length_meters: number | null;
   turns: number | null;
   configuration: string | null;
+  description: string | null;
   latitude: number | null;
   longitude: number | null;
   image_url: string | null;
-  description: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -21,10 +29,14 @@ export interface Session {
   session_type: string;
   total_laps: number;
   best_lap_time_seconds: number | null;
+  vehicle: string | null;
+  duration_seconds: number | null;
+  session_source: string;
   created_at: string;
   updated_at: string;
   // Joined data
   track?: Track;
+  profile?: Profile;
 }
 
 export interface Lap {
@@ -32,13 +44,19 @@ export interface Lap {
   session_id: string;
   lap_number: number;
   lap_time_seconds: number;
+  min_speed_kmh: number;
   max_speed_kmh: number;
   max_lean_angle: number;
+  min_g_force_x: number;
   max_g_force_x: number;
+  min_g_force_z: number;
   max_g_force_z: number;
   start_time: string;
   end_time: string;
   created_at: string;
+  sector_1: number;
+  sector_2: number;
+  sector_3: number;
 }
 
 export interface TelemetryPoint {

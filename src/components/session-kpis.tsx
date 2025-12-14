@@ -1,73 +1,45 @@
 'use client';
 
 import { Card } from '@/components/ui/card';
+import { Clock, Gauge, Target, Flag, Bike } from 'lucide-react';
 import {
-  Clock,
-  Gauge,
-  Activity,
-  Target,
-  Thermometer,
-  Bike,
-} from 'lucide-react';
-import { formatLapTime } from '@/lib/sessions-data';
+  formatLapTime,
+  formatDuration,
+  formatMinMaxSpeed,
+} from '@/lib/format-utils';
+import { SessionData } from '@/lib/types/response';
 
-interface SessionKPIsProps {
-  stats: {
-    duration: number;
-    maxSpeed: number;
-    minSpeed: number;
-    maxCorneringG: number;
-    minCorneringG: number;
-    theoreticalBest: number;
-  };
-  sessionInfo: {
-    vehicle: string;
-    weather: {
-      temperature: number;
-      pressure: number;
-      humidity: number;
-    };
-  };
-}
-
-export function SessionKPIs({ stats, sessionInfo }: SessionKPIsProps) {
+export function SessionKPIs({ ...stats }: SessionData) {
   const kpis = [
     {
       label: 'Vehicle',
-      value: sessionInfo.vehicle,
+      value: stats.vehicle,
       icon: Bike,
     },
     {
       label: 'Duration',
-      value: `${stats.duration} minutes`,
+      value: formatDuration(stats.duration_seconds),
       icon: Clock,
     },
     {
-      label: 'Max/Min Speed',
-      value: `${stats.maxSpeed.toFixed(2)} / ${stats.minSpeed.toFixed(2)} kph`,
-      icon: Gauge,
-    },
-    {
-      label: 'Max Lateral/Cornering G',
-      value: `${stats.maxCorneringG.toFixed(2)} / ${stats.minCorneringG.toFixed(
-        2
-      )}`,
-      icon: Activity,
+      label: 'Best Lap Time',
+      value: formatLapTime(stats.best_lap_time_seconds),
+      icon: Flag,
     },
     {
       label: 'Theoretical Best Lap',
-      value: formatLapTime(stats.theoreticalBest),
+      value: formatLapTime(stats.theoretical_best),
       icon: Target,
     },
     {
-      label: 'Weather',
-      value: `${sessionInfo.weather.temperature}°C, ${sessionInfo.weather.pressure} hPa, ${sessionInfo.weather.humidity}%`,
-      icon: Thermometer,
+      label: 'Max/Min Speed',
+      value: formatMinMaxSpeed(stats.min_speed, stats.max_speed),
+      icon: Gauge,
     },
   ];
 
   return (
-    <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-4'>
+    <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4'>
       {kpis.map((kpi) => (
         <Card key={kpi.label} className='bg-card border-border p-3 lg:p-4'>
           <div className='flex items-start gap-3'>

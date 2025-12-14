@@ -18,7 +18,7 @@ export async function GET() {
       .order('session_date', { ascending: false });
 
     if (error) {
-      console.error('[v0] Error fetching analytics data:', error);
+      console.error('Error fetching analytics data:', error);
       return NextResponse.json(
         { error: 'Failed to fetch analytics data' },
         { status: 500 }
@@ -46,7 +46,7 @@ export async function GET() {
       sessions: sessions || [],
     });
   } catch (error) {
-    console.error('[v0] Error in analytics route:', error);
+    console.error('Error in analytics route:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

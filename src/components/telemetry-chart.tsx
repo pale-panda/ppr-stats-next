@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import {
   LineChart,
@@ -11,19 +12,57 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
-import { generateTelemetryData, formatLapTime } from '@/lib/sessions-data';
+import { formatLapTime, formatTime } from '@/lib/format-utils';
+import { Laps, TelemetryPoints } from '@/lib/types/response';
 
 interface TelemetryChartProps {
   selectedLap: number;
-  lapData: {
-    time: number;
-    maxSpeed: number;
-    minSpeed: number;
-  };
+  laps: Laps;
+  telemetry?: TelemetryPoints;
 }
 
-export function TelemetryChart({ selectedLap, lapData }: TelemetryChartProps) {
-  const telemetryData = generateTelemetryData(selectedLap);
+export function TelemetryChart({
+  selectedLap,
+  laps,
+  telemetry,
+}: TelemetryChartProps) {
+  const lap = laps.find((lap) => lap.lap_number === selectedLap);
+  const downsampledTelemetry = useMemo(() => {
+    if (!telemetry || telemetry.length === 0) {
+      return [] as TelemetryPoints;
+    }
+    let telemetryFiltered = telemetry.filter(
+      (point) => point.lap_number === selectedLap
+    );
+
+    const maxRows = 200;
+    const step = Math.ceil(telemetryFiltered.length / maxRows);
+
+    telemetryFiltered = telemetryFiltered.filter(
+      (_, index) => index % step === 0
+    );
+
+    const formatedTelemetry = telemetryFiltered.map((dataPoint) => ({
+      ...dataPoint,
+      timestamp: formatTime(
+        (new Date(dataPoint.timestamp).getTime() -
+          new Date(telemetryFiltered[0]?.timestamp).getTime()) /
+          1000
+      ),
+    }));
+
+    return formatedTelemetry;
+  }, [telemetry]);
+
+  if (!lap || !telemetry) {
+    return (
+      <Card className='bg-card border-border p-4'>
+        <div className='text-center text-muted-foreground'>
+          No telemetry data available for Lap {selectedLap}.
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className='bg-card border-border p-4'>
@@ -33,7 +72,7 @@ export function TelemetryChart({ selectedLap, lapData }: TelemetryChartProps) {
             Telemetry Data
           </div>
           <div className='text-lg font-semibold text-foreground'>
-            Lap {selectedLap} - {formatLapTime(lapData.time)}
+            Lap {selectedLap} - {formatLapTime(lap.lap_time_seconds)}
           </div>
         </div>
         <div className='flex items-center gap-6 text-xs'>
@@ -55,11 +94,11 @@ export function TelemetryChart({ selectedLap, lapData }: TelemetryChartProps) {
       <div className='h-[250px] lg:h-[300px]'>
         <ResponsiveContainer width='100%' height='100%'>
           <LineChart
-            data={telemetryData}
+            data={downsampledTelemetry}
             margin={{ top: 10, right: 50, left: 10, bottom: 10 }}>
             <CartesianGrid strokeDasharray='3 3' stroke='#374151' />
             <XAxis
-              dataKey='time'
+              dataKey='timestamp'
               stroke='#6b7280'
               tick={{ fill: '#9ca3af', fontSize: 11 }}
               interval={19}
@@ -108,7 +147,7 @@ export function TelemetryChart({ selectedLap, lapData }: TelemetryChartProps) {
             <Line
               yAxisId='speed'
               type='monotone'
-              dataKey='speed'
+              dataKey='speed_kmh'
               stroke='#ef4444'
               dot={false}
               strokeWidth={2}
@@ -117,7 +156,7 @@ export function TelemetryChart({ selectedLap, lapData }: TelemetryChartProps) {
             <Line
               yAxisId='g-force'
               type='monotone'
-              dataKey='accBrkG'
+              dataKey='g_force_x'
               stroke='#22c55e'
               dot={false}
               strokeWidth={2}
@@ -126,11 +165,11 @@ export function TelemetryChart({ selectedLap, lapData }: TelemetryChartProps) {
             <Line
               yAxisId='g-force'
               type='monotone'
-              dataKey='corneringG'
+              dataKey='lean_angle'
               stroke='#3b82f6'
               dot={false}
               strokeWidth={2}
-              name='Cornering G'
+              name='Lean Angle'
             />
           </LineChart>
         </ResponsiveContainer>

@@ -16,7 +16,7 @@ export async function getSessionById(id: string) {
     .single();
 
   if (error) {
-    console.error('[v0] Error fetching session:', error);
+    console.error('Error fetching session:', error);
     return null;
   }
 
@@ -30,10 +30,11 @@ export async function getSessionLaps(sessionId: string) {
     .from('laps')
     .select('*')
     .eq('session_id', sessionId)
+    .neq('lap_number', 0)
     .order('lap_number', { ascending: true });
 
   if (error) {
-    console.error('[v0] Error fetching laps:', error);
+    console.error('Error fetching laps:', error);
     return [];
   }
 
@@ -48,14 +49,26 @@ export async function getSessionStats(sessionId: string) {
   });
 
   if (error) {
+    const { data: session } = await supabase
+      .from('sessions')
+      .select('duration_seconds')
+      .eq('id', sessionId)
+      .single();
     // Fallback: Calculate stats from laps if RPC doesn't exist
     const { data: laps } = await supabase
       .from('laps')
-      .select('max_speed_kmh, max_lean_angle, max_g_force_x, max_g_force_z')
+      .select(
+        'lap_time_seconds, max_speed_kmh, max_lean_angle, max_g_force_x, max_g_force_z'
+      )
       .eq('session_id', sessionId);
 
     if (laps && laps.length > 0) {
       return {
+        duration_seconds: session?.duration_seconds || 0,
+        theoretical_best: laps.reduce(
+          (sum, l) => sum + (l.lap_time_seconds || 0),
+          0
+        ),
         max_speed: Math.max(...laps.map((l) => l.max_speed_kmh || 0)),
         max_lean_angle: Math.max(...laps.map((l) => l.max_lean_angle || 0)),
         avg_speed:
@@ -65,6 +78,8 @@ export async function getSessionStats(sessionId: string) {
     }
 
     return {
+      duration_seconds: 0,
+      theoretical_best: 0,
       max_speed: 0,
       max_lean_angle: 0,
       avg_speed: 0,
@@ -74,39 +89,7 @@ export async function getSessionStats(sessionId: string) {
   return stats;
 }
 
-export function formatLapTime(seconds: number | null): string {
-  if (!seconds) return '--:--:---';
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${minutes}:${remainingSeconds.toFixed(3).padStart(6, '0')}`;
-}
-
-export function formatSessionDate(dateString: string): string {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(date);
-}
-
-export function calculateSessionDuration(laps: Lap[]): string {
-  if (laps.length === 0) return '0 min';
-
-  const firstLap = laps[0];
-  const lastLap = laps[laps.length - 1];
-
-  if (!firstLap.start_time || !lastLap.end_time) return 'N/A';
-
-  const start = new Date(firstLap.start_time);
-  const end = new Date(lastLap.end_time);
-  const durationMs = end.getTime() - start.getTime();
-  const minutes = Math.floor(durationMs / 60000);
-
-  return `${minutes} min`;
-}
-
-export async function getAllSessions() {
+export async function getAllSessions(limit: number = 24) {
   const supabase = await createServerClient();
 
   const { data: sessions, error } = await supabase
@@ -117,10 +100,11 @@ export async function getAllSessions() {
       track:tracks(*)
     `
     )
-    .order('session_date', { ascending: false });
+    .order('session_date', { ascending: false })
+    .limit(limit);
 
   if (error) {
-    console.error('[v0] Error fetching all sessions:', error);
+    console.error('Error fetching all sessions:', error);
     return [];
   }
 
@@ -142,7 +126,7 @@ export async function getSessionsForAnalytics() {
     .order('session_date', { ascending: false });
 
   if (error) {
-    console.error('[v0] Error fetching sessions for analytics:', error);
+    console.error('Error fetching sessions for analytics:', error);
     return [];
   }
 
@@ -158,7 +142,7 @@ export async function getAllTracks() {
     .order('name', { ascending: true });
 
   if (error) {
-    console.error('[v0] Error fetching tracks:', error);
+    console.error('Error fetching tracks:', error);
     return [];
   }
 
@@ -175,7 +159,7 @@ export async function getTrackById(id: string) {
     .single();
 
   if (error) {
-    console.error('[v0] Error fetching track:', error);
+    console.error('Error fetching track:', error);
     return null;
   }
 
@@ -192,7 +176,7 @@ export async function getTrackSessions(trackId: string) {
     .order('session_date', { ascending: false });
 
   if (error) {
-    console.error('[v0] Error fetching track sessions:', error);
+    console.error('Error fetching track sessions:', error);
     return [];
   }
 
@@ -217,6 +201,7 @@ export async function getDashboardStats() {
     .from('laps')
     .select('lap_time_seconds')
     .order('lap_time_seconds', { ascending: true })
+    .neq('lap_number', 0)
     .limit(1)
     .single();
 
@@ -225,6 +210,7 @@ export async function getDashboardStats() {
     .from('laps')
     .select('max_speed_kmh')
     .order('max_speed_kmh', { ascending: false })
+    .neq('lap_number', 0)
     .limit(1)
     .single();
 

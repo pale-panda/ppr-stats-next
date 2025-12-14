@@ -10,12 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  getTrackById,
-  getTrackSessions,
-  formatLapTime,
-  formatSessionDate,
-} from '@/lib/data/sessions';
+import { getTrackById, getTrackSessions } from '@/lib/data/sessions';
+import { formatLapTime, formatSessionDate } from '@/lib/format-utils';
 import {
   MapPin,
   Route,

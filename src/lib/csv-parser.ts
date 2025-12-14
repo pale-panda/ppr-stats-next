@@ -156,7 +156,7 @@ function parseLapSummaryLine(line: string): RaceBoxCSVLapSummary | null {
   for (let i = sectorStartIndex; i < parts.length; i++) {
     if (!parts[i]) continue;
     const sectorValue = Number.parseFloat(parts[i]);
-    if (!Number.isNaN(sectorValue)) {
+    if (!Number.isNaN(sectorValue) && sectorValue > 0) {
       sectorTimes.push(sectorValue);
     }
   }
@@ -171,10 +171,12 @@ function parseLapSummaryLine(line: string): RaceBoxCSVLapSummary | null {
 // Calculate lap times from telemetry data
 export function calculateLapData(records: RaceBoxCSVRecord[]): {
   lapNumber: number;
-  lapTimeSeconds: number | null;
-  maxSpeedKmh: number;
   maxLeanAngle: number;
+  minSpeedKmh: number;
+  maxSpeedKmh: number;
+  minGForceX: number;
   maxGForceX: number;
+  minGForceZ: number;
   maxGForceZ: number;
   startTime: string;
   endTime: string;
@@ -192,10 +194,12 @@ export function calculateLapData(records: RaceBoxCSVRecord[]): {
 
   const laps: {
     lapNumber: number;
-    lapTimeSeconds: number | null;
+    minSpeedKmh: number;
     maxSpeedKmh: number;
     maxLeanAngle: number;
+    minGForceX: number;
     maxGForceX: number;
+    minGForceZ: number;
     maxGForceZ: number;
     startTime: string;
     endTime: string;
@@ -216,30 +220,35 @@ export function calculateLapData(records: RaceBoxCSVRecord[]): {
     const startTime = lapRecords[0].time;
     const endTime = lapRecords[lapRecords.length - 1].time;
 
-    // Calculate lap time in seconds
-    const startMs = new Date(startTime).getTime();
-    const endMs = new Date(endTime).getTime();
-    const lapTimeSeconds = (endMs - startMs) / 1000;
-
     // Calculate max values
+    let minSpeedKmh = 0;
     let maxSpeedKmh = 0;
     let maxLeanAngle = 0;
+    let minGForceX = 0;
     let maxGForceX = 0;
     let maxGForceZ = 0;
+    let minGForceZ = 0;
 
     for (const record of lapRecords) {
-      maxSpeedKmh = Math.max(maxSpeedKmh, record.speed);
       maxLeanAngle = Math.max(maxLeanAngle, Math.abs(record.leanAngle));
-      maxGForceX = Math.max(maxGForceX, Math.abs(record.gForceX));
-      maxGForceZ = Math.max(maxGForceZ, Math.abs(record.gForceZ));
+      minSpeedKmh = Math.min(minSpeedKmh, record.speed);
+      maxSpeedKmh = Math.max(maxSpeedKmh, record.speed);
+      // Note: G-Force-X: Negative = Braking, Positive = Acceleration
+      minGForceX = Math.min(minGForceX, record.gForceX);
+      maxGForceX = Math.max(maxGForceX, record.gForceX);
+      // Note: G-Force-Z: Probably not used for motorcycle racing analysis
+      minGForceZ = Math.min(minGForceZ, record.gForceZ);
+      maxGForceZ = Math.max(maxGForceZ, record.gForceZ);
     }
 
     laps.push({
       lapNumber: lapNum,
-      lapTimeSeconds: lapTimeSeconds > 0 ? lapTimeSeconds : null,
-      maxSpeedKmh,
       maxLeanAngle,
+      minSpeedKmh,
+      maxSpeedKmh,
+      minGForceX,
       maxGForceX,
+      minGForceZ,
       maxGForceZ,
       startTime,
       endTime,

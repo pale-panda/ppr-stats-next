@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (createTrackError || !newTrack) {
-        console.error('[v0] Error creating track:', createTrackError);
+        console.error('Error creating track:', createTrackError);
         return NextResponse.json(
           { success: false, message: 'Failed to create track' },
           { status: 500 }
@@ -86,17 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find best lap time
-    const bestLap = laps.reduce((best, lap) => {
-      if (!lap.lapTimeSeconds) return best;
-      if (
-        !best ||
-        !best.lapTimeSeconds ||
-        lap.lapTimeSeconds < best.lapTimeSeconds
-      ) {
-        return lap;
-      }
-      return best;
-    }, laps[0]);
+    const bestLap = header.bestLapTime;
 
     const { data: newSession, error: sessionError } = await supabase
       .from('sessions')
@@ -104,15 +94,23 @@ export async function POST(request: NextRequest) {
         track_id: trackId,
         session_date: sessionDate.toISOString(),
         total_laps: laps.length,
-        best_lap_time_seconds: bestLap.lapTimeSeconds,
+        best_lap_time_seconds: bestLap,
         session_type: header.sessionType,
         data_source: header.dataSource || 'RaceBox',
+        vehicle: 'Unknown',
+        duration_seconds:
+          records.length > 1
+            ? (new Date(records[records.length - 1].time).getTime() -
+                new Date(records[0].time).getTime()) /
+              1000
+            : 0,
+        file_name: file.name,
       })
       .select('id')
       .single();
 
     if (sessionError || !newSession) {
-      console.error('[v0] Error creating session:', sessionError);
+      console.error('Error creating session:', sessionError);
       return NextResponse.json(
         {
           success: false,
@@ -130,11 +128,14 @@ export async function POST(request: NextRequest) {
     const lapsToInsert = laps.map((lap) => ({
       session_id: sessionId,
       lap_number: lap.lapNumber,
-      lap_time_seconds: lap.lapTimeSeconds,
+      lap_time_seconds:
+        header.lapSummaries[lap.lapNumber - 1]?.lapTimeSeconds || 0,
       max_speed_kmh: lap.maxSpeedKmh,
       max_lean_angle: lap.maxLeanAngle,
       max_g_force_x: lap.maxGForceX,
+      min_g_force_x: records.filter((r) => r.lap === lap.lapNumber).reduce((min, r) => r.gForceX < min ? r.gForceX : min, Infinity),
       max_g_force_z: lap.maxGForceZ,
+      
       start_time: new Date(lap.startTime).toISOString(),
       end_time: new Date(lap.endTime).toISOString(),
       sector_1: header.lapSummaries[lap.lapNumber - 1]?.sectorTimes[0] || null,
@@ -148,7 +149,7 @@ export async function POST(request: NextRequest) {
       .select('id, lap_number');
 
     if (lapsError || !insertedLaps) {
-      console.error('[v0] Error inserting laps:', lapsError);
+      console.error('Error inserting laps:', lapsError);
       return NextResponse.json(
         { success: false, message: 'Failed to insert laps' },
         { status: 500 }
@@ -187,7 +188,7 @@ export async function POST(request: NextRequest) {
         .insert(batch);
 
       if (telemetryError) {
-        console.error('[v0] Error inserting telemetry batch:', telemetryError);
+        console.error('Error inserting telemetry batch:', telemetryError);
         // Continue with other batches even if one fails
       }
     }
@@ -200,7 +201,7 @@ export async function POST(request: NextRequest) {
       laps: laps.length,
     });
   } catch (error) {
-    console.error('[v0] Upload error:', error);
+    console.error('Upload error:', error);
     return NextResponse.json(
       {
         success: false,

@@ -1,9 +1,3 @@
-.bg-dashed-blue {
-  background-image: repeating-linear-gradient(
-    90deg,
-    #3b82f6,
-    #3b82f6 4px,
-    transparent 4px,
-    transparent 8px
-  );
+#track-map div {
+  border-radius: 0.75rem; /* rounded-xl */
 }

@@ -3,11 +3,8 @@ import { HeroSection } from '@/components/hero-section';
 import { SessionCard } from '@/components/session-card';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Filter, Clock, Flag, Zap, Gauge } from 'lucide-react';
-import {
-  getAllSessions,
-  getDashboardStats,
-  formatLapTime,
-} from '@/lib/data/sessions';
+import { getAllSessions, getDashboardStats } from '@/lib/data/sessions';
+import { formatLapTime, formatSpeed } from '@/lib/format-utils';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default async function HomePage() {
@@ -51,10 +48,15 @@ export default async function HomePage() {
                       Top Speed
                     </p>
                     <p className='text-2xl font-mono font-bold text-foreground mt-1'>
-                      {stats.topSpeed ? `${Math.round(stats.topSpeed)}` : '--'}
-                      <span className='text-sm text-muted-foreground ml-1'>
-                        km/h
-                      </span>
+                      {stats.topSpeed
+                        ? formatSpeed(stats.topSpeed, {
+                            component: (
+                              <span className='text-sm text-muted-foreground ml-1'>
+                                km/h
+                              </span>
+                            ),
+                          })
+                        : '--'}
                     </p>
                   </div>
                   <div className='w-10 h-10 rounded-lg bg-chart-2/10 flex items-center justify-center'>

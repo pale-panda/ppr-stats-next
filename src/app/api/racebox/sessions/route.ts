@@ -25,8 +25,6 @@ async function fetchWithCookies(
     headers.set('user-agent', 'Mozilla/5.0 (compatible; NextjsRaceboxBot/1.0)');
   }
 
-  console.log(`Fetching: ${url}`);
-
   const res = await fetch(url, {
     ...init,
     headers,

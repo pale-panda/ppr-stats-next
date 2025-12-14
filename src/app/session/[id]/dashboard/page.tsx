@@ -15,16 +15,19 @@ import {
   Wind,
   Bike,
 } from 'lucide-react';
-import {
-  getSessionById,
-  getSessionLaps,
-  formatLapTime,
-  formatSessionDate,
-} from '@/lib/data/sessions';
 import { LapTimeChart } from '@/components/lap-time-chart';
 import { SpeedChart } from '@/components/speed-chart';
 import { TelemetryPanel } from '@/components/telemetry-panel';
 import { SessionDashboard } from '@/components/session-dashboard';
+import {
+  formatGForce,
+  formatLapTime,
+  formatLeanAngle,
+  formatSessionDate,
+  formatSpeed,
+  formatTrackLength,
+} from '@/lib/format-utils';
+import { getSession } from '@/lib/data/telemetry';
 
 interface DashboardPageProps {
   params: Promise<{ id: string }>;
@@ -32,21 +35,11 @@ interface DashboardPageProps {
 
 export default async function DashboardPage({ params }: DashboardPageProps) {
   const { id } = await params;
-  const [session, laps] = await Promise.all([
-    getSessionById(id),
-    getSessionLaps(id),
-  ]);
+  const session = await getSession(id);
 
   if (!session) {
     notFound();
   }
-
-  const maxSpeed =
-    laps.length > 0 ? Math.max(...laps.map((l) => l.max_speed_kmh || 0)) : 0;
-  const avgSpeed =
-    laps.length > 0
-      ? laps.reduce((sum, l) => sum + (l.max_speed_kmh || 0), 0) / laps.length
-      : 0;
 
   return (
     <div className='min-h-screen bg-background'>
@@ -114,7 +107,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                         Top Speed
                       </p>
                       <p className='text-2xl font-mono font-bold text-foreground mt-1'>
-                        {Math.round(maxSpeed)} km/h
+                        {formatSpeed(session.max_speed)}
                       </p>
                     </div>
                     <div className='w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center'>
@@ -131,7 +124,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                         Avg Speed
                       </p>
                       <p className='text-2xl font-mono font-bold text-foreground mt-1'>
-                        {Math.round(avgSpeed)} km/h
+                        {formatSpeed(session.avg_speed)}
                       </p>
                     </div>
                     <div className='w-10 h-10 rounded-lg bg-chart-2/10 flex items-center justify-center'>
@@ -184,7 +177,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
               />
               <SpeedChart
                 sessionId={id}
-                topSpeed={`${Math.round(maxSpeed)} km/h`}
+                topSpeed={formatSpeed(session.max_speed) as string}
               />
             </div>
 
@@ -213,11 +206,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                   <div className='flex justify-between'>
                     <span className='text-muted-foreground'>Length</span>
                     <span className='text-foreground font-mono'>
-                      {session.track?.length_meters
-                        ? `${(session.track.length_meters / 1000).toFixed(
-                            2
-                          )} km`
-                        : 'N/A'}
+                      {formatTrackLength(session.track.length_meters)}
                     </span>
                   </div>
                   <div className='flex justify-between'>
@@ -244,23 +233,13 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                         Max Lean Angle
                       </span>
                       <span className='text-foreground font-mono'>
-                        {laps.length > 0
-                          ? `${Math.round(
-                              Math.max(
-                                ...laps.map((l) => l.max_lean_angle || 0)
-                              )
-                            )}°`
-                          : '--'}
+                        {formatLeanAngle(session.max_lean_angle)}
                       </span>
                     </div>
                     <Progress
                       value={
-                        laps.length > 0
-                          ? (Math.max(
-                              ...laps.map((l) => l.max_lean_angle || 0)
-                            ) /
-                              65) *
-                            100
+                        session.laps.length > 0
+                          ? (session.max_lean_angle / 65) * 100
                           : 0
                       }
                       className='h-2'
@@ -272,21 +251,13 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                         Max G-Force (Lateral)
                       </span>
                       <span className='text-foreground font-mono'>
-                        {laps.length > 0
-                          ? `${Math.max(
-                              ...laps.map((l) => Math.abs(l.max_g_force_x || 0))
-                            ).toFixed(2)}g`
-                          : '--'}
+                        {formatGForce(session.max_g_force_x)}
                       </span>
                     </div>
                     <Progress
                       value={
-                        laps.length > 0
-                          ? (Math.max(
-                              ...laps.map((l) => Math.abs(l.max_g_force_x || 0))
-                            ) /
-                              2) *
-                            100
+                        session.laps.length > 0
+                          ? (session.max_g_force_x / 2) * 100
                           : 0
                       }
                       className='h-2'
@@ -298,21 +269,13 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                         Max G-Force (Vertical)
                       </span>
                       <span className='text-foreground font-mono'>
-                        {laps.length > 0
-                          ? `${Math.max(
-                              ...laps.map((l) => Math.abs(l.max_g_force_z || 0))
-                            ).toFixed(2)}g`
-                          : '--'}
+                        {formatGForce(session.max_g_force_z)}
                       </span>
                     </div>
                     <Progress
                       value={
-                        laps.length > 0
-                          ? (Math.max(
-                              ...laps.map((l) => Math.abs(l.max_g_force_z || 0))
-                            ) /
-                              3) *
-                            100
+                        session.laps.length > 0
+                          ? (session.max_g_force_z / 3) * 100
                           : 0
                       }
                       className='h-2'
@@ -328,7 +291,8 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
           </TabsContent>
 
           <TabsContent value='analysis'>
-            <SessionDashboard sessionId={id} />
+            <SessionDashboard trackSessionData={session} />
+
             <Card className='bg-card border-border/50'>
               <CardHeader>
                 <CardTitle className='text-foreground'>
