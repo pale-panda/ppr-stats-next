@@ -9,11 +9,11 @@ interface SessionCardProps {
   title: string;
   track: string;
   date: string;
-  duration: string;
+  duration?: string;
   laps: number;
   bestLap: string;
   status: 'completed' | 'live' | 'upcoming';
-  imageUrl: string;
+  imageUrl: string | null;
 }
 
 export function SessionCard({

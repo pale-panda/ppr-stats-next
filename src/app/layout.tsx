@@ -2,7 +2,7 @@ import type React from 'react';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
-//import { Analytics } from '@vercel/analytics/next';
+import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import { Footer } from '@/components/footer';
 
@@ -54,7 +54,7 @@ export default function RootLayout({
           disableTransitionOnChange>
           {children}
           <Footer />
-          {/* <Analytics /> */}
+          {process.env.NEXT_ENV === 'production' && <Analytics />}
         </ThemeProvider>
       </body>
     </html>

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import useSWR from 'swr';
 import { Header } from '@/components/header';
 import {
   Card,
@@ -57,27 +58,63 @@ import {
   Flag,
   Target,
 } from 'lucide-react';
-import {
-  sessionsData,
-  getLapsBySessionId,
-  getCompletedSessions,
-} from '@/lib/sessions-data';
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+type AnalyticsSession = {
+  id: string;
+  session_type: string;
+  session_date: string;
+  total_laps: number;
+  best_lap_time_seconds: number;
+  track: {
+    id: string;
+    name: string;
+    location: string;
+  };
+  laps: Array<{
+    id: string;
+    lap_number: number;
+    lap_time_seconds: number;
+    sector_1_seconds: number | null;
+    sector_2_seconds: number | null;
+    sector_3_seconds: number | null;
+    max_speed_kmh: number | null;
+  }>;
+};
 
 export default function AnalyticsPage() {
-  const completedSessions = getCompletedSessions();
-  const [selectedSession1, setSelectedSession1] = useState<string>(
-    completedSessions[0]?.id || ''
+  const { data, error, isLoading } = useSWR('/api/analytics', fetcher);
+
+  const sessions: AnalyticsSession[] = data?.sessions || [];
+  const allTimeStats = useMemo(
+    () => ({
+      bestLapTime: data?.bestLapTime || 0,
+      avgLapTime: data?.avgLapTime || 0,
+      totalLaps: data?.totalLaps || 0,
+      topSpeed: data?.topSpeed || 0,
+    }),
+    [data]
   );
-  const [selectedSession2, setSelectedSession2] = useState<string>(
-    completedSessions[1]?.id || ''
-  );
+
+  const [selectedSession1, setSelectedSession1] = useState<string>('');
+  const [selectedSession2, setSelectedSession2] = useState<string>('');
   const [selectedLap1, setSelectedLap1] = useState<number>(1);
   const [selectedLap2, setSelectedLap2] = useState<number>(1);
 
-  const session1 = sessionsData.find((s) => s.id === selectedSession1);
-  const session2 = sessionsData.find((s) => s.id === selectedSession2);
-  const laps1 = getLapsBySessionId(selectedSession1);
-  const laps2 = getLapsBySessionId(selectedSession2);
+  useEffect(() => {
+    if (sessions.length > 0 && !selectedSession1) {
+      setSelectedSession1(sessions[0].id);
+      if (sessions.length > 1) {
+        setSelectedSession2(sessions[1].id);
+      }
+    }
+  }, [sessions, selectedSession1]);
+
+  const session1 = sessions.find((s) => s.id === selectedSession1);
+  const session2 = sessions.find((s) => s.id === selectedSession2);
+  const laps1 = session1?.laps || [];
+  const laps2 = session2?.laps || [];
 
   // Session comparison data
   const sessionComparisonData = useMemo(() => {
@@ -85,18 +122,24 @@ export default function AnalyticsPage() {
     return [
       {
         metric: 'Top Speed',
-        session1: Number.parseInt(session1.topSpeed) || 0,
-        session2: Number.parseInt(session2.topSpeed) || 0,
+        session1:
+          Math.max(...session1.laps.map((l) => l.max_speed_kmh || 0)) || 0,
+        session2:
+          Math.max(...session2.laps.map((l) => l.max_speed_kmh || 0)) || 0,
       },
       {
         metric: 'Avg Speed',
-        session1: Number.parseInt(session1.avgSpeed) || 0,
-        session2: Number.parseInt(session2.avgSpeed) || 0,
+        session1:
+          session1.laps.reduce((sum, l) => sum + (l.max_speed_kmh || 0), 0) /
+            (session1.laps.length || 1) || 0,
+        session2:
+          session2.laps.reduce((sum, l) => sum + (l.max_speed_kmh || 0), 0) /
+            (session2.laps.length || 1) || 0,
       },
       {
         metric: 'Laps',
-        session1: session1.laps,
-        session2: session2.laps,
+        session1: session1.total_laps,
+        session2: session2.total_laps,
       },
     ];
   }, [session1, session2]);
@@ -108,8 +151,8 @@ export default function AnalyticsPage() {
     for (let i = 0; i < maxLaps; i++) {
       data.push({
         lap: i + 1,
-        session1: laps1[i]?.time || null,
-        session2: laps2[i]?.time || null,
+        session1: laps1[i]?.lap_time_seconds || null,
+        session2: laps2[i]?.lap_time_seconds || null,
       });
     }
     return data;
@@ -117,13 +160,25 @@ export default function AnalyticsPage() {
 
   // Sector comparison for selected laps
   const sectorComparisonData = useMemo(() => {
-    const lap1Data = laps1.find((l) => l.lap === selectedLap1);
-    const lap2Data = laps2.find((l) => l.lap === selectedLap2);
+    const lap1Data = laps1.find((l) => l.lap_number === selectedLap1);
+    const lap2Data = laps2.find((l) => l.lap_number === selectedLap2);
     if (!lap1Data || !lap2Data) return [];
     return [
-      { sector: 'Sector 1', session1: lap1Data.s1, session2: lap2Data.s1 },
-      { sector: 'Sector 2', session1: lap1Data.s2, session2: lap2Data.s2 },
-      { sector: 'Sector 3', session1: lap1Data.s3, session2: lap2Data.s3 },
+      {
+        sector: 'Sector 1',
+        session1: lap1Data.sector_1_seconds || 0,
+        session2: lap2Data.sector_1_seconds || 0,
+      },
+      {
+        sector: 'Sector 2',
+        session1: lap1Data.sector_2_seconds || 0,
+        session2: lap2Data.sector_2_seconds || 0,
+      },
+      {
+        sector: 'Sector 3',
+        session1: lap1Data.sector_3_seconds || 0,
+        session2: lap2Data.sector_3_seconds || 0,
+      },
     ];
   }, [laps1, laps2, selectedLap1, selectedLap2]);
 
@@ -131,22 +186,31 @@ export default function AnalyticsPage() {
   const radarData = useMemo(() => {
     if (!session1 || !session2 || laps1.length === 0 || laps2.length === 0)
       return [];
-    const bestLap1 = Math.min(...laps1.map((l) => l.time));
-    const bestLap2 = Math.min(...laps2.map((l) => l.time));
-    const avgLap1 = laps1.reduce((sum, l) => sum + l.time, 0) / laps1.length;
-    const avgLap2 = laps2.reduce((sum, l) => sum + l.time, 0) / laps2.length;
+    const bestLap1 = Math.min(...laps1.map((l) => l.lap_time_seconds));
+    const bestLap2 = Math.min(...laps2.map((l) => l.lap_time_seconds));
+    const avgLap1 =
+      laps1.reduce((sum, l) => sum + l.lap_time_seconds, 0) / laps1.length;
+    const avgLap2 =
+      laps2.reduce((sum, l) => sum + l.lap_time_seconds, 0) / laps2.length;
     const consistency1 =
       100 -
-      ((Math.max(...laps1.map((l) => l.time)) - bestLap1) / bestLap1) * 100;
+      ((Math.max(...laps1.map((l) => l.lap_time_seconds)) - bestLap1) /
+        bestLap1) *
+        100;
     const consistency2 =
       100 -
-      ((Math.max(...laps2.map((l) => l.time)) - bestLap2) / bestLap2) * 100;
+      ((Math.max(...laps2.map((l) => l.lap_time_seconds)) - bestLap2) /
+        bestLap2) *
+        100;
+
+    const topSpeed1 = Math.max(...laps1.map((l) => l.max_speed_kmh || 0));
+    const topSpeed2 = Math.max(...laps2.map((l) => l.max_speed_kmh || 0));
 
     return [
       {
         attribute: 'Top Speed',
-        session1: (Number.parseInt(session1.topSpeed) / 350) * 100,
-        session2: (Number.parseInt(session2.topSpeed) / 350) * 100,
+        session1: (topSpeed1 / 350) * 100,
+        session2: (topSpeed2 / 350) * 100,
         fullMark: 100,
       },
       {
@@ -157,47 +221,85 @@ export default function AnalyticsPage() {
       },
       {
         attribute: 'Pace',
-        session1: (1 - (avgLap1 - 90) / 30) * 100,
-        session2: (1 - (avgLap2 - 90) / 30) * 100,
+        session1: Math.max(0, 100 - ((avgLap1 - 60) / 60) * 100),
+        session2: Math.max(0, 100 - ((avgLap2 - 60) / 60) * 100),
         fullMark: 100,
       },
       {
         attribute: 'Best Lap',
-        session1: (1 - (bestLap1 - 90) / 30) * 100,
-        session2: (1 - (bestLap2 - 90) / 30) * 100,
+        session1: Math.max(0, 100 - ((bestLap1 - 60) / 60) * 100),
+        session2: Math.max(0, 100 - ((bestLap2 - 60) / 60) * 100),
         fullMark: 100,
       },
       {
-        attribute: 'Tire Mgmt',
-        session1: session1.rearTireWear,
-        session2: session2.rearTireWear,
+        attribute: 'Speed',
+        session1: (topSpeed1 / 300) * 100,
+        session2: (topSpeed2 / 300) * 100,
         fullMark: 100,
       },
     ];
   }, [session1, session2, laps1, laps2]);
-
-  // All-time stats
-  const allTimeStats = useMemo(() => {
-    const allLaps = completedSessions.flatMap((s) => getLapsBySessionId(s.id));
-    const allTimes = allLaps.map((l) => l.time).filter((t) => t > 0);
-    const bestLapTime = allTimes.length > 0 ? Math.min(...allTimes) : 0;
-    const avgLapTime =
-      allTimes.length > 0
-        ? allTimes.reduce((a, b) => a + b, 0) / allTimes.length
-        : 0;
-    const totalLaps = allLaps.length;
-    const topSpeed = Math.max(
-      ...completedSessions.map((s) => Number.parseInt(s.topSpeed) || 0)
-    );
-
-    return { bestLapTime, avgLapTime, totalLaps, topSpeed };
-  }, [completedSessions]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = (seconds % 60).toFixed(3);
     return `${mins}:${secs.padStart(6, '0')}`;
   };
+
+  if (isLoading) {
+    return (
+      <div className='min-h-screen bg-background'>
+        <Header />
+        <div className='container mx-auto px-4 py-6'>
+          <p className='text-muted-foreground'>Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className='min-h-screen bg-background'>
+        <Header />
+        <div className='container mx-auto px-4 py-6'>
+          <p className='text-red-500'>Error loading analytics data</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (sessions.length === 0) {
+    return (
+      <div className='min-h-screen bg-background'>
+        <Header />
+        <div className='border-b border-border bg-card/50'>
+          <div className='container mx-auto px-4 py-6'>
+            <div className='flex items-center gap-3'>
+              <div className='w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center'>
+                <BarChart3 className='w-5 h-5 text-primary' />
+              </div>
+              <div>
+                <h1 className='text-2xl font-bold text-foreground'>
+                  Analytics
+                </h1>
+                <p className='text-sm text-muted-foreground'>
+                  Compare sessions and analyze your performance
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className='container mx-auto px-4 py-12 text-center'>
+          <p className='text-muted-foreground mb-4'>
+            No session data available yet.
+          </p>
+          <p className='text-sm text-muted-foreground'>
+            Upload some sessions to start analyzing your performance.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen bg-background'>
@@ -282,7 +384,7 @@ export default function AnalyticsPage() {
                     Top Speed
                   </p>
                   <p className='text-2xl font-mono font-bold text-foreground mt-1'>
-                    {allTimeStats.topSpeed} km/h
+                    {Math.round(allTimeStats.topSpeed)} km/h
                   </p>
                 </div>
                 <div className='w-10 h-10 rounded-lg bg-chart-4/10 flex items-center justify-center'>
@@ -334,9 +436,12 @@ export default function AnalyticsPage() {
                         <SelectValue placeholder='Select session' />
                       </SelectTrigger>
                       <SelectContent>
-                        {completedSessions.map((session) => (
+                        {sessions.map((session) => (
                           <SelectItem key={session.id} value={session.id}>
-                            {session.title} - {session.track} ({session.date})
+                            {session.track.name} -{' '}
+                            {new Date(
+                              session.session_date
+                            ).toLocaleDateString()}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -344,17 +449,17 @@ export default function AnalyticsPage() {
                     {session1 && (
                       <div className='p-3 rounded-lg bg-primary/5 border border-primary/20'>
                         <p className='font-medium text-foreground'>
-                          {session1.title}
+                          {session1.track.name}
                         </p>
                         <p className='text-sm text-muted-foreground'>
-                          {session1.track}
+                          {session1.track.location}
                         </p>
                         <div className='flex gap-4 mt-2 text-sm'>
                           <span className='text-primary font-mono'>
-                            {session1.bestLap}
+                            {formatTime(session1.best_lap_time_seconds)}
                           </span>
                           <span className='text-muted-foreground'>
-                            {session1.laps} laps
+                            {session1.total_laps} laps
                           </span>
                         </div>
                       </div>
@@ -371,9 +476,12 @@ export default function AnalyticsPage() {
                         <SelectValue placeholder='Select session' />
                       </SelectTrigger>
                       <SelectContent>
-                        {completedSessions.map((session) => (
+                        {sessions.map((session) => (
                           <SelectItem key={session.id} value={session.id}>
-                            {session.title} - {session.track} ({session.date})
+                            {session.track.name} -{' '}
+                            {new Date(
+                              session.session_date
+                            ).toLocaleDateString()}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -381,17 +489,17 @@ export default function AnalyticsPage() {
                     {session2 && (
                       <div className='p-3 rounded-lg bg-chart-2/5 border border-chart-2/20'>
                         <p className='font-medium text-foreground'>
-                          {session2.title}
+                          {session2.track.name}
                         </p>
                         <p className='text-sm text-muted-foreground'>
-                          {session2.track}
+                          {session2.track.location}
                         </p>
                         <div className='flex gap-4 mt-2 text-sm'>
                           <span className='text-chart-2 font-mono'>
-                            {session2.bestLap}
+                            {formatTime(session2.best_lap_time_seconds)}
                           </span>
                           <span className='text-muted-foreground'>
-                            {session2.laps} laps
+                            {session2.total_laps} laps
                           </span>
                         </div>
                       </div>
@@ -417,11 +525,11 @@ export default function AnalyticsPage() {
                   <ChartContainer
                     config={{
                       session1: {
-                        label: session1?.title || 'Session 1',
+                        label: session1?.track.name || 'Session 1',
                         color: 'hsl(var(--primary))',
                       },
                       session2: {
-                        label: session2?.title || 'Session 2',
+                        label: session2?.track.name || 'Session 2',
                         color: 'hsl(var(--chart-2))',
                       },
                     }}
@@ -452,7 +560,7 @@ export default function AnalyticsPage() {
                           stroke='hsl(var(--primary))'
                           strokeWidth={2}
                           dot={{ fill: 'hsl(var(--primary))' }}
-                          name={session1?.title}
+                          name={session1?.track.name}
                           connectNulls
                         />
                         <Line
@@ -461,7 +569,7 @@ export default function AnalyticsPage() {
                           stroke='hsl(var(--chart-2))'
                           strokeWidth={2}
                           dot={{ fill: 'hsl(var(--chart-2))' }}
-                          name={session2?.title}
+                          name={session2?.track.name}
                           connectNulls
                         />
                       </LineChart>
@@ -484,11 +592,11 @@ export default function AnalyticsPage() {
                   <ChartContainer
                     config={{
                       session1: {
-                        label: session1?.title || 'Session 1',
+                        label: session1?.track.name || 'Session 1',
                         color: 'hsl(var(--primary))',
                       },
                       session2: {
-                        label: session2?.title || 'Session 2',
+                        label: session2?.track.name || 'Session 2',
                         color: 'hsl(var(--chart-2))',
                       },
                     }}
@@ -512,14 +620,14 @@ export default function AnalyticsPage() {
                           }}
                         />
                         <Radar
-                          name={session1?.title}
+                          name={session1?.track.name}
                           dataKey='session1'
                           stroke='hsl(var(--primary))'
                           fill='hsl(var(--primary))'
                           fillOpacity={0.3}
                         />
                         <Radar
-                          name={session2?.title}
+                          name={session2?.track.name}
                           dataKey='session2'
                           stroke='hsl(var(--chart-2))'
                           fill='hsl(var(--chart-2))'
@@ -548,10 +656,10 @@ export default function AnalyticsPage() {
                         Metric
                       </TableHead>
                       <TableHead className='text-primary'>
-                        {session1?.title || 'Session 1'}
+                        {session1?.track.name || 'Session 1'}
                       </TableHead>
                       <TableHead className='text-chart-2'>
-                        {session2?.title || 'Session 2'}
+                        {session2?.track.name || 'Session 2'}
                       </TableHead>
                       <TableHead className='text-muted-foreground'>
                         Difference
@@ -564,23 +672,23 @@ export default function AnalyticsPage() {
                         Best Lap
                       </TableCell>
                       <TableCell className='font-mono text-foreground'>
-                        {session1?.bestLap}
+                        {session1 && formatTime(session1.best_lap_time_seconds)}
                       </TableCell>
                       <TableCell className='font-mono text-foreground'>
-                        {session2?.bestLap}
+                        {session2 && formatTime(session2.best_lap_time_seconds)}
                       </TableCell>
                       <TableCell>
-                        {laps1.length > 0 && laps2.length > 0 && (
+                        {session1 && session2 && (
                           <Badge
                             variant={
-                              Math.min(...laps1.map((l) => l.time)) <
-                              Math.min(...laps2.map((l) => l.time))
+                              session1.best_lap_time_seconds <
+                              session2.best_lap_time_seconds
                                 ? 'default'
                                 : 'secondary'
                             }>
                             {(
-                              Math.min(...laps1.map((l) => l.time)) -
-                              Math.min(...laps2.map((l) => l.time))
+                              session1.best_lap_time_seconds -
+                              session2.best_lap_time_seconds
                             ).toFixed(3)}
                             s
                           </Badge>
@@ -592,81 +700,59 @@ export default function AnalyticsPage() {
                         Top Speed
                       </TableCell>
                       <TableCell className='font-mono text-foreground'>
-                        {session1?.topSpeed}
+                        {session1 &&
+                          Math.round(
+                            Math.max(
+                              ...session1.laps.map((l) => l.max_speed_kmh || 0)
+                            )
+                          )}{' '}
+                        km/h
                       </TableCell>
                       <TableCell className='font-mono text-foreground'>
-                        {session2?.topSpeed}
+                        {session2 &&
+                          Math.round(
+                            Math.max(
+                              ...session2.laps.map((l) => l.max_speed_kmh || 0)
+                            )
+                          )}{' '}
+                        km/h
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            Number.parseInt(session1?.topSpeed || '0') >
-                            Number.parseInt(session2?.topSpeed || '0')
-                              ? 'default'
-                              : 'secondary'
-                          }>
-                          {Number.parseInt(session1?.topSpeed || '0') -
-                            Number.parseInt(session2?.topSpeed || '0')}{' '}
-                          km/h
-                        </Badge>
+                        {session1 && session2 && (
+                          <Badge variant='secondary'>
+                            {Math.round(
+                              Math.max(
+                                ...session1.laps.map(
+                                  (l) => l.max_speed_kmh || 0
+                                )
+                              ) -
+                                Math.max(
+                                  ...session2.laps.map(
+                                    (l) => l.max_speed_kmh || 0
+                                  )
+                                )
+                            )}{' '}
+                            km/h
+                          </Badge>
+                        )}
                       </TableCell>
                     </TableRow>
                     <TableRow className='border-border'>
                       <TableCell className='text-muted-foreground'>
-                        Avg Speed
+                        Total Laps
                       </TableCell>
                       <TableCell className='font-mono text-foreground'>
-                        {session1?.avgSpeed}
+                        {session1?.total_laps}
                       </TableCell>
                       <TableCell className='font-mono text-foreground'>
-                        {session2?.avgSpeed}
+                        {session2?.total_laps}
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            Number.parseInt(session1?.avgSpeed || '0') >
-                            Number.parseInt(session2?.avgSpeed || '0')
-                              ? 'default'
-                              : 'secondary'
-                          }>
-                          {Number.parseInt(session1?.avgSpeed || '0') -
-                            Number.parseInt(session2?.avgSpeed || '0')}{' '}
-                          km/h
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow className='border-border'>
-                      <TableCell className='text-muted-foreground'>
-                        Laps Completed
-                      </TableCell>
-                      <TableCell className='font-mono text-foreground'>
-                        {session1?.laps}
-                      </TableCell>
-                      <TableCell className='font-mono text-foreground'>
-                        {session2?.laps}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant='outline'>
-                          {(session1?.laps || 0) - (session2?.laps || 0)}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow className='border-border'>
-                      <TableCell className='text-muted-foreground'>
-                        Front Tire Wear
-                      </TableCell>
-                      <TableCell className='font-mono text-foreground'>
-                        {session1?.frontTireWear}%
-                      </TableCell>
-                      <TableCell className='font-mono text-foreground'>
-                        {session2?.frontTireWear}%
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant='outline'>
-                          {(session1?.frontTireWear || 0) -
-                            (session2?.frontTireWear || 0)}
-                          %
-                        </Badge>
+                        {session1 && session2 && (
+                          <Badge variant='secondary'>
+                            {session1.total_laps - session2.total_laps}
+                          </Badge>
+                        )}
                       </TableCell>
                     </TableRow>
                   </TableBody>
@@ -677,83 +763,81 @@ export default function AnalyticsPage() {
 
           {/* Lap Analysis Tab */}
           <TabsContent value='laps' className='space-y-6'>
-            {/* Lap Selectors */}
-            <Card className='bg-card border-border/50'>
-              <CardHeader>
-                <CardTitle className='text-foreground'>
-                  Select Laps to Compare
-                </CardTitle>
-                <CardDescription>
-                  Compare individual laps sector by sector
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className='grid md:grid-cols-2 gap-6'>
-                  <div className='space-y-2'>
-                    <label className='text-sm font-medium text-muted-foreground'>
-                      {session1?.title} - Lap
-                    </label>
-                    <Select
-                      value={selectedLap1.toString()}
-                      onValueChange={(v) =>
-                        setSelectedLap1(Number.parseInt(v))
-                      }>
-                      <SelectTrigger className='bg-background border-border'>
-                        <SelectValue placeholder='Select lap' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {laps1.map((lap) => (
-                          <SelectItem key={lap.lap} value={lap.lap.toString()}>
-                            Lap {lap.lap} - {formatTime(lap.time)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className='space-y-2'>
-                    <label className='text-sm font-medium text-muted-foreground'>
-                      {session2?.title} - Lap
-                    </label>
-                    <Select
-                      value={selectedLap2.toString()}
-                      onValueChange={(v) =>
-                        setSelectedLap2(Number.parseInt(v))
-                      }>
-                      <SelectTrigger className='bg-background border-border'>
-                        <SelectValue placeholder='Select lap' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {laps2.map((lap) => (
-                          <SelectItem key={lap.lap} value={lap.lap.toString()}>
-                            Lap {lap.lap} - {formatTime(lap.time)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className='grid md:grid-cols-2 gap-6'>
+              <Card className='bg-card border-border/50'>
+                <CardHeader>
+                  <CardTitle className='text-foreground'>
+                    Select Lap - Session 1
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Select
+                    value={selectedLap1.toString()}
+                    onValueChange={(v) => setSelectedLap1(Number(v))}>
+                    <SelectTrigger className='bg-background border-border'>
+                      <SelectValue placeholder='Select lap' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {laps1.map((lap) => (
+                        <SelectItem
+                          key={lap.id}
+                          value={lap.lap_number.toString()}>
+                          Lap {lap.lap_number} -{' '}
+                          {formatTime(lap.lap_time_seconds)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+
+              <Card className='bg-card border-border/50'>
+                <CardHeader>
+                  <CardTitle className='text-foreground'>
+                    Select Lap - Session 2
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Select
+                    value={selectedLap2.toString()}
+                    onValueChange={(v) => setSelectedLap2(Number(v))}>
+                    <SelectTrigger className='bg-background border-border'>
+                      <SelectValue placeholder='Select lap' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {laps2.map((lap) => (
+                        <SelectItem
+                          key={lap.id}
+                          value={lap.lap_number.toString()}>
+                          Lap {lap.lap_number} -{' '}
+                          {formatTime(lap.lap_time_seconds)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+            </div>
 
             {/* Sector Comparison */}
             <Card className='bg-card border-border/50'>
               <CardHeader>
                 <CardTitle className='text-foreground'>
-                  Sector Breakdown
+                  Sector Time Comparison
                 </CardTitle>
                 <CardDescription>
-                  Compare sector times between selected laps
+                  Compare individual sector performance
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ChartContainer
                   config={{
                     session1: {
-                      label: `${session1?.title} Lap ${selectedLap1}`,
+                      label: session1?.track.name || 'Session 1',
                       color: 'hsl(var(--primary))',
                     },
                     session2: {
-                      label: `${session2?.title} Lap ${selectedLap2}`,
+                      label: session2?.track.name || 'Session 2',
                       color: 'hsl(var(--chart-2))',
                     },
                   }}
@@ -761,7 +845,7 @@ export default function AnalyticsPage() {
                   <ResponsiveContainer width='100%' height='100%'>
                     <BarChart
                       data={sectorComparisonData}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                       <CartesianGrid
                         strokeDasharray='3 3'
                         stroke='hsl(var(--border))'
@@ -781,14 +865,12 @@ export default function AnalyticsPage() {
                       <Bar
                         dataKey='session1'
                         fill='hsl(var(--primary))'
-                        name={`${session1?.title} Lap ${selectedLap1}`}
-                        radius={[4, 4, 0, 0]}
+                        name={session1?.track.name}
                       />
                       <Bar
                         dataKey='session2'
                         fill='hsl(var(--chart-2))'
-                        name={`${session2?.title} Lap ${selectedLap2}`}
-                        radius={[4, 4, 0, 0]}
+                        name={session2?.track.name}
                       />
                     </BarChart>
                   </ResponsiveContainer>
@@ -796,135 +878,127 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
 
-            {/* Lap Details Table */}
+            {/* Lap Details Tables */}
             <div className='grid md:grid-cols-2 gap-6'>
               <Card className='bg-card border-border/50'>
-                <CardHeader className='pb-3'>
-                  <CardTitle className='text-foreground text-lg'>
-                    {session1?.title} - All Laps
+                <CardHeader>
+                  <CardTitle className='text-foreground'>
+                    Session 1 Laps
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow className='border-border hover:bg-transparent'>
-                        <TableHead className='text-muted-foreground'>
-                          Lap
-                        </TableHead>
-                        <TableHead className='text-muted-foreground'>
-                          Time
-                        </TableHead>
-                        <TableHead className='text-muted-foreground'>
-                          S1
-                        </TableHead>
-                        <TableHead className='text-muted-foreground'>
-                          S2
-                        </TableHead>
-                        <TableHead className='text-muted-foreground'>
-                          S3
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {laps1.map((lap) => {
-                        const isBest =
-                          lap.time === Math.min(...laps1.map((l) => l.time));
-                        return (
+                  <div className='max-h-[400px] overflow-auto'>
+                    <Table>
+                      <TableHeader>
+                        <TableRow className='border-border hover:bg-transparent'>
+                          <TableHead className='text-muted-foreground'>
+                            Lap
+                          </TableHead>
+                          <TableHead className='text-muted-foreground'>
+                            Time
+                          </TableHead>
+                          <TableHead className='text-muted-foreground'>
+                            S1
+                          </TableHead>
+                          <TableHead className='text-muted-foreground'>
+                            S2
+                          </TableHead>
+                          <TableHead className='text-muted-foreground'>
+                            S3
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {laps1.map((lap) => (
                           <TableRow
-                            key={lap.lap}
+                            key={lap.id}
                             className={`border-border ${
-                              isBest ? 'bg-primary/5' : ''
+                              lap.lap_time_seconds ===
+                              Math.min(...laps1.map((l) => l.lap_time_seconds))
+                                ? 'bg-primary/5'
+                                : ''
                             }`}>
+                            <TableCell className='font-medium text-foreground'>
+                              {lap.lap_number}
+                            </TableCell>
                             <TableCell className='font-mono text-foreground'>
-                              {lap.lap}
+                              {formatTime(lap.lap_time_seconds)}
                             </TableCell>
-                            <TableCell
-                              className={`font-mono ${
-                                isBest
-                                  ? 'text-primary font-bold'
-                                  : 'text-foreground'
-                              }`}>
-                              {formatTime(lap.time)}
+                            <TableCell className='font-mono text-muted-foreground text-sm'>
+                              {lap.sector_1_seconds?.toFixed(3) || '-'}
                             </TableCell>
-                            <TableCell className='font-mono text-muted-foreground'>
-                              {lap.s1.toFixed(1)}s
+                            <TableCell className='font-mono text-muted-foreground text-sm'>
+                              {lap.sector_2_seconds?.toFixed(3) || '-'}
                             </TableCell>
-                            <TableCell className='font-mono text-muted-foreground'>
-                              {lap.s2.toFixed(1)}s
-                            </TableCell>
-                            <TableCell className='font-mono text-muted-foreground'>
-                              {lap.s3.toFixed(1)}s
+                            <TableCell className='font-mono text-muted-foreground text-sm'>
+                              {lap.sector_3_seconds?.toFixed(3) || '-'}
                             </TableCell>
                           </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </CardContent>
               </Card>
 
               <Card className='bg-card border-border/50'>
-                <CardHeader className='pb-3'>
-                  <CardTitle className='text-foreground text-lg'>
-                    {session2?.title} - All Laps
+                <CardHeader>
+                  <CardTitle className='text-foreground'>
+                    Session 2 Laps
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow className='border-border hover:bg-transparent'>
-                        <TableHead className='text-muted-foreground'>
-                          Lap
-                        </TableHead>
-                        <TableHead className='text-muted-foreground'>
-                          Time
-                        </TableHead>
-                        <TableHead className='text-muted-foreground'>
-                          S1
-                        </TableHead>
-                        <TableHead className='text-muted-foreground'>
-                          S2
-                        </TableHead>
-                        <TableHead className='text-muted-foreground'>
-                          S3
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {laps2.map((lap) => {
-                        const isBest =
-                          lap.time === Math.min(...laps2.map((l) => l.time));
-                        return (
+                  <div className='max-h-[400px] overflow-auto'>
+                    <Table>
+                      <TableHeader>
+                        <TableRow className='border-border hover:bg-transparent'>
+                          <TableHead className='text-muted-foreground'>
+                            Lap
+                          </TableHead>
+                          <TableHead className='text-muted-foreground'>
+                            Time
+                          </TableHead>
+                          <TableHead className='text-muted-foreground'>
+                            S1
+                          </TableHead>
+                          <TableHead className='text-muted-foreground'>
+                            S2
+                          </TableHead>
+                          <TableHead className='text-muted-foreground'>
+                            S3
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {laps2.map((lap) => (
                           <TableRow
-                            key={lap.lap}
+                            key={lap.id}
                             className={`border-border ${
-                              isBest ? 'bg-chart-2/5' : ''
+                              lap.lap_time_seconds ===
+                              Math.min(...laps2.map((l) => l.lap_time_seconds))
+                                ? 'bg-chart-2/5'
+                                : ''
                             }`}>
+                            <TableCell className='font-medium text-foreground'>
+                              {lap.lap_number}
+                            </TableCell>
                             <TableCell className='font-mono text-foreground'>
-                              {lap.lap}
+                              {formatTime(lap.lap_time_seconds)}
                             </TableCell>
-                            <TableCell
-                              className={`font-mono ${
-                                isBest
-                                  ? 'text-chart-2 font-bold'
-                                  : 'text-foreground'
-                              }`}>
-                              {formatTime(lap.time)}
+                            <TableCell className='font-mono text-muted-foreground text-sm'>
+                              {lap.sector_1_seconds?.toFixed(3) || '-'}
                             </TableCell>
-                            <TableCell className='font-mono text-muted-foreground'>
-                              {lap.s1.toFixed(1)}s
+                            <TableCell className='font-mono text-muted-foreground text-sm'>
+                              {lap.sector_2_seconds?.toFixed(3) || '-'}
                             </TableCell>
-                            <TableCell className='font-mono text-muted-foreground'>
-                              {lap.s2.toFixed(1)}s
-                            </TableCell>
-                            <TableCell className='font-mono text-muted-foreground'>
-                              {lap.s3.toFixed(1)}s
+                            <TableCell className='font-mono text-muted-foreground text-sm'>
+                              {lap.sector_3_seconds?.toFixed(3) || '-'}
                             </TableCell>
                           </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -935,48 +1009,37 @@ export default function AnalyticsPage() {
             <Card className='bg-card border-border/50'>
               <CardHeader>
                 <CardTitle className='text-foreground'>
-                  Performance Over Time
+                  Best Lap Times Over Time
                 </CardTitle>
                 <CardDescription>
-                  Track your best lap times across all sessions
+                  Track your improvement across all sessions
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ChartContainer
                   config={{
                     bestLap: {
-                      label: 'Best Lap (s)',
+                      label: 'Best Lap',
                       color: 'hsl(var(--primary))',
                     },
                   }}
-                  className='h-[350px]'>
+                  className='h-[300px]'>
                   <ResponsiveContainer width='100%' height='100%'>
                     <LineChart
-                      data={completedSessions.map((s) => {
-                        const laps = getLapsBySessionId(s.id);
-                        const bestTime =
-                          laps.length > 0
-                            ? Math.min(...laps.map((l) => l.time))
-                            : 0;
-                        return {
-                          session: s.title,
-                          track: s.track,
-                          date: s.date,
-                          bestLap: bestTime,
-                        };
-                      })}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                      data={sessions.map((s, idx) => ({
+                        session: idx + 1,
+                        bestLap: s.best_lap_time_seconds,
+                        date: new Date(s.session_date).toLocaleDateString(),
+                      }))}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                       <CartesianGrid
                         strokeDasharray='3 3'
                         stroke='hsl(var(--border))'
                       />
                       <XAxis
-                        dataKey='date'
+                        dataKey='session'
                         stroke='hsl(var(--muted-foreground))'
                         fontSize={12}
-                        angle={-45}
-                        textAnchor='end'
-                        height={60}
                       />
                       <YAxis
                         stroke='hsl(var(--muted-foreground))'
@@ -988,8 +1051,9 @@ export default function AnalyticsPage() {
                         type='monotone'
                         dataKey='bestLap'
                         stroke='hsl(var(--primary))'
-                        strokeWidth={3}
-                        dot={{ fill: 'hsl(var(--primary))', r: 6 }}
+                        strokeWidth={2}
+                        dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+                        name='Best Lap'
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -1012,16 +1076,13 @@ export default function AnalyticsPage() {
                         Date
                       </TableHead>
                       <TableHead className='text-muted-foreground'>
-                        Session
-                      </TableHead>
-                      <TableHead className='text-muted-foreground'>
                         Track
                       </TableHead>
                       <TableHead className='text-muted-foreground'>
-                        Laps
+                        Best Lap
                       </TableHead>
                       <TableHead className='text-muted-foreground'>
-                        Best Lap
+                        Laps
                       </TableHead>
                       <TableHead className='text-muted-foreground'>
                         Top Speed
@@ -1029,25 +1090,27 @@ export default function AnalyticsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {completedSessions.map((session) => (
+                    {sessions.map((session) => (
                       <TableRow key={session.id} className='border-border'>
-                        <TableCell className='text-muted-foreground'>
-                          {session.date}
+                        <TableCell className='text-foreground'>
+                          {new Date(session.session_date).toLocaleDateString()}
                         </TableCell>
-                        <TableCell className='font-medium text-foreground'>
-                          {session.title}
-                        </TableCell>
-                        <TableCell className='text-muted-foreground'>
-                          {session.track}
+                        <TableCell className='text-foreground'>
+                          {session.track.name}
                         </TableCell>
                         <TableCell className='font-mono text-foreground'>
-                          {session.laps}
+                          {formatTime(session.best_lap_time_seconds)}
                         </TableCell>
-                        <TableCell className='font-mono text-primary'>
-                          {session.bestLap}
+                        <TableCell className='text-foreground'>
+                          {session.total_laps}
                         </TableCell>
                         <TableCell className='font-mono text-foreground'>
-                          {session.topSpeed}
+                          {Math.round(
+                            Math.max(
+                              ...session.laps.map((l) => l.max_speed_kmh || 0)
+                            )
+                          )}{' '}
+                          km/h
                         </TableCell>
                       </TableRow>
                     ))}

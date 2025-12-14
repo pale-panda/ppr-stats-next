@@ -1,8 +1,11 @@
 import { Header } from '@/components/header';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { tracksData, getTrackStats } from '@/lib/tracks-data';
+import {
+  getAllTracks,
+  getTrackSessions,
+  formatLapTime,
+} from '@/lib/data/sessions';
 import {
   MapPin,
   Route,
@@ -10,13 +13,56 @@ import {
   Timer,
   Gauge,
   Flag,
-  TrendingUp,
   Calendar,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-export default function TracksPage() {
+export default async function TracksPage() {
+  const tracks = await getAllTracks();
+
+  const tracksWithStats = await Promise.all(
+    tracks.map(async (track) => {
+      const sessions = await getTrackSessions(track.id);
+      const totalLaps = sessions.reduce((sum, s) => sum + s.total_laps, 0);
+      const allLaps = sessions.flatMap((s) => s.laps);
+      const bestLapTime =
+        allLaps.length > 0
+          ? Math.min(...allLaps.map((l) => l.lap_time_seconds))
+          : null;
+      const avgTopSpeed =
+        allLaps.length > 0
+          ? Math.round(
+              allLaps.reduce((sum, l) => sum + (l.max_speed_kmh || 0), 0) /
+                allLaps.length
+            )
+          : null;
+
+      return {
+        ...track,
+        stats: {
+          totalSessions: sessions.length,
+          totalLaps,
+          bestLapTime,
+          avgTopSpeed,
+        },
+      };
+    })
+  );
+
+  const totalTracks = tracks.length;
+  const totalSessions = tracksWithStats.reduce(
+    (sum, t) => sum + t.stats.totalSessions,
+    0
+  );
+  const totalLaps = tracksWithStats.reduce(
+    (sum, t) => sum + t.stats.totalLaps,
+    0
+  );
+  const combinedLength = Math.round(
+    tracks.reduce((sum, t) => sum + (t.length_meters || 0), 0) / 1000
+  );
+
   return (
     <div className='min-h-screen bg-background'>
       <Header />
@@ -42,32 +88,21 @@ export default function TracksPage() {
           <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
             <div className='text-center'>
               <p className='text-3xl font-bold text-foreground'>
-                {tracksData.length}
+                {totalTracks}
               </p>
               <p className='text-sm text-muted-foreground'>Total Tracks</p>
             </div>
             <div className='text-center'>
-              <p className='text-3xl font-bold text-primary'>
-                {tracksData.reduce(
-                  (sum, t) => sum + (getTrackStats(t.id)?.totalSessions || 0),
-                  0
-                )}
-              </p>
+              <p className='text-3xl font-bold text-primary'>{totalSessions}</p>
               <p className='text-sm text-muted-foreground'>Total Sessions</p>
             </div>
             <div className='text-center'>
-              <p className='text-3xl font-bold text-foreground'>
-                {tracksData.reduce(
-                  (sum, t) => sum + (getTrackStats(t.id)?.totalLaps || 0),
-                  0
-                )}
-              </p>
+              <p className='text-3xl font-bold text-foreground'>{totalLaps}</p>
               <p className='text-sm text-muted-foreground'>Total Laps</p>
             </div>
             <div className='text-center'>
               <p className='text-3xl font-bold text-foreground'>
-                {Math.round(tracksData.reduce((sum, t) => sum + t.length, 0))}{' '}
-                km
+                {combinedLength} km
               </p>
               <p className='text-sm text-muted-foreground'>Combined Length</p>
             </div>
@@ -78,10 +113,15 @@ export default function TracksPage() {
       {/* Tracks Grid */}
       <section className='py-12'>
         <div className='container mx-auto px-4'>
-          <div className='grid gap-6'>
-            {tracksData.map((track) => {
-              const stats = getTrackStats(track.id);
-              return (
+          {tracksWithStats.length === 0 ? (
+            <div className='text-center py-12'>
+              <p className='text-muted-foreground'>
+                No tracks found. Upload sessions to see tracks!
+              </p>
+            </div>
+          ) : (
+            <div className='grid gap-6'>
+              {tracksWithStats.map((track) => (
                 <Card
                   key={track.id}
                   className='overflow-hidden bg-card border-border hover:border-primary/50 transition-colors'>
@@ -89,19 +129,18 @@ export default function TracksPage() {
                     {/* Track Image */}
                     <div className='relative h-48 md:h-auto'>
                       <Image
-                        src={track.imageUrl || '/placeholder.svg'}
+                        src={
+                          track.image_url ||
+                          `/placeholder.svg?height=400&width=400&query=${
+                            encodeURIComponent(track.name + ' race track') ||
+                            '/placeholder.svg'
+                          }`
+                        }
                         alt={track.name}
                         fill
                         className='object-cover'
                       />
                       <div className='absolute inset-0 bg-linear-to-r from-transparent to-card/80 hidden md:block' />
-                      <div className='absolute top-4 left-4'>
-                        <Badge
-                          variant='secondary'
-                          className='bg-background/80 backdrop-blur-sm'>
-                          {track.type === 'permanent' ? 'Permanent' : 'Street'}
-                        </Badge>
-                      </div>
                     </div>
 
                     {/* Track Info */}
@@ -127,12 +166,8 @@ export default function TracksPage() {
                         </Link>
                       </div>
 
-                      <p className='text-muted-foreground text-sm mb-6 line-clamp-2'>
-                        {track.description}
-                      </p>
-
                       {/* Track Specs */}
-                      <div className='grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 pb-6 border-b border-border'>
+                      <div className='grid grid-cols-2 md:grid-cols-3 gap-4 mb-6 pb-6 border-b border-border'>
                         <div className='flex items-center gap-2'>
                           <Route className='w-4 h-4 text-primary' />
                           <div>
@@ -140,43 +175,27 @@ export default function TracksPage() {
                               Length
                             </p>
                             <p className='text-sm font-semibold text-foreground'>
-                              {track.length} km
+                              {track?.length_meters
+                                ? `${(track.length_meters / 1000).toFixed(
+                                    2
+                                  )} km`
+                                : 'N/A'}
                             </p>
                           </div>
                         </div>
-                        <div className='flex items-center gap-2'>
-                          <CornerDownRight className='w-4 h-4 text-primary' />
-                          <div>
-                            <p className='text-xs text-muted-foreground'>
-                              Turns
-                            </p>
-                            <p className='text-sm font-semibold text-foreground'>
-                              {track.turns}
-                            </p>
+                        {track.turns && (
+                          <div className='flex items-center gap-2'>
+                            <CornerDownRight className='w-4 h-4 text-primary' />
+                            <div>
+                              <p className='text-xs text-muted-foreground'>
+                                Turns
+                              </p>
+                              <p className='text-sm font-semibold text-foreground'>
+                                {track.turns}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                        <div className='flex items-center gap-2'>
-                          <TrendingUp className='w-4 h-4 text-primary' />
-                          <div>
-                            <p className='text-xs text-muted-foreground'>
-                              Longest Straight
-                            </p>
-                            <p className='text-sm font-semibold text-foreground'>
-                              {track.longestStraight}m
-                            </p>
-                          </div>
-                        </div>
-                        <div className='flex items-center gap-2'>
-                          <Flag className='w-4 h-4 text-primary' />
-                          <div>
-                            <p className='text-xs text-muted-foreground'>
-                              Lap Record
-                            </p>
-                            <p className='text-sm font-semibold text-foreground'>
-                              {track.lapRecord}
-                            </p>
-                          </div>
-                        </div>
+                        )}
                       </div>
 
                       {/* Personal Stats */}
@@ -193,7 +212,7 @@ export default function TracksPage() {
                               </span>
                             </div>
                             <p className='text-lg font-bold text-foreground'>
-                              {stats?.totalSessions || 0}
+                              {track.stats.totalSessions}
                             </p>
                           </div>
                           <div className='bg-secondary/50 rounded-md p-3'>
@@ -204,7 +223,7 @@ export default function TracksPage() {
                               </span>
                             </div>
                             <p className='text-lg font-bold text-foreground'>
-                              {stats?.totalLaps || 0}
+                              {track.stats.totalLaps}
                             </p>
                           </div>
                           <div className='bg-secondary/50 rounded-md p-3'>
@@ -215,7 +234,9 @@ export default function TracksPage() {
                               </span>
                             </div>
                             <p className='text-lg font-bold text-primary'>
-                              {stats?.bestLapTime || '--:--.---'}
+                              {track.stats.bestLapTime
+                                ? formatLapTime(track.stats.bestLapTime)
+                                : '--:--:---'}
                             </p>
                           </div>
                           <div className='bg-secondary/50 rounded-md p-3'>
@@ -226,8 +247,8 @@ export default function TracksPage() {
                               </span>
                             </div>
                             <p className='text-lg font-bold text-foreground'>
-                              {stats?.avgTopSpeed
-                                ? `${stats.avgTopSpeed} km/h`
+                              {track.stats.avgTopSpeed
+                                ? `${track.stats.avgTopSpeed} km/h`
                                 : '--'}
                             </p>
                           </div>
@@ -236,9 +257,9 @@ export default function TracksPage() {
                     </div>
                   </div>
                 </Card>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>

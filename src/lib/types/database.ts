@@ -7,6 +7,8 @@ export interface Track {
   configuration: string | null;
   latitude: number | null;
   longitude: number | null;
+  image_url: string | null;
+  description: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -29,13 +31,13 @@ export interface Lap {
   id: string;
   session_id: string;
   lap_number: number;
-  lap_time_seconds: number | null;
-  max_speed_kmh: number | null;
-  max_lean_angle: number | null;
-  max_g_force_x: number | null;
-  max_g_force_z: number | null;
-  start_time: string | null;
-  end_time: string | null;
+  lap_time_seconds: number;
+  max_speed_kmh: number;
+  max_lean_angle: number;
+  max_g_force_x: number;
+  max_g_force_z: number;
+  start_time: string;
+  end_time: string;
   created_at: string;
 }
 
@@ -59,6 +61,12 @@ export interface TelemetryPoint {
 }
 
 // CSV parsing types
+export interface RaceBoxCSVLapSummary {
+  lapNumber: number;
+  lapTimeSeconds: number | null;
+  sectorTimes: number[];
+}
+
 export interface RaceBoxCSVHeader {
   format: string;
   dataSource: string;
@@ -71,6 +79,7 @@ export interface RaceBoxCSVHeader {
   configuration: string;
   laps: number;
   bestLapTime: number;
+  lapSummaries: RaceBoxCSVLapSummary[];
 }
 
 export interface RaceBoxCSVRecord {

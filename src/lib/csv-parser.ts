@@ -1,12 +1,15 @@
-import type { RaceBoxCSVHeader, RaceBoxCSVRecord } from './types/database';
+import type {
+  RaceBoxCSVHeader,
+  RaceBoxCSVLapSummary,
+  RaceBoxCSVRecord,
+} from './types/database';
 
 export function parseRaceBoxCSV(csvContent: string): {
   header: RaceBoxCSVHeader;
   records: RaceBoxCSVRecord[];
 } {
-  const lines = csvContent.trim().split('\n');
+  const lines = csvContent.trim().split(/\r?\n/);
 
-  // Parse header metadata (first 10 lines)
   const header: RaceBoxCSVHeader = {
     format: '',
     dataSource: '',
@@ -19,13 +22,35 @@ export function parseRaceBoxCSV(csvContent: string): {
     configuration: '',
     laps: 0,
     bestLapTime: 0,
+    lapSummaries: [],
   };
 
-  for (let i = 0; i < 11; i++) {
-    const line = lines[i];
-    if (!line) continue;
+  let dataStartIndex = lines.length;
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i];
+    if (!rawLine) continue;
 
-    const [key, value] = line.split(',').map((s) => s?.trim());
+    const trimmedLine = rawLine.trim();
+    if (!trimmedLine) continue;
+
+    if (trimmedLine.startsWith('Record,Time,')) {
+      dataStartIndex = i + 1;
+      break;
+    }
+
+    if (lapLineRegex.test(trimmedLine)) {
+      const lapSummary = parseLapSummaryLine(trimmedLine);
+      if (lapSummary) {
+        header.lapSummaries.push(lapSummary);
+      }
+      continue;
+    }
+
+    const [rawKey, ...rest] = trimmedLine.split(',');
+    const key = (rawKey || '').trim();
+    const value = rest.join(',').trim();
+
+    if (!key) continue;
 
     switch (key) {
       case 'Format':
@@ -64,13 +89,12 @@ export function parseRaceBoxCSV(csvContent: string): {
     }
   }
 
-  // Find the data header row (Record,Time,Latitude,...)
-  let dataStartIndex = 0;
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].startsWith('Record,Time,')) {
-      dataStartIndex = i + 1;
-      break;
-    }
+  if (header.laps === 0 && header.lapSummaries.length > 0) {
+    header.laps = header.lapSummaries.length;
+  }
+
+  if (header.lapSummaries.length > 1) {
+    header.lapSummaries.sort((a, b) => a.lapNumber - b.lapNumber);
   }
 
   // Parse telemetry records
@@ -79,7 +103,7 @@ export function parseRaceBoxCSV(csvContent: string): {
     const line = lines[i];
     if (!line || line.trim() === '') continue;
 
-    const parts = line.split(',');
+    const parts = line.split(',').map((part) => part.trim());
     if (parts.length < 13) continue;
 
     records.push({
@@ -100,6 +124,48 @@ export function parseRaceBoxCSV(csvContent: string): {
   }
 
   return { header, records };
+}
+
+const lapLineRegex = /^Lap\s+\d+/i;
+
+function parseLapSummaryLine(line: string): RaceBoxCSVLapSummary | null {
+  const parts = line.split(',').map((part) => part.trim());
+  if (parts.length < 2) {
+    return null;
+  }
+
+  const match = /^Lap\s+(\d+)/i.exec(parts[0]);
+  if (!match) {
+    return null;
+  }
+
+  const lapNumber = Number.parseInt(match[1], 10);
+  if (Number.isNaN(lapNumber)) {
+    return null;
+  }
+
+  const lapTimeValue = Number.parseFloat(parts[1]);
+  const lapTimeSeconds = Number.isNaN(lapTimeValue) ? null : lapTimeValue;
+
+  const sectorLabelIndex = parts.findIndex((part) =>
+    part.toLowerCase().startsWith('sector')
+  );
+  const sectorStartIndex = sectorLabelIndex !== -1 ? sectorLabelIndex + 1 : 2;
+
+  const sectorTimes: number[] = [];
+  for (let i = sectorStartIndex; i < parts.length; i++) {
+    if (!parts[i]) continue;
+    const sectorValue = Number.parseFloat(parts[i]);
+    if (!Number.isNaN(sectorValue)) {
+      sectorTimes.push(sectorValue);
+    }
+  }
+
+  return {
+    lapNumber,
+    lapTimeSeconds,
+    sectorTimes,
+  };
 }
 
 // Calculate lap times from telemetry data
