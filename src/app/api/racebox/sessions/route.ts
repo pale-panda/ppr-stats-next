@@ -106,12 +106,12 @@ function extractSessionId(sessionPath: string): string | null {
   return m?.[1] ?? null;
 }
 
-async function fetchAllSessionPaths(jar: CookieJar, pageIndex?: number) {
+async function fetchAllSessionPaths(jar: CookieJar, pageNo?: string) {
   const all = new Set<string>();
-  let page = pageIndex || 1;
+  let page = pageNo ? parseInt(pageNo) || 1 : 1;
 
   while (true) {
-    if (pageIndex && page > pageIndex) break;
+    if (pageNo && page > parseInt(pageNo)) break;
 
     const url = `${BASE}/webapp/sessions?page=${page}`;
     const res = await fetchWithCookies(jar, url, {
@@ -203,7 +203,7 @@ async function mapLimit<T, R>(
 }
 
 export async function GET(_req: NextRequest) {
-  const page = _req.nextUrl.searchParams.get('page');
+  const page = _req.nextUrl.searchParams.get('page') ?? undefined;
   const email = process.env.RACEBOX_EMAIL;
   const password = process.env.RACEBOX_PASSWORD;
 
@@ -217,10 +217,7 @@ export async function GET(_req: NextRequest) {
   const jar = new CookieJar();
   await login(jar, email, password);
 
-  if (page) {
-    console.log(`Begränsar till sida ${page} för sessions.`);
-  }
-  const sessionPaths = await fetchAllSessionPaths(jar);
+  const sessionPaths = await fetchAllSessionPaths(jar, page);
 
   // tmp dir (cross-platform)
   const outDir = path.join(os.tmpdir(), 'racebox-csv');
