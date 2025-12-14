@@ -8,8 +8,12 @@ import { TelemetryChart } from '@/components/telemetry-chart';
 import { LapComparison } from '@/components/lap-comparison';
 import { sessionInfo, lapData, getSessionStats } from '@/lib/sessions-data';
 
-export function SessionDashboard() {
-  const [selectedLap, setSelectedLap] = useState(5); // Best lap
+interface SessionDashboardProps {
+  sessionId: string;
+}
+
+export function SessionDashboard({ sessionId }: SessionDashboardProps) {
+  const [selectedLap, setSelectedLap] = useState(1); // Best lap
   const [comparisonLap, setComparisonLap] = useState<number | null>(null);
   const [showComparison, setShowComparison] = useState(false);
 

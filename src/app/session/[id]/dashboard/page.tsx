@@ -24,6 +24,7 @@ import {
 import { LapTimeChart } from '@/components/lap-time-chart';
 import { SpeedChart } from '@/components/speed-chart';
 import { TelemetryPanel } from '@/components/telemetry-panel';
+import { SessionDashboard } from '@/components/session-dashboard';
 
 interface DashboardPageProps {
   params: Promise<{ id: string }>;
@@ -327,6 +328,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
           </TabsContent>
 
           <TabsContent value='analysis'>
+            <SessionDashboard sessionId={id} />
             <Card className='bg-card border-border/50'>
               <CardHeader>
                 <CardTitle className='text-foreground'>

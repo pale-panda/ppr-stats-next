@@ -10,7 +10,7 @@ export const runtime = 'nodejs';
 const BASE = 'https://www.racebox.pro';
 
 const EXPORT_FORM =
-  'csvFormat=custom&timeFormat=utc&speedFormat=kph&altitudeFormat=m&newLineFormat=crlf&extendedHeader=1&addLapSectorEventsInHeader=1&includeEntryExit=1';
+  'csvFormat=custom&timeFormat=utc&speedFormat=kph&altitudeFormat=m&newLineFormat=crlf&extendedHeader=1&addLapSectorEventsInHeader=1&includeEntryExit=1&bikeMode=on';
 
 async function fetchWithCookies(
   jar: CookieJar,
