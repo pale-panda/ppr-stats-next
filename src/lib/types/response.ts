@@ -1,3 +1,8 @@
+export type LatLngLiteral = {
+  lat: number;
+  lng: number;
+};
+
 export type SingleLap = {
   id: string;
   lap_number: number;
@@ -16,8 +21,6 @@ export type SingleLap = {
   sector_3: number;
 };
 
-export type Laps = Array<SingleLap>;
-
 export type SingleTelemetryPoint = {
   lap_number: number;
   record_number: number;
@@ -29,24 +32,24 @@ export type SingleTelemetryPoint = {
   gyro_x: number;
   gyro_y: number;
   gyro_z: number;
-  point: LatLngLiteral;
+  gps_point: LatLngLiteral;
 };
 
-export type TelemetryPoints = Array<SingleTelemetryPoint>;
-
 export type Track = {
+  id: string;
   name: string;
-  country: string | null;
+  country: string;
   length_meters: number | null;
   turns: number | null;
   configuration: string | null;
   description: string | null;
   image_url: string | null;
-  point: LatLngLiteral;
+  gps_point: LatLngLiteral;
 };
 
 export type TrackSession = {
   id: string;
+  track_id: string;
   avg_speed: number;
   min_speed: number;
   max_speed: number;
@@ -63,11 +66,23 @@ export type TrackSession = {
   vehicle: string;
   data_source: string;
   session_source: string;
-  track: Track;
-  laps: Laps;
 };
 
-export type LatLngLiteral = {
-  lat: number;
-  lng: number;
+export type TrackSessionWithTrack = TrackSession & {
+  track?: Track;
+  laps?: Laps;
+  telemetry?: TelemetryPoints;
+};
+
+export type Laps = Array<SingleLap>;
+export type TelemetryPoints = Array<SingleTelemetryPoint>;
+export type TrackSessionData = Array<TrackSession>;
+export type Tracks = Array<Track>;
+
+export type PaginationMeta = {
+  currentPage: number;
+  nextPage: number | null;
+  totalPages: number;
+  totalCount: number;
+  remainingCount: number;
 };

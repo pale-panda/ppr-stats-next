@@ -1,0 +1,10 @@
+export const TRACK_SESSION_LIMIT_CARDS = 24;
+export const TRACK_SESSION_LIMIT_TABLE = 100;
+
+export const DASHBOARD_TOP_SESSIONS_LIMIT = 5;
+
+export const TELEMETRY_CACHE_TIME = 10 * 60;
+export const SESSION_COUNT_CACHE_TIME = 5 * 60;
+export const DASHBOARD_STATS_CACHE_TIME = 5 * 60;
+
+export const LINE_CHART_DATA_POINTS = 200;

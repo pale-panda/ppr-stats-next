@@ -1,14 +1,13 @@
 import { cache } from 'react';
 import { createServerClient } from '@/lib/supabase/server';
 import {
-  LatLngLiteral,
   TelemetryPoints,
   Track,
-  TrackSession,
+  TrackSessionWithTrack,
 } from '@/lib/types/response';
 
 export const getSession = cache(
-  async (sessionId: string): Promise<TrackSession> => {
+  async (sessionId: string): Promise<TrackSessionWithTrack> => {
     const supabase = await createServerClient();
 
     const { data: session, error: sessionError } = await supabase
@@ -51,7 +50,8 @@ export const getSession = cache(
     const { data: trackData, error: trackError } = await supabase
       .from('tracks')
       .select(
-        `name,
+        `id,
+        name,
         country,
         length_meters,
         turns,
@@ -67,10 +67,7 @@ export const getSession = cache(
       throw new Error('Failed to fetch track data');
     }
 
-    const track: Track = {
-      ...trackData,
-      point: trackData.gps_point,
-    };
+    const track: Track = trackData;
 
     const laps = session.laps;
 
@@ -137,10 +134,7 @@ export const getTelemetry = cache(
       throw new Error('Failed to fetch telemetry data');
     }
 
-    const data: TelemetryPoints = telemetry.map((point) => ({
-      ...point,
-      point: point.gps_point,
-    }));
+    const data: TelemetryPoints = telemetry;
 
     return data;
   }
@@ -163,10 +157,7 @@ export const getTelemetryPerLap = cache(
       throw new Error('Failed to fetch telemetry data');
     }
 
-    const data: TelemetryPoints = telemetry.map((point) => ({
-      ...point,
-      point: point.gps_point,
-    }));
+    const data: TelemetryPoints = telemetry;
 
     return data;
   }

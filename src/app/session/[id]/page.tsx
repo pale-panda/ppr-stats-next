@@ -36,7 +36,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
   const session = await getSession(id);
   const { track, laps } = session;
 
-  if (!session) {
+  if (!session || !track || !laps) {
     notFound();
   }
 

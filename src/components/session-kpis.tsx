@@ -7,9 +7,9 @@ import {
   formatDuration,
   formatMinMaxSpeed,
 } from '@/lib/format-utils';
-import { SessionData } from '@/lib/types/response';
+import { TrackSession } from '@/lib/types/response';
 
-export function SessionKPIs({ ...stats }: SessionData) {
+export function SessionKPIs({ ...stats }: TrackSession) {
   const kpis = [
     {
       label: 'Vehicle',

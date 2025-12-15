@@ -1,7 +1,16 @@
 import { createServerClient } from '@/lib/supabase/server';
-import type { Session, Lap, Track } from '@/lib/types/database';
+import {
+  Laps,
+  Tracks,
+  TrackSessionData,
+  PaginationMeta,
+  TrackSessionWithTrack,
+  Track,
+} from '@/lib/types/response';
+import { TRACK_SESSION_LIMIT_CARDS } from '@/lib/data/constants';
+import { filterByFilterParams, FilterParams } from '@/lib/filter-utils';
 
-export async function getSessionById(id: string) {
+export async function getSessionById(id: string): Promise<TrackSessionData> {
   const supabase = await createServerClient();
 
   const { data: session, error } = await supabase
@@ -17,13 +26,13 @@ export async function getSessionById(id: string) {
 
   if (error) {
     console.error('Error fetching session:', error);
-    return null;
+    throw new Error('Failed to fetch session data');
   }
 
-  return session as Session & { track: Track };
+  return session;
 }
 
-export async function getSessionLaps(sessionId: string) {
+export async function getSessionLaps(sessionId: string): Promise<Laps> {
   const supabase = await createServerClient();
 
   const { data: laps, error } = await supabase
@@ -35,80 +44,156 @@ export async function getSessionLaps(sessionId: string) {
 
   if (error) {
     console.error('Error fetching laps:', error);
-    return [];
+    throw new Error('Failed to fetch laps data');
   }
 
-  return laps as Lap[];
+  return laps as Laps;
 }
 
 export async function getSessionStats(sessionId: string) {
   const supabase = await createServerClient();
 
-  const { data: stats, error } = await supabase.rpc('get_session_stats', {
-    p_session_id: sessionId,
-  });
+  const { data: session, error } = await supabase
+    .from('sessions')
+    .select(
+      'duration_seconds, theoretical_best, laps:laps(lap_time_seconds, max_speed_kmh, max_lean_angle, max_g_force_x, max_g_force_z)'
+    )
+    .eq('id', sessionId)
+    .neq('laps.lap_number', 0)
+    .single();
 
   if (error) {
-    const { data: session } = await supabase
-      .from('sessions')
-      .select('duration_seconds')
-      .eq('id', sessionId)
-      .single();
-    // Fallback: Calculate stats from laps if RPC doesn't exist
-    const { data: laps } = await supabase
-      .from('laps')
-      .select(
-        'lap_time_seconds, max_speed_kmh, max_lean_angle, max_g_force_x, max_g_force_z'
-      )
-      .eq('session_id', sessionId);
+    console.error('Error fetching session stats:', error);
+    throw new Error('Failed to fetch session stats');
+  }
 
-    if (laps && laps.length > 0) {
-      return {
-        duration_seconds: session?.duration_seconds || 0,
-        theoretical_best: laps.reduce(
-          (sum, l) => sum + (l.lap_time_seconds || 0),
-          0
-        ),
-        max_speed: Math.max(...laps.map((l) => l.max_speed_kmh || 0)),
-        max_lean_angle: Math.max(...laps.map((l) => l.max_lean_angle || 0)),
-        avg_speed:
-          laps.reduce((sum, l) => sum + (l.max_speed_kmh || 0), 0) /
-          laps.length,
-      };
-    }
+  if (session.laps && session.laps.length > 0) {
+    const { laps } = session;
 
     return {
-      duration_seconds: 0,
-      theoretical_best: 0,
-      max_speed: 0,
-      max_lean_angle: 0,
-      avg_speed: 0,
+      duration_seconds: session.duration_seconds || 0,
+      theoretical_best: laps.reduce(
+        (sum, l) => sum + (l.lap_time_seconds || 0),
+        0
+      ),
+      max_speed: Math.max(...laps.map((l) => l.max_speed_kmh || 0)),
+      max_lean_angle: Math.max(...laps.map((l) => l.max_lean_angle || 0)),
+      avg_speed:
+        laps.reduce((sum, l) => sum + (l.max_speed_kmh || 0), 0) / laps.length,
     };
   }
 
-  return stats;
+  return {
+    duration_seconds: 0,
+    theoretical_best: 0,
+    max_speed: 0,
+    max_lean_angle: 0,
+    avg_speed: 0,
+  };
 }
 
-export async function getAllSessions(limit: number = 24) {
+export async function getSessionCount(): Promise<number> {
   const supabase = await createServerClient();
-
-  const { data: sessions, error } = await supabase
+  const { data, error } = await supabase
     .from('sessions')
-    .select(
-      `
-      *,
-      track:tracks(*)
-    `
-    )
-    .order('session_date', { ascending: false })
-    .limit(limit);
-
+    .select('id')
+    .order('id', { ascending: true });
   if (error) {
-    console.error('Error fetching all sessions:', error);
-    return [];
+    console.error('Error fetching session count:', error);
+    return 0;
   }
 
-  return sessions as (Session & { track: Track })[];
+  if (data && data.length !== undefined) {
+    return data.length;
+  }
+
+  return 0;
+}
+
+interface GetAllSessionsProps {
+  filter?: FilterParams;
+  currentPage?: number;
+  limit?: number;
+}
+
+export async function getAllSessions({
+  filter,
+  currentPage = 1,
+  limit = TRACK_SESSION_LIMIT_CARDS,
+}: GetAllSessionsProps): Promise<{
+  sessions: TrackSessionWithTrack[];
+  meta: PaginationMeta;
+}> {
+  const currentIndex = (currentPage - 1) * limit;
+  const supabase = await createServerClient();
+
+  const { data: tracks, error: trackError } = await supabase.from('tracks')
+    .select(`id,
+      name,
+      country,
+      configuration,
+      length_meters,
+      turns`);
+
+  if (trackError) {
+    console.error('Error fetching tracks:', trackError);
+    throw new Error('Failed to fetch tracks');
+  }
+
+  let filteredTracks;
+
+  if (filter !== undefined)
+    filteredTracks = filterByFilterParams(tracks, filter);
+  else filteredTracks = tracks;
+
+  const trackIds = filteredTracks.map((t) => t.id) || [];
+
+  if (trackIds.length === 0) {
+    return {
+      sessions: [],
+      meta: {
+        currentPage,
+        nextPage: null,
+        totalPages: 0,
+        totalCount: 0,
+        remainingCount: 0,
+      },
+    };
+  }
+
+  const totalCount = (
+    await supabase
+      .from('sessions')
+      .select('id', { count: 'exact', head: true })
+      .in(`track_id`, trackIds)
+  ).count;
+
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('*, track:tracks(*)')
+    .in(`track_id`, trackIds)
+    .order('session_date', { ascending: false })
+    .range(currentIndex, currentIndex + limit - 1);
+  if (error) {
+    console.error('Error fetching sessions:', error);
+    throw new Error('Failed to fetch sessions');
+  }
+
+  const sessions: TrackSessionWithTrack[] = data;
+
+  const totalPages = Math.ceil((totalCount || 0) / limit);
+  const remainingCount = Math.max((totalCount || 0) - currentPage * limit, 0);
+
+  return {
+    sessions,
+    meta: {
+      currentPage,
+      nextPage: currentPage < (totalPages || 0) ? currentPage + 1 : null,
+      totalPages,
+      totalCount: totalCount || 0,
+      remainingCount,
+    },
+  };
 }
 
 export async function getSessionsForAnalytics() {
@@ -116,13 +201,7 @@ export async function getSessionsForAnalytics() {
 
   const { data: sessions, error } = await supabase
     .from('sessions')
-    .select(
-      `
-      *,
-      track:tracks(*),
-      laps(*)
-    `
-    )
+    .select(`*, track:tracks(*), laps(*)`)
     .order('session_date', { ascending: false });
 
   if (error) {
@@ -130,7 +209,7 @@ export async function getSessionsForAnalytics() {
     return [];
   }
 
-  return sessions as (Session & { track: Track; laps: Lap[] })[];
+  return sessions as TrackSessionWithTrack[];
 }
 
 export async function getAllTracks() {
@@ -146,7 +225,7 @@ export async function getAllTracks() {
     return [];
   }
 
-  return tracks as Track[];
+  return tracks as Tracks;
 }
 
 export async function getTrackById(id: string) {
@@ -180,7 +259,7 @@ export async function getTrackSessions(trackId: string) {
     return [];
   }
 
-  return sessions as (Session & { laps: Lap[] })[];
+  return sessions as TrackSessionWithTrack[];
 }
 
 export async function getDashboardStats() {
@@ -228,13 +307,7 @@ export async function getAnalyticsStats() {
   // Get all completed sessions with laps
   const { data: sessions } = await supabase
     .from('sessions')
-    .select(
-      `
-      *,
-      track:tracks(*),
-      laps(*)
-    `
-    )
+    .select(`*, track:tracks(*), laps(*)`)
     .order('session_date', { ascending: false });
 
   if (!sessions || sessions.length === 0) {
@@ -263,6 +336,75 @@ export async function getAnalyticsStats() {
     avgLapTime,
     totalLaps,
     topSpeed,
-    sessions: sessions as (Session & { track: Track; laps: Lap[] })[],
+    sessions: sessions as TrackSessionWithTrack[],
   };
+}
+
+export async function getTrackMetaData() {
+  const supabase = await createServerClient();
+
+  const { data: tracks, error } = await supabase
+    .from('tracks')
+    .select('country, name')
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching tracks:', error);
+    return { countries: [], names: [] };
+  }
+
+  return {
+    countries: [...new Set(tracks.map((t) => t.country))],
+    names: [...new Set(tracks.map((t) => t.name))],
+  };
+}
+
+interface TrackWithStats extends Track {
+  stats: {
+    totalSessions: number;
+    totalLaps: number;
+    bestLapTime: number | null;
+    avgTopSpeed: number | null;
+  };
+}
+
+export async function getTracksWithStats(): Promise<TrackWithStats[]> {
+  const tracks = await getAllTracks();
+  const { sessions } = await getAllSessions({ limit: 100000 });
+
+  const tracksWithStats = tracks
+    .map((track) => {
+      const trackSessions = sessions.filter((s) => s.track_id === track.id);
+      if (!trackSessions || trackSessions.length === 0) return undefined;
+
+      const totalLaps = trackSessions.reduce((sum, s) => sum + s.total_laps, 0);
+      const allLaps = trackSessions.flatMap((s) => s.laps || []) as Laps;
+
+      const bestLapTime =
+        allLaps.length > 0
+          ? Math.min(...allLaps.map((l) => l.lap_time_seconds))
+          : null;
+      const avgTopSpeed =
+        allLaps.length > 0
+          ? Math.round(
+              allLaps.reduce((sum, l) => sum + (l.max_speed_kmh || 0), 0) /
+                allLaps.length
+            )
+          : null;
+
+      const result: TrackWithStats = {
+        ...track,
+        stats: {
+          totalSessions: trackSessions.length,
+          totalLaps,
+          bestLapTime,
+          avgTopSpeed,
+        },
+      };
+
+      return result;
+    })
+    .filter((t): t is TrackWithStats => t !== undefined);
+
+  return tracksWithStats;
 }

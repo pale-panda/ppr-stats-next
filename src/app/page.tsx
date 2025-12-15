@@ -1,17 +1,14 @@
 import { Header } from '@/components/header';
 import { HeroSection } from '@/components/hero-section';
-import { SessionCard } from '@/components/session-card';
-import { Button } from '@/components/ui/button';
-import { ChevronRight, Filter, Clock, Flag, Zap, Gauge } from 'lucide-react';
-import { getAllSessions, getDashboardStats } from '@/lib/data/sessions';
+import { Clock, Flag, Zap, Gauge } from 'lucide-react';
+import { getDashboardStats, getAllTracks } from '@/lib/data/sessions';
 import { formatLapTime, formatSpeed } from '@/lib/format-utils';
 import { Card, CardContent } from '@/components/ui/card';
+import { SessionSection } from '@/components/session-section';
 
 export default async function HomePage() {
-  const [sessions, stats] = await Promise.all([
-    getAllSessions(),
-    getDashboardStats(),
-  ]);
+  const stats = await getDashboardStats();
+  const tracks = await getAllTracks();
 
   return (
     <div className='min-h-screen bg-background'>
@@ -104,59 +101,7 @@ export default async function HomePage() {
       </section>
 
       {/* Sessions Section */}
-      <section className='container mx-auto px-4 py-12'>
-        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8'>
-          <div>
-            <h2 className='text-2xl md:text-3xl font-bold text-foreground'>
-              Your Sessions
-            </h2>
-            <p className='text-muted-foreground mt-1'>
-              Select a session to view detailed analytics
-            </p>
-          </div>
-          <div className='flex gap-2'>
-            <Button variant='outline' size='sm'>
-              <Filter className='w-4 h-4 mr-2' />
-              Filter
-            </Button>
-            <Button variant='ghost' size='sm' className='text-primary'>
-              View All
-              <ChevronRight className='w-4 h-4 ml-1' />
-            </Button>
-          </div>
-        </div>
-
-        {sessions.length === 0 ? (
-          <div className='text-center py-12'>
-            <p className='text-muted-foreground'>
-              No sessions found. Upload your first session to get started!
-            </p>
-          </div>
-        ) : (
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-            {sessions.map((session) => (
-              <SessionCard
-                key={session.id}
-                id={session.id}
-                title={`${session.session_type} Session`}
-                track={session.track.name}
-                date={new Date(session.session_date).toLocaleDateString(
-                  'en-US',
-                  {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  }
-                )}
-                laps={session.total_laps}
-                bestLap={formatLapTime(session.best_lap_time_seconds)}
-                status='completed'
-                imageUrl={session.track.image_url}
-              />
-            ))}
-          </div>
-        )}
-      </section>
+      <SessionSection tracks={tracks} />
     </div>
   );
 }

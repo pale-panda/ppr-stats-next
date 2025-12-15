@@ -1,7 +1,11 @@
 import { Header } from '@/components/header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { getAllTracks, getTrackSessions } from '@/lib/data/sessions';
+import {
+  getAllSessions,
+  getAllTracks,
+  getTrackSessions,
+} from '@/lib/data/sessions';
 import { formatLapTime, formatSpeed } from '@/lib/format-utils';
 import {
   MapPin,
@@ -14,15 +18,17 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Laps } from '@/lib/types/response';
 
 export default async function TracksPage() {
   const tracks = await getAllTracks();
+  const sessions = await getAllSessions({});
 
   const tracksWithStats = await Promise.all(
     tracks.map(async (track) => {
       const sessions = await getTrackSessions(track.id);
       const totalLaps = sessions.reduce((sum, s) => sum + s.total_laps, 0);
-      const allLaps = sessions.flatMap((s) => s.laps);
+      const allLaps = sessions.flatMap((s) => s.laps) as Laps;
       const bestLapTime =
         allLaps.length > 0
           ? Math.min(...allLaps.map((l) => l.lap_time_seconds))
@@ -127,14 +133,11 @@ export default async function TracksPage() {
                     <div className='relative h-48 md:h-auto'>
                       <Image
                         src={
-                          track.image_url ||
-                          `/placeholder.svg?height=400&width=400&query=${
-                            encodeURIComponent(track.name + ' race track') ||
-                            '/placeholder.svg'
-                          }`
+                          track.image_url ? track.image_url : '/placeholder.svg'
                         }
                         alt={track.name}
                         fill
+                        sizes='(max-width: 768px) 100vw, 400px'
                         className='object-cover'
                       />
                       <div className='absolute inset-0 bg-linear-to-r from-transparent to-card/80 hidden md:block' />

@@ -58,7 +58,7 @@ import {
   Flag,
   Target,
 } from 'lucide-react';
-import { formatSpeed } from '@/lib/format-utils';
+import { formatSpeed, formatDuration, formatTime } from '@/lib/format-utils';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -241,12 +241,6 @@ export default function AnalyticsPage() {
     ];
   }, [session1, session2, laps1, laps2]);
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = (seconds % 60).toFixed(3);
-    return `${mins}:${secs.padStart(6, '0')}`;
-  };
-
   if (isLoading) {
     return (
       <div className='min-h-screen bg-background'>
@@ -385,7 +379,7 @@ export default function AnalyticsPage() {
                     Top Speed
                   </p>
                   <p className='text-2xl font-mono font-bold text-foreground mt-1'>
-                    {formatSpeed(allTimeStats.topSpeed, { unit: 'kph' })}
+                    {formatSpeed(allTimeStats.topSpeed)}
                   </p>
                 </div>
                 <div className='w-10 h-10 rounded-lg bg-chart-4/10 flex items-center justify-center'>

@@ -93,7 +93,10 @@ function TrackMap({
   const selectedLapPath = useMemo<google.maps.LatLngLiteral[]>(() => {
     return sortedTelemetry
       .filter((entry) => entry.lap_number === selectedLap)
-      .map((entry) => entry.point);
+      .map((entry) => {
+        if (entry.gps_point) return entry.gps_point;
+        else return { lat: 0, lng: 0 };
+      });
   }, [selectedLap, sortedTelemetry]);
 
   const comparisonLapPath = useMemo<google.maps.LatLngLiteral[]>(() => {
@@ -103,7 +106,10 @@ function TrackMap({
 
     return sortedTelemetry
       .filter((entry) => entry.lap_number === comparisonLap)
-      .map((entry) => entry.point);
+      .map((entry) => {
+        if (entry.gps_point) return entry.gps_point;
+        else return { lat: 0, lng: 0 };
+      });
   }, [comparisonLap, showComparison, sortedTelemetry]);
 
   const selectedPolylineOptions = useMemo<google.maps.PolylineOptions>(
