@@ -2,9 +2,10 @@ import type React from 'react';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
-//import { Analytics } from '@vercel/analytics/next';
+import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import { Footer } from '@/components/footer';
+import { APP_ENVIRONMENT } from '@/services/client';
 
 const _geist = Geist({
   variable: '--font-geist-sans',
@@ -54,7 +55,8 @@ export default function RootLayout({
           disableTransitionOnChange>
           {children}
           <Footer />
-          {/* <Analytics /> */}
+          {process.env.NEXT_PUBLIC_ENV !== 'development' &&
+            APP_ENVIRONMENT !== 'local' && <Analytics />}
         </ThemeProvider>
       </body>
     </html>

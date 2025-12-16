@@ -8,24 +8,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import {
   ArrowLeft,
-  Clock,
   Flag,
   Gauge,
   Zap,
   Activity,
-  ThermometerSun,
   Wind,
   Bike,
 } from 'lucide-react';
-import {
-  getSessionById,
-  sessionInfo,
-  getSessionStats,
-} from '@/lib/sessions-data';
 import { LapTimeChart } from '@/components/lap-time-chart';
 import { SpeedChart } from '@/components/speed-chart';
 import { TelemetryPanel } from '@/components/telemetry-panel';
 import { SessionDashboard } from '@/components/session-dashboard';
+import {
+  formatGForce,
+  formatLapTime,
+  formatLeanAngle,
+  formatSessionDate,
+  formatSpeed,
+  formatTrackLength,
+} from '@/lib/format-utils';
+import { getTrackSessionWithStats } from '@/lib/data/track-session.data';
 
 interface DashboardPageProps {
   params: Promise<{ id: string }>;
@@ -33,24 +35,11 @@ interface DashboardPageProps {
 
 export default async function DashboardPage({ params }: DashboardPageProps) {
   const { id } = await params;
-  const session = getSessionById(id);
-  const stats = getSessionStats();
+  const session = await getTrackSessionWithStats(id);
 
   if (!session) {
     notFound();
   }
-
-  const statusStyles = {
-    completed: 'bg-muted text-muted-foreground',
-    live: 'bg-primary text-primary-foreground animate-pulse',
-    upcoming: 'bg-secondary text-secondary-foreground',
-  };
-
-  const statusLabels = {
-    completed: 'Completed',
-    live: 'Live',
-    upcoming: 'Upcoming',
-  };
 
   return (
     <div className='min-h-screen bg-background'>
@@ -69,34 +58,29 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
               <div>
                 <div className='flex items-center gap-2'>
                   <h1 className='text-xl md:text-2xl font-bold text-foreground'>
-                    {session.title}
+                    {session.session_type} Session
                   </h1>
-                  <Badge className={statusStyles[session.status]}>
-                    {statusLabels[session.status]}
+                  <Badge className='bg-muted text-muted-foreground'>
+                    Completed
                   </Badge>
                 </div>
                 <p className='text-sm text-muted-foreground'>
-                  {session.track} • {session.date}
+                  {session.track.name} •{' '}
+                  {formatSessionDate(session.session_date)}
                 </p>
               </div>
             </div>
             <div className='flex items-center gap-4'>
               <div className='flex items-center gap-2 text-sm'>
-                <Clock className='w-4 h-4 text-muted-foreground' />
-                <span className='font-mono text-foreground'>
-                  {session.duration}
-                </span>
-              </div>
-              <div className='flex items-center gap-2 text-sm'>
                 <Flag className='w-4 h-4 text-muted-foreground' />
                 <span className='font-mono text-foreground'>
-                  {session.laps} laps
+                  {session.total_laps} laps
                 </span>
               </div>
               <div className='flex items-center gap-2 text-sm'>
                 <Zap className='w-4 h-4 text-primary' />
                 <span className='font-mono text-primary font-medium'>
-                  {session.bestLap}
+                  {formatLapTime(session.best_lap_time_seconds)}
                 </span>
               </div>
             </div>
@@ -123,7 +107,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                         Top Speed
                       </p>
                       <p className='text-2xl font-mono font-bold text-foreground mt-1'>
-                        {session.topSpeed}
+                        {formatSpeed(session.max_speed)}
                       </p>
                     </div>
                     <div className='w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center'>
@@ -140,7 +124,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                         Avg Speed
                       </p>
                       <p className='text-2xl font-mono font-bold text-foreground mt-1'>
-                        {session.avgSpeed}
+                        {formatSpeed(session.avg_speed)}
                       </p>
                     </div>
                     <div className='w-10 h-10 rounded-lg bg-chart-2/10 flex items-center justify-center'>
@@ -154,10 +138,10 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                   <div className='flex items-center justify-between'>
                     <div>
                       <p className='text-xs text-muted-foreground uppercase tracking-wider'>
-                        Fuel Used
+                        Total Laps
                       </p>
                       <p className='text-2xl font-mono font-bold text-foreground mt-1'>
-                        {session.fuelUsed}
+                        {session.total_laps}
                       </p>
                     </div>
                     <div className='w-10 h-10 rounded-lg bg-chart-4/10 flex items-center justify-center'>
@@ -171,14 +155,14 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                   <div className='flex items-center justify-between'>
                     <div>
                       <p className='text-xs text-muted-foreground uppercase tracking-wider'>
-                        Track Temp
+                        Best Lap
                       </p>
-                      <p className='text-2xl font-mono font-bold text-foreground mt-1'>
-                        {session.trackTemp}
+                      <p className='text-2xl font-mono font-bold text-primary mt-1'>
+                        {formatLapTime(session.best_lap_time_seconds)}
                       </p>
                     </div>
                     <div className='w-10 h-10 rounded-lg bg-chart-3/10 flex items-center justify-center'>
-                      <ThermometerSun className='w-5 h-5 text-chart-3' />
+                      <Flag className='w-5 h-5 text-chart-3' />
                     </div>
                   </div>
                 </CardContent>
@@ -187,8 +171,14 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
 
             {/* Charts Row */}
             <div className='grid lg:grid-cols-2 gap-6'>
-              <LapTimeChart sessionId={id} bestLap={session.bestLap} />
-              <SpeedChart sessionId={id} topSpeed={session.topSpeed} />
+              <LapTimeChart
+                sessionId={id}
+                bestLap={formatLapTime(session.best_lap_time_seconds)}
+              />
+              <SpeedChart
+                sessionId={id}
+                topSpeed={formatSpeed(session.max_speed) as string}
+              />
             </div>
 
             {/* Conditions & Bike Setup */}
@@ -197,35 +187,33 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                 <CardHeader>
                   <CardTitle className='text-foreground flex items-center gap-2'>
                     <Wind className='w-5 h-5' />
-                    Conditions
+                    Track Information
                   </CardTitle>
                 </CardHeader>
                 <CardContent className='space-y-4'>
                   <div className='flex justify-between'>
-                    <span className='text-muted-foreground'>Weather</span>
+                    <span className='text-muted-foreground'>Track</span>
                     <span className='text-foreground font-medium'>
-                      {session.weather}
+                      {session.track.name}
                     </span>
                   </div>
                   <div className='flex justify-between'>
-                    <span className='text-muted-foreground'>
-                      Air Temperature
-                    </span>
+                    <span className='text-muted-foreground'>Country</span>
                     <span className='text-foreground font-mono'>
-                      {session.temperature}
+                      {session.track.country}
                     </span>
                   </div>
                   <div className='flex justify-between'>
-                    <span className='text-muted-foreground'>
-                      Road Temperature
-                    </span>
+                    <span className='text-muted-foreground'>Length</span>
                     <span className='text-foreground font-mono'>
-                      {session.trackTemp}
+                      {formatTrackLength(session.track.length_meters)}
                     </span>
                   </div>
                   <div className='flex justify-between'>
-                    <span className='text-muted-foreground'>Wind Speed</span>
-                    <span className='text-foreground font-mono'>12 km/h</span>
+                    <span className='text-muted-foreground'>Data Source</span>
+                    <span className='text-foreground font-mono'>
+                      {session.data_source}
+                    </span>
                   </div>
                 </CardContent>
               </Card>
@@ -235,49 +223,63 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                 <CardHeader>
                   <CardTitle className='text-foreground flex items-center gap-2'>
                     <Bike className='w-5 h-5' />
-                    Bike Setup
+                    Session Stats
                   </CardTitle>
                 </CardHeader>
                 <CardContent className='space-y-4'>
                   <div>
                     <div className='flex justify-between text-sm mb-2'>
                       <span className='text-muted-foreground'>
-                        Front Tire Temp
-                      </span>
-                      <span className='text-foreground font-mono'>87°C</span>
-                    </div>
-                    <Progress value={72} className='h-2' />
-                  </div>
-                  <div>
-                    <div className='flex justify-between text-sm mb-2'>
-                      <span className='text-muted-foreground'>
-                        Rear Tire Temp
-                      </span>
-                      <span className='text-foreground font-mono'>94°C</span>
-                    </div>
-                    <Progress value={78} className='h-2' />
-                  </div>
-                  <div>
-                    <div className='flex justify-between text-sm mb-2'>
-                      <span className='text-muted-foreground'>
-                        Front Suspension
+                        Max Lean Angle
                       </span>
                       <span className='text-foreground font-mono'>
-                        32 clicks
+                        {formatLeanAngle(session.max_lean_angle)}
                       </span>
                     </div>
-                    <Progress value={64} className='h-2' />
+                    <Progress
+                      value={
+                        session.laps.length > 0
+                          ? (session.max_lean_angle / 65) * 100
+                          : 0
+                      }
+                      className='h-2'
+                    />
                   </div>
                   <div>
                     <div className='flex justify-between text-sm mb-2'>
                       <span className='text-muted-foreground'>
-                        Rear Suspension
+                        Max G-Force (Lateral)
                       </span>
                       <span className='text-foreground font-mono'>
-                        28 clicks
+                        {formatGForce(session.max_g_force_x)}
                       </span>
                     </div>
-                    <Progress value={56} className='h-2' />
+                    <Progress
+                      value={
+                        session.laps.length > 0
+                          ? (session.max_g_force_x / 2) * 100
+                          : 0
+                      }
+                      className='h-2'
+                    />
+                  </div>
+                  <div>
+                    <div className='flex justify-between text-sm mb-2'>
+                      <span className='text-muted-foreground'>
+                        Max G-Force (Vertical)
+                      </span>
+                      <span className='text-foreground font-mono'>
+                        {formatGForce(session.max_g_force_z)}
+                      </span>
+                    </div>
+                    <Progress
+                      value={
+                        session.laps.length > 0
+                          ? (session.max_g_force_z / 3) * 100
+                          : 0
+                      }
+                      className='h-2'
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -289,24 +291,22 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
           </TabsContent>
 
           <TabsContent value='analysis'>
-            <SessionDashboard />
-            <div className='py-6'>
-              <Card className='bg-card border-border/50'>
-                <CardHeader>
-                  <CardTitle className='text-foreground'>
-                    Session Analysis
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className='text-muted-foreground'>
-                    Detailed performance analysis and AI-powered insights for
-                    this session will be available here. Compare lap times,
-                    identify areas for improvement, and track your progress over
-                    time.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+            <SessionDashboard trackSessionData={session} />
+
+            <Card className='bg-card border-border/50'>
+              <CardHeader>
+                <CardTitle className='text-foreground'>
+                  Session Analysis
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className='text-muted-foreground'>
+                  Detailed performance analysis and AI-powered insights for this
+                  session will be available here. Compare lap times, identify
+                  areas for improvement, and track your progress over time.
+                </p>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

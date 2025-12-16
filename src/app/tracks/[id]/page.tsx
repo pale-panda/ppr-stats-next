@@ -1,6 +1,5 @@
 import { Header } from '@/components/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -11,26 +10,26 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { tracksData, getTrackById, getTrackStats } from '@/lib/tracks-data';
-import { lapsData } from '@/lib/sessions-data';
+import {
+  getTrackById,
+  getTrackSessionsByTrackId,
+} from '@/lib/data/track-session.data';
+import {
+  formatLapTime,
+  formatSessionDate,
+  formatTrackLength,
+} from '@/lib/format-utils';
 import {
   MapPin,
   Route,
   CornerDownRight,
-  TrendingUp,
   ChevronLeft,
   Trophy,
-  Flame,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-
-export function generateStaticParams() {
-  return tracksData.map((track) => ({
-    id: track.id,
-  }));
-}
+import { Lap } from '@/types';
 
 export default async function TrackDetailPage({
   params,
@@ -38,43 +37,47 @@ export default async function TrackDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const track = getTrackById(id);
+  const [track, sessions] = await Promise.all([
+    getTrackById(id),
+    getTrackSessionsByTrackId(id),
+  ]);
 
   if (!track) {
     notFound();
   }
 
-  const stats = getTrackStats(id);
-  const trackSessions = stats?.sessions || [];
+  if (!sessions) {
+    throw new Error('Failed to fetch sessions for this track');
+  }
 
-  // Get all laps for this track sorted by time
-  const allLaps: {
-    sessionId: string;
-    sessionTitle: string;
-    lap: number;
-    time: number;
-    topSpeed: number;
-  }[] = [];
-  trackSessions.forEach((session) => {
-    const sessionLaps = lapsData[session.id] || [];
-    sessionLaps.forEach((lap) => {
-      allLaps.push({
-        sessionId: session.id,
-        sessionTitle: session.title,
-        lap: lap.lap,
-        time: lap.time,
-        topSpeed: lap.topSpeed,
-      });
-    });
-  });
-  allLaps.sort((a, b) => a.time - b.time);
-  const topLaps = allLaps.slice(0, 10);
+  const totalLaps = sessions.reduce((sum, s) => sum + s.total_laps, 0);
+  const allLaps = sessions
+    .flatMap((s) => s.laps)
+    .filter((l): l is Lap => l != null);
+  const lapTimes = allLaps
+    .map((l) => l.lap_time_seconds)
+    .filter((t): t is number => typeof t === 'number');
+  const bestLapTime = Math.min(...lapTimes);
+  const avgTopSpeed =
+    allLaps.length > 0
+      ? Math.round(
+          allLaps.reduce((sum, l) => sum + (l.max_speed_kmh || 0), 0) /
+            allLaps.length
+        )
+      : 0;
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = (seconds % 60).toFixed(3);
-    return `${mins}:${secs.padStart(6, '0')}`;
-  };
+  // Get top 10 laps sorted by time
+  const topLaps = allLaps
+    .map((lap) => {
+      const session = sessions.find((s) => s.id === lap.session_id);
+      return {
+        ...lap,
+        sessionTitle: session ? `${session.session_type} Session` : 'Unknown',
+        sessionDate: session?.session_date || '',
+      };
+    })
+    .sort((a, b) => a.lap_time_seconds - b.lap_time_seconds)
+    .slice(0, 10);
 
   return (
     <div className='min-h-screen bg-background'>
@@ -82,12 +85,12 @@ export default async function TrackDetailPage({
 
       {/* Hero Section */}
       <section className='relative h-64 md:h-80'>
-        <Image
-          src={track.imageUrl || '/placeholder.svg'}
+        <img
+          src={track.image_url || '/placeholder.svg'}
           alt={track.name}
-          fill
-          className='object-cover'
+          className='absolute inset-0 w-full h-full object-fill'
         />
+
         <div className='absolute inset-0 bg-linear-to-t from-background via-background/60 to-transparent' />
         <div className='absolute bottom-0 left-0 right-0 p-6'>
           <div className='container mx-auto'>
@@ -101,9 +104,6 @@ export default async function TrackDetailPage({
               <h1 className='text-3xl md:text-4xl font-bold text-foreground'>
                 {track.name}
               </h1>
-              <Badge variant='secondary'>
-                {track.type === 'permanent' ? 'Permanent' : 'Street'}
-              </Badge>
             </div>
             <div className='flex items-center gap-1 text-muted-foreground'>
               <MapPin className='w-4 h-4' />
@@ -116,41 +116,29 @@ export default async function TrackDetailPage({
       {/* Track Stats Bar */}
       <section className='py-6 border-b border-border bg-card/50'>
         <div className='container mx-auto px-4'>
-          <div className='grid grid-cols-2 md:grid-cols-6 gap-4'>
+          <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
             <div className='text-center'>
               <p className='text-2xl font-bold text-foreground'>
-                {track.length} km
+                {formatTrackLength(track.length_meters)}
               </p>
               <p className='text-xs text-muted-foreground'>Length</p>
             </div>
+            {track.turns && (
+              <div className='text-center'>
+                <p className='text-2xl font-bold text-foreground'>
+                  {track.turns}
+                </p>
+                <p className='text-xs text-muted-foreground'>Turns</p>
+              </div>
+            )}
             <div className='text-center'>
               <p className='text-2xl font-bold text-foreground'>
-                {track.turns}
-              </p>
-              <p className='text-xs text-muted-foreground'>Turns</p>
-            </div>
-            <div className='text-center'>
-              <p className='text-2xl font-bold text-foreground'>
-                {track.longestStraight}m
-              </p>
-              <p className='text-xs text-muted-foreground'>Longest Straight</p>
-            </div>
-            <div className='text-center'>
-              <p className='text-2xl font-bold text-primary'>
-                {track.lapRecord}
-              </p>
-              <p className='text-xs text-muted-foreground'>Lap Record</p>
-            </div>
-            <div className='text-center'>
-              <p className='text-2xl font-bold text-foreground'>
-                {stats?.totalSessions || 0}
+                {sessions.length}
               </p>
               <p className='text-xs text-muted-foreground'>Your Sessions</p>
             </div>
             <div className='text-center'>
-              <p className='text-2xl font-bold text-foreground'>
-                {stats?.totalLaps || 0}
-              </p>
+              <p className='text-2xl font-bold text-foreground'>{totalLaps}</p>
               <p className='text-xs text-muted-foreground'>Your Laps</p>
             </div>
           </div>
@@ -177,21 +165,9 @@ export default async function TrackDetailPage({
                   </CardHeader>
                   <CardContent className='space-y-4'>
                     <p className='text-muted-foreground leading-relaxed'>
-                      {track.description}
+                      {track.description ||
+                        'No description available for this track.'}
                     </p>
-                    <div className='flex items-center gap-2 pt-4 border-t border-border'>
-                      <Trophy className='w-4 h-4 text-primary' />
-                      <span className='text-sm text-muted-foreground'>
-                        Official Lap Record:
-                      </span>
-                      <span className='text-sm font-semibold text-foreground'>
-                        {track.lapRecord}
-                      </span>
-                      <span className='text-sm text-muted-foreground'>by</span>
-                      <span className='text-sm font-semibold text-foreground'>
-                        {track.recordHolder}
-                      </span>
-                    </div>
                   </CardContent>
                 </Card>
 
@@ -203,7 +179,7 @@ export default async function TrackDetailPage({
                   <CardContent className='space-y-4'>
                     <div className='text-center py-4'>
                       <p className='text-4xl font-bold text-primary'>
-                        {stats?.bestLapTime || '--:--.---'}
+                        {bestLapTime ? formatLapTime(bestLapTime) : '--:--:---'}
                       </p>
                       <p className='text-sm text-muted-foreground mt-1'>
                         Best Lap Time
@@ -212,7 +188,7 @@ export default async function TrackDetailPage({
                     <div className='grid grid-cols-2 gap-4'>
                       <div className='bg-secondary/50 rounded-md p-3 text-center'>
                         <p className='text-lg font-bold text-foreground'>
-                          {stats?.avgTopSpeed || '--'}
+                          {avgTopSpeed || '--'}
                         </p>
                         <p className='text-xs text-muted-foreground'>
                           Avg Top Speed (km/h)
@@ -220,10 +196,10 @@ export default async function TrackDetailPage({
                       </div>
                       <div className='bg-secondary/50 rounded-md p-3 text-center'>
                         <p className='text-lg font-bold text-foreground'>
-                          {stats?.totalDuration || '0:00:00'}
+                          {sessions.length}
                         </p>
                         <p className='text-xs text-muted-foreground'>
-                          Total Track Time
+                          Sessions
                         </p>
                       </div>
                     </div>
@@ -237,7 +213,7 @@ export default async function TrackDetailPage({
                   <CardTitle>Track Characteristics</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className='grid grid-cols-2 md:grid-cols-4 gap-6'>
+                  <div className='grid grid-cols-2 md:grid-cols-3 gap-6'>
                     <div className='flex items-start gap-3'>
                       <div className='w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center'>
                         <Route className='w-5 h-5 text-primary' />
@@ -247,46 +223,37 @@ export default async function TrackDetailPage({
                           Circuit Length
                         </p>
                         <p className='text-lg font-semibold text-foreground'>
-                          {track.length} km
+                          {track?.length_meters
+                            ? `${(track.length_meters / 1000).toFixed(2)} km`
+                            : 'N/A'}
                         </p>
                       </div>
                     </div>
+                    {track.turns && (
+                      <div className='flex items-start gap-3'>
+                        <div className='w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center'>
+                          <CornerDownRight className='w-5 h-5 text-primary' />
+                        </div>
+                        <div>
+                          <p className='text-sm text-muted-foreground'>
+                            Number of Turns
+                          </p>
+                          <p className='text-lg font-semibold text-foreground'>
+                            {track.turns} corners
+                          </p>
+                        </div>
+                      </div>
+                    )}
                     <div className='flex items-start gap-3'>
                       <div className='w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center'>
-                        <CornerDownRight className='w-5 h-5 text-primary' />
+                        <MapPin className='w-5 h-5 text-primary' />
                       </div>
                       <div>
                         <p className='text-sm text-muted-foreground'>
-                          Number of Turns
+                          Location
                         </p>
                         <p className='text-lg font-semibold text-foreground'>
-                          {track.turns} corners
-                        </p>
-                      </div>
-                    </div>
-                    <div className='flex items-start gap-3'>
-                      <div className='w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center'>
-                        <TrendingUp className='w-5 h-5 text-primary' />
-                      </div>
-                      <div>
-                        <p className='text-sm text-muted-foreground'>
-                          Longest Straight
-                        </p>
-                        <p className='text-lg font-semibold text-foreground'>
-                          {track.longestStraight} meters
-                        </p>
-                      </div>
-                    </div>
-                    <div className='flex items-start gap-3'>
-                      <div className='w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center'>
-                        <Flame className='w-5 h-5 text-primary' />
-                      </div>
-                      <div>
-                        <p className='text-sm text-muted-foreground'>
-                          Track Type
-                        </p>
-                        <p className='text-lg font-semibold text-foreground capitalize'>
-                          {track.type} Circuit
+                          {track.country}
                         </p>
                       </div>
                     </div>
@@ -297,7 +264,7 @@ export default async function TrackDetailPage({
 
             {/* Sessions Tab */}
             <TabsContent value='sessions' className='space-y-6'>
-              {trackSessions.length === 0 ? (
+              {sessions.length === 0 ? (
                 <Card className='bg-card border-border'>
                   <CardContent className='py-12 text-center'>
                     <p className='text-muted-foreground'>
@@ -329,44 +296,27 @@ export default async function TrackDetailPage({
                           <TableHead className='text-muted-foreground text-right'>
                             Best Lap
                           </TableHead>
-                          <TableHead className='text-muted-foreground text-right'>
-                            Top Speed
-                          </TableHead>
-                          <TableHead className='text-muted-foreground text-right'>
-                            Duration
-                          </TableHead>
                           <TableHead className='text-muted-foreground'></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {trackSessions.map((session) => (
+                        {sessions.map((session) => (
                           <TableRow key={session.id} className='border-border'>
                             <TableCell>
                               <div className='flex items-center gap-2'>
                                 <span className='font-medium text-foreground'>
-                                  {session.title}
+                                  {session.session_type} Session
                                 </span>
-                                {session.status === 'live' && (
-                                  <Badge className='bg-red-500/20 text-red-400 border-red-500/30'>
-                                    Live
-                                  </Badge>
-                                )}
                               </div>
                             </TableCell>
                             <TableCell className='text-muted-foreground'>
-                              {session.date}
+                              {formatSessionDate(session.session_date)}
                             </TableCell>
                             <TableCell className='text-right text-foreground'>
-                              {session.laps}
+                              {session.total_laps}
                             </TableCell>
                             <TableCell className='text-right font-mono text-primary'>
-                              {session.bestLap}
-                            </TableCell>
-                            <TableCell className='text-right text-foreground'>
-                              {session.topSpeed}
-                            </TableCell>
-                            <TableCell className='text-right text-muted-foreground'>
-                              {session.duration}
+                              {formatLapTime(session.best_lap_time_seconds)}
                             </TableCell>
                             <TableCell className='text-right'>
                               <Link href={`/session/${session.id}/dashboard`}>
@@ -400,7 +350,9 @@ export default async function TrackDetailPage({
               ) : (
                 <Card className='bg-card border-border'>
                   <CardHeader>
-                    <CardTitle>Your Top 10 Laps</CardTitle>
+                    <CardTitle>
+                      Your Top {Math.min(10, topLaps.length)} Laps
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Table>
@@ -429,10 +381,13 @@ export default async function TrackDetailPage({
                       <TableBody>
                         {topLaps.map((lap, index) => {
                           const gap =
-                            index === 0 ? 0 : lap.time - topLaps[0].time;
+                            index === 0
+                              ? 0
+                              : lap.lap_time_seconds! -
+                                topLaps[0].lap_time_seconds!;
                           return (
                             <TableRow
-                              key={`${lap.sessionId}-${lap.lap}`}
+                              key={`${lap.session_id}-${lap.lap_number}`}
                               className='border-border'>
                               <TableCell>
                                 {index === 0 ? (
@@ -451,16 +406,16 @@ export default async function TrackDetailPage({
                                     ? 'text-primary'
                                     : 'text-foreground'
                                 }`}>
-                                {formatTime(lap.time)}
+                                {formatLapTime(lap.lap_time_seconds)}
                               </TableCell>
                               <TableCell className='text-muted-foreground'>
                                 {lap.sessionTitle}
                               </TableCell>
                               <TableCell className='text-right text-foreground'>
-                                Lap {lap.lap}
+                                Lap {lap.lap_number}
                               </TableCell>
                               <TableCell className='text-right text-foreground'>
-                                {lap.topSpeed} km/h
+                                {Math.round(lap.max_speed_kmh || 0)} km/h
                               </TableCell>
                               <TableCell className='text-right text-muted-foreground'>
                                 {index === 0 ? '--' : `+${gap.toFixed(3)}s`}

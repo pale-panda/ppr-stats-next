@@ -3,13 +3,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Flag, Settings, User } from 'lucide-react';
+import { Menu, X, Settings, User } from 'lucide-react';
 import Image from 'next/image';
 
 const navLinks = [
   { href: '/', label: 'Sessions' },
   { href: '/analytics', label: 'Analytics' },
   { href: '/tracks', label: 'Tracks' },
+  { href: '/upload', label: 'Upload' },
   { href: '/leaderboard', label: 'Leaderboard' },
 ];
 

@@ -2,7 +2,7 @@
 
 import { Flag, Settings, Download, Share2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { formatLapTime } from '@/lib/sessions-data';
+import { formatLapTime } from '@/lib/format-utils';
 
 interface SessionHeaderProps {
   sessionInfo: {

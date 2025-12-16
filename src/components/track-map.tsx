@@ -1,161 +1,170 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { Card } from '@/components/ui/card';
-import { trackCoordinates } from '@/lib/sessions-data';
-import './track-map.css';
+import { useEffect, useMemo, memo } from 'react';
+import '@/components/track-map.css';
+import { APIProvider, useMap, Map } from '@vis.gl/react-google-maps';
+import { LatLngLiteral, Telemetry } from '@/types';
 
 interface TrackMapProps {
+  telemetry?: Telemetry;
   selectedLap: number;
   comparisonLap: number | null;
   showComparison: boolean;
+  center: LatLngLiteral;
 }
 
-export function TrackMap({
+type TelemetryEntry = NonNullable<TrackMapProps['telemetry']>[number];
+
+const MapTypeId = {
+  HYBRID: 'hybrid',
+  ROADMAP: 'roadmap',
+  SATELLITE: 'satellite',
+  TERRAIN: 'terrain',
+};
+export type MapConfig = {
+  id: string;
+  label: string;
+  mapId?: string;
+  mapTypeId?: string;
+  styles?: google.maps.MapTypeStyle[];
+};
+
+const mapConfig: MapConfig = {
+  id: 'satellite',
+  label: 'Satellite',
+  mapTypeId: MapTypeId.SATELLITE,
+};
+
+interface TelemetryPolylineProps {
+  path: google.maps.LatLngLiteral[];
+  options: google.maps.PolylineOptions;
+}
+
+const TelemetryPolyline = memo(function TelemetryPolyline({
+  path,
+  options,
+}: TelemetryPolylineProps) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map || path.length < 2) {
+      return;
+    }
+
+    const mapsApi = window.google?.maps;
+    if (!mapsApi?.Polyline) {
+      return;
+    }
+
+    const polyline = new mapsApi.Polyline({
+      ...options,
+      path,
+      map,
+    });
+
+    return () => {
+      polyline.setMap(null);
+    };
+  }, [map, options, path]);
+
+  return null;
+});
+
+function TrackMap({
+  telemetry,
   selectedLap,
   comparisonLap,
   showComparison,
+  center,
 }: TrackMapProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const API_KEY =
+    (process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string) ??
+    globalThis.GOOGLE_MAPS_API_KEY;
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Set canvas size
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * window.devicePixelRatio;
-    canvas.height = rect.height * window.devicePixelRatio;
-    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-
-    const width = rect.width;
-    const height = rect.height;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height);
-
-    // Calculate bounds
-    const lats = trackCoordinates.map((c) => c.lat);
-    const lngs = trackCoordinates.map((c) => c.lng);
-    const minLat = Math.min(...lats);
-    const maxLat = Math.max(...lats);
-    const minLng = Math.min(...lngs);
-    const maxLng = Math.max(...lngs);
-
-    const padding = 40;
-    const scaleX = (width - padding * 2) / (maxLng - minLng);
-    const scaleY = (height - padding * 2) / (maxLat - minLat);
-    const scale = Math.min(scaleX, scaleY);
-
-    const offsetX = (width - (maxLng - minLng) * scale) / 2;
-    const offsetY = (height - (maxLat - minLat) * scale) / 2;
-
-    const toCanvas = (lat: number, lng: number) => ({
-      x: offsetX + (lng - minLng) * scale,
-      y: height - offsetY - (lat - minLat) * scale,
-    });
-
-    // Draw track background (gray asphalt)
-    ctx.strokeStyle = '#374151';
-    ctx.lineWidth = 24;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-    trackCoordinates.forEach((coord, i) => {
-      const { x, y } = toCanvas(coord.lat, coord.lng);
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    // Draw racing line for selected lap
-    const primaryColor = getComputedStyle(document.documentElement)
-      .getPropertyValue('--primary')
-      .trim();
-    ctx.strokeStyle = '#ef4444';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    trackCoordinates.forEach((coord, i) => {
-      const jitter = Math.sin(i * 0.5 + selectedLap) * 0.00002;
-      const { x, y } = toCanvas(coord.lat + jitter, coord.lng + jitter);
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    // Draw comparison line if enabled
-    if (showComparison && comparisonLap) {
-      ctx.strokeStyle = '#3b82f6';
-      ctx.lineWidth = 3;
-      ctx.setLineDash([8, 4]);
-      ctx.beginPath();
-      trackCoordinates.forEach((coord, i) => {
-        const jitter = Math.sin(i * 0.5 + comparisonLap) * 0.00003;
-        const { x, y } = toCanvas(coord.lat + jitter, coord.lng + jitter);
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-      ctx.setLineDash([]);
+  const sortedTelemetry = useMemo<TelemetryEntry[]>(() => {
+    if (!telemetry?.length) {
+      console.error('No telemetry data available: ', telemetry);
+      return [];
     }
 
-    // Draw start/finish line marker
-    const startPos = toCanvas(trackCoordinates[0].lat, trackCoordinates[0].lng);
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(startPos.x, startPos.y, 8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#000000';
-    ctx.beginPath();
-    ctx.arc(startPos.x, startPos.y, 5, 0, Math.PI * 2);
-    ctx.fill();
+    return [...telemetry].sort((a, b) => a.record_number - b.record_number);
+  }, [telemetry]);
 
-    // Draw sector markers
-    const sectorIndices = [5, 10, 14];
-    sectorIndices.forEach((idx, sectorNum) => {
-      const coord = trackCoordinates[idx];
-      const { x, y } = toCanvas(coord.lat, coord.lng);
+  const selectedLapPath = useMemo<google.maps.LatLngLiteral[]>(() => {
+    return sortedTelemetry
+      .filter((entry) => entry.lap_number === selectedLap)
+      .map((entry) => {
+        if (entry.gps_point) return entry.gps_point;
+        else return { lat: 0, lng: 0 };
+      });
+  }, [selectedLap, sortedTelemetry]);
 
-      ctx.fillStyle = '#6b7280';
-      ctx.beginPath();
-      ctx.arc(x, y, 4, 0, Math.PI * 2);
-      ctx.fill();
+  const comparisonLapPath = useMemo<google.maps.LatLngLiteral[]>(() => {
+    if (!showComparison || comparisonLap === null) {
+      return [];
+    }
 
-      ctx.fillStyle = '#9ca3af';
-      ctx.font = '10px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`S${sectorNum + 1}`, x, y - 10);
-    });
-  }, [selectedLap, comparisonLap, showComparison]);
+    return sortedTelemetry
+      .filter((entry) => entry.lap_number === comparisonLap)
+      .map((entry) => {
+        if (entry.gps_point) return entry.gps_point;
+        else return { lat: 0, lng: 0 };
+      });
+  }, [comparisonLap, showComparison, sortedTelemetry]);
+
+  const selectedPolylineOptions = useMemo<google.maps.PolylineOptions>(
+    () => ({
+      strokeColor: 'oklch(64.022% 0.24527 24.891)',
+      strokeOpacity: 0.8,
+      strokeWeight: 3,
+      geodesic: true,
+      zIndex: 2,
+    }),
+    []
+  );
+
+  const comparisonPolylineOptions = useMemo<google.maps.PolylineOptions>(
+    () => ({
+      strokeColor: 'oklch(0.75 0.15 85)',
+      strokeOpacity: 0.8,
+      strokeWeight: 3,
+      geodesic: true,
+      zIndex: 1,
+    }),
+    []
+  );
+
+  console.log(selectedLapPath);
 
   return (
-    <Card className='bg-card border-border p-4 h-[400px] lg:h-[450px] relative'>
-      <div className='absolute top-4 left-4 z-10'>
-        <div className='text-xs text-muted-foreground uppercase tracking-wider'>
-          Track Map
-        </div>
-        <div className='text-lg font-semibold text-foreground'>
-          Mantorp Park
-        </div>
-      </div>
-
-      {showComparison && comparisonLap && (
-        <div className='absolute top-4 right-4 z-10 flex items-center gap-4 text-xs'>
-          <div className='flex items-center gap-2'>
-            <div className='w-4 h-0.5 bg-red-500'></div>
-            <span className='text-muted-foreground'>Lap {selectedLap}</span>
-            <div className='flex items-center gap-2'>
-              <div className='w-4 h-0.5 bg-blue-500 bg-dashed-blue'></div>
-              <span className='text-muted-foreground'>Lap {comparisonLap}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <canvas ref={canvasRef} className='w-full h-full block' />
-    </Card>
+    <APIProvider apiKey={API_KEY}>
+      <Map
+        className='rounded-xl w-full h-full min-h-[400px] border shadow-sm border-border'
+        id='track-map'
+        defaultCenter={center}
+        defaultZoom={15}
+        gestureHandling='greedy'
+        disableDefaultUI
+        mapId={mapConfig.mapId}
+        mapTypeId={mapConfig.mapTypeId}
+        styles={mapConfig.styles}>
+        {selectedLapPath.length > 1 && (
+          <TelemetryPolyline
+            path={selectedLapPath}
+            options={selectedPolylineOptions}
+          />
+        )}
+        {showComparison &&
+          comparisonLap !== null &&
+          comparisonLapPath.length > 1 && (
+            <TelemetryPolyline
+              path={comparisonLapPath}
+              options={comparisonPolylineOptions}
+            />
+          )}
+      </Map>
+    </APIProvider>
   );
 }
+
+export default memo(TrackMap);
