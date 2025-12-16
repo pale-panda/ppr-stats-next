@@ -14,7 +14,7 @@ import {
 import { formatLapTime } from '@/lib/format-utils';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { formatSpeed } from '@/lib/format-utils';
-import { Laps } from '@/lib/types/response';
+import { Laps } from '@/types';
 
 interface LapComparisonProps {
   lap1: number;

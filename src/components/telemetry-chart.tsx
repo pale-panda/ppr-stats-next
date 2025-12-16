@@ -13,12 +13,12 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { formatLapTime, formatTime } from '@/lib/format-utils';
-import { Laps, TelemetryPoints } from '@/lib/types/response';
+import { Laps, Telemetry } from '@/types';
 
 interface TelemetryChartProps {
   selectedLap: number;
   laps: Laps;
-  telemetry?: TelemetryPoints;
+  telemetry?: Telemetry;
 }
 
 export function TelemetryChart({
@@ -29,7 +29,7 @@ export function TelemetryChart({
   const lap = laps.find((lap) => lap.lap_number === selectedLap);
   const downsampledTelemetry = useMemo(() => {
     if (!telemetry || telemetry.length === 0) {
-      return [] as TelemetryPoints;
+      return [] as Telemetry;
     }
     let telemetryFiltered = telemetry.filter(
       (point) => point.lap_number === selectedLap

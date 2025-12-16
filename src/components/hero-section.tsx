@@ -14,7 +14,6 @@ export function HeroSection() {
           className='w-full h-full object-cover'
           width='1920'
           height='1080'
-          priority
         />
         <div className='absolute inset-0 bg-linear-to-r from-background via-background/80 to-background/40' />
         <div className='absolute inset-0 bg-linear-to-t from-background via-transparent to-background/50' />

@@ -2,7 +2,7 @@ import type {
   RaceBoxCSVHeader,
   RaceBoxCSVLapSummary,
   RaceBoxCSVRecord,
-} from './types/database';
+} from '@/types';
 
 export function parseRaceBoxCSV(csvContent: string): {
   header: RaceBoxCSVHeader;
@@ -94,7 +94,10 @@ export function parseRaceBoxCSV(csvContent: string): {
   }
 
   if (header.lapSummaries.length > 1) {
-    header.lapSummaries.sort((a, b) => a.lapNumber - b.lapNumber);
+    header.lapSummaries.sort(
+      (a: { lapNumber: number }, b: { lapNumber: number }) =>
+        a.lapNumber - b.lapNumber
+    );
   }
 
   // Parse telemetry records

@@ -1,21 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { SessionKPIs } from '@/components/session-kpis';
 import { LapSelector } from '@/components/lap-selector';
 import TrackMap from '@/components/track-map';
 import { TelemetryChart } from '@/components/telemetry-chart';
 import { LapComparison } from '@/components/lap-comparison';
-import { TelemetryPoints, TrackSession } from '@/lib/types/response';
+import { Telemetry, TrackSessionJoined } from '@/types';
 import useSWR from 'swr';
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
-interface SessionDashboardProps {
-  trackSessionData: TrackSession;
+interface TrackSessionDashboardProps {
+  trackSessionData: TrackSessionJoined;
 }
 
-export function SessionDashboard({ trackSessionData }: SessionDashboardProps) {
+export function SessionDashboard({
+  trackSessionData,
+}: TrackSessionDashboardProps) {
   const { track, laps, ...trackSession } = trackSessionData;
   const [selectedLap, setSelectedLap] = useState(1);
   const [comparisonLap, setComparisonLap] = useState<number | null>(null);
@@ -25,8 +27,8 @@ export function SessionDashboard({ trackSessionData }: SessionDashboardProps) {
     data: lapTelemetry,
     error,
     isLoading,
-  } = useSWR<TelemetryPoints>(
-    `/api/sessions/${trackSession.id}/telemetry?lap=${selectedLap}`,
+  } = useSWR<Telemetry>(
+    `/api/sessions/${trackSession.id}?lap=${selectedLap}`,
     fetcher
   );
 
@@ -57,7 +59,7 @@ export function SessionDashboard({ trackSessionData }: SessionDashboardProps) {
               comparisonLap={comparisonLap}
               showComparison={showComparison}
               center={{
-                ...track.point,
+                ...track?.gps_point,
               }}
             />
           </div>

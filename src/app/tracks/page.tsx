@@ -2,10 +2,9 @@ import { Header } from '@/components/header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
-  getAllSessions,
   getAllTracks,
-  getTrackSessions,
-} from '@/lib/data/sessions';
+  getTrackSessionsByTrackId,
+} from '@/lib/data/track-session.data';
 import { formatLapTime, formatSpeed } from '@/lib/format-utils';
 import {
   MapPin,
@@ -16,17 +15,15 @@ import {
   Flag,
   Calendar,
 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
-import { Laps } from '@/lib/types/response';
+import { Laps } from '@/types';
 
 export default async function TracksPage() {
   const tracks = await getAllTracks();
-  const sessions = await getAllSessions({});
 
   const tracksWithStats = await Promise.all(
     tracks.map(async (track) => {
-      const sessions = await getTrackSessions(track.id);
+      const sessions = await getTrackSessionsByTrackId(track.id);
       const totalLaps = sessions.reduce((sum, s) => sum + s.total_laps, 0);
       const allLaps = sessions.flatMap((s) => s.laps) as Laps;
       const bestLapTime =
@@ -71,16 +68,25 @@ export default async function TracksPage() {
       <Header />
 
       {/* Hero Section */}
-      <section className='relative py-16 border-b border-border'>
-        <div className='container mx-auto px-4'>
-          <div className='max-w-2xl'>
-            <h1 className='text-4xl font-bold text-foreground mb-4 text-balance'>
-              Tracks
-            </h1>
-            <p className='text-lg text-muted-foreground leading-relaxed'>
-              Explore circuit information, your personal statistics, and
-              performance data for each track you've raced on.
-            </p>
+      <section className='relative h-64 md:h-80'>
+        <img
+          src={'/spa-francorchamps-race-track-aerial-view.jpg'}
+          alt={'Track Hero Image'}
+          className='absolute inset-0 w-full h-full object-fill'
+        />
+
+        <div className='absolute inset-0 bg-linear-to-t from-background via-background/60 to-transparent' />
+        <div className='absolute bottom-0 left-0 right-0 p-6'>
+          <div className='container mx-auto px-4'>
+            <div className='max-w-2xl gap-3 mb-4'>
+              <h1 className='text-4xl font-bold text-foreground mb-4 text-balance'>
+                Tracks
+              </h1>
+              <p className='text-lg text-muted-foreground leading-relaxed'>
+                Explore circuit information, your personal statistics, and
+                performance data for each track you've raced on.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -114,7 +120,7 @@ export default async function TracksPage() {
       </section>
 
       {/* Tracks Grid */}
-      <section className='py-12'>
+      <section className='py-6'>
         <div className='container mx-auto px-4'>
           {tracksWithStats.length === 0 ? (
             <div className='text-center py-12'>
@@ -127,18 +133,14 @@ export default async function TracksPage() {
               {tracksWithStats.map((track) => (
                 <Card
                   key={track.id}
-                  className='overflow-hidden bg-card border-border hover:border-primary/50 transition-colors'>
+                  className='overflow-hidden bg-card border-border py-0 hover:border-primary/50 transition-colors'>
                   <div className='grid md:grid-cols-[300px_1fr] lg:grid-cols-[400px_1fr]'>
                     {/* Track Image */}
                     <div className='relative h-48 md:h-auto'>
-                      <Image
-                        src={
-                          track.image_url ? track.image_url : '/placeholder.svg'
-                        }
+                      <img
+                        src={track.image_url || '/placeholder.svg'}
                         alt={track.name}
-                        fill
-                        sizes='(max-width: 768px) 100vw, 400px'
-                        className='object-cover'
+                        className='absolute inset-0 w-full h-full object-cover 100vh'
                       />
                       <div className='absolute inset-0 bg-linear-to-r from-transparent to-card/80 hidden md:block' />
                     </div>

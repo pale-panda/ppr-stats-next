@@ -3,10 +3,10 @@
 import { useEffect, useMemo, memo } from 'react';
 import '@/components/track-map.css';
 import { APIProvider, useMap, Map } from '@vis.gl/react-google-maps';
-import { LatLngLiteral, TelemetryPoints } from '@/lib/types/response';
+import { LatLngLiteral, Telemetry } from '@/types';
 
 interface TrackMapProps {
-  telemetry?: TelemetryPoints;
+  telemetry?: Telemetry;
   selectedLap: number;
   comparisonLap: number | null;
   showComparison: boolean;

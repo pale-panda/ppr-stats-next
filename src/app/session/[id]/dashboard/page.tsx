@@ -27,7 +27,7 @@ import {
   formatSpeed,
   formatTrackLength,
 } from '@/lib/format-utils';
-import { getSession } from '@/lib/data/telemetry';
+import { getTrackSessionWithStats } from '@/lib/data/track-session.data';
 
 interface DashboardPageProps {
   params: Promise<{ id: string }>;
@@ -35,7 +35,7 @@ interface DashboardPageProps {
 
 export default async function DashboardPage({ params }: DashboardPageProps) {
   const { id } = await params;
-  const session = await getSession(id);
+  const session = await getTrackSessionWithStats(id);
 
   if (!session) {
     notFound();

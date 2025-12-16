@@ -10,8 +10,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { getTrackById, getTrackSessions } from '@/lib/data/sessions';
-import { formatLapTime, formatSessionDate } from '@/lib/format-utils';
+import {
+  getTrackById,
+  getTrackSessionsByTrackId,
+} from '@/lib/data/track-session.data';
+import {
+  formatLapTime,
+  formatSessionDate,
+  formatTrackLength,
+} from '@/lib/format-utils';
 import {
   MapPin,
   Route,
@@ -22,6 +29,7 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Lap } from '@/types';
 
 export default async function TrackDetailPage({
   params,
@@ -31,19 +39,25 @@ export default async function TrackDetailPage({
   const { id } = await params;
   const [track, sessions] = await Promise.all([
     getTrackById(id),
-    getTrackSessions(id),
+    getTrackSessionsByTrackId(id),
   ]);
 
   if (!track) {
     notFound();
   }
 
+  if (!sessions) {
+    throw new Error('Failed to fetch sessions for this track');
+  }
+
   const totalLaps = sessions.reduce((sum, s) => sum + s.total_laps, 0);
-  const allLaps = sessions.flatMap((s) => s.laps);
-  const bestLapTime =
-    allLaps.length > 0
-      ? Math.min(...allLaps.map((l) => l.lap_time_seconds))
-      : null;
+  const allLaps = sessions
+    .flatMap((s) => s.laps)
+    .filter((l): l is Lap => l != null);
+  const lapTimes = allLaps
+    .map((l) => l.lap_time_seconds)
+    .filter((t): t is number => typeof t === 'number');
+  const bestLapTime = Math.min(...lapTimes);
   const avgTopSpeed =
     allLaps.length > 0
       ? Math.round(
@@ -71,18 +85,12 @@ export default async function TrackDetailPage({
 
       {/* Hero Section */}
       <section className='relative h-64 md:h-80'>
-        <Image
-          src={
-            track.image_url ||
-            `/placeholder.svg?height=400&width=800&query=${
-              encodeURIComponent(track.name + ' race track aerial view') ||
-              '/placeholder.svg'
-            }`
-          }
+        <img
+          src={track.image_url || '/placeholder.svg'}
           alt={track.name}
-          fill
-          className='object-cover'
+          className='absolute inset-0 w-full h-full object-fill'
         />
+
         <div className='absolute inset-0 bg-linear-to-t from-background via-background/60 to-transparent' />
         <div className='absolute bottom-0 left-0 right-0 p-6'>
           <div className='container mx-auto'>
@@ -111,9 +119,7 @@ export default async function TrackDetailPage({
           <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
             <div className='text-center'>
               <p className='text-2xl font-bold text-foreground'>
-                {track?.length_meters
-                  ? `${(track.length_meters / 1000).toFixed(2)} km`
-                  : 'N/A'}
+                {formatTrackLength(track.length_meters)}
               </p>
               <p className='text-xs text-muted-foreground'>Length</p>
             </div>

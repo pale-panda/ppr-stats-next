@@ -7,7 +7,7 @@ import {
   formatDuration,
   formatMinMaxSpeed,
 } from '@/lib/format-utils';
-import { TrackSession } from '@/lib/types/response';
+import { TrackSession } from '@/types';
 
 export function SessionKPIs({ ...stats }: TrackSession) {
   const kpis = [

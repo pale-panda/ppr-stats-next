@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
+import { AppImage as Image } from '@/components/app-image';
 import { Header } from '@/components/header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +25,7 @@ import {
   formatLeanAngle,
   formatTrackLength,
 } from '@/lib/format-utils';
-import { getSession } from '@/lib/data/telemetry';
+import { getTrackSessionWithStats } from '@/lib/data/track-session.data';
 
 interface SessionPageProps {
   params: Promise<{ id: string }>;
@@ -33,7 +33,7 @@ interface SessionPageProps {
 
 export default async function SessionPage({ params }: SessionPageProps) {
   const { id } = await params;
-  const session = await getSession(id);
+  const session = await getTrackSessionWithStats(id);
   const { track, laps } = session;
 
   if (!session || !track || !laps) {
@@ -52,7 +52,6 @@ export default async function SessionPage({ params }: SessionPageProps) {
           className='w-full h-full object-cover'
           width={1200}
           height={400}
-          priority
         />
         <div className='absolute inset-0 bg-linear-to-t from-background via-background/60 to-transparent' />
         <div className='absolute inset-0 flex items-end'>

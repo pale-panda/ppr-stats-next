@@ -1,11 +1,8 @@
-import { getAllSessions } from '@/lib/data/sessions';
+import { getAllSessions } from '@/lib/data/track-session.data';
 import { createFilterParams } from '@/lib/filter-utils';
-import { type NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(
-  req: NextRequest,
-  res: NextResponse
-): Promise<NextResponse> {
+export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const page = parseInt(searchParams.get('page') || '1', 10);
   let filter = searchParams.get('filter') || '';

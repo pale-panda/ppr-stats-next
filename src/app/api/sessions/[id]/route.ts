@@ -3,7 +3,7 @@ import { getTelemetry } from '@/lib/data/telemetry';
 
 export async function GET(
   _req: NextRequest,
-  ctx: RouteContext<'/api/sessions/[id]/telemetry'>
+  ctx: RouteContext<'/api/sessions/[id]'>
 ) {
   try {
     const { id: sessionId } = await ctx.params;
