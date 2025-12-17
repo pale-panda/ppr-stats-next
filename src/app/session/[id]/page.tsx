@@ -47,7 +47,11 @@ export default async function SessionPage({ params }: SessionPageProps) {
       {/* Hero Section */}
       <div className='relative h-64 md:h-80 overflow-hidden'>
         <Image
-          src={track.image_url ?? '/default-track.jpg'}
+          src={
+            track.image_url
+              ? process.env.NEXT_PUBLIC_STORAGE_URL! + track.image_url
+              : '/placeholder.svg'
+          }
           alt={track.name || 'Track'}
           className='w-full h-full object-cover'
           width={1200}

@@ -1,16 +1,13 @@
 'use client';
-import { useEffect } from 'react';
 import { SessionCard } from '@/components/session-card';
 import { formatLapTime } from '@/lib/format-utils';
 import { type DropdownMenuCheckboxItemProps } from '@radix-ui/react-dropdown-menu';
-import { PaginationMeta, TrackSessionJoined } from '@/types';
-import useSWR from 'swr';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '@/state/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/state/store';
 import { TRACK_SESSION_LIMIT_CARDS } from '@/lib/data/constants';
-import { AppPagination } from '@/components/app-pagination';
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+import { TrackSessionPagination } from '@/components/track-session-pagination';
+import { getTrackSessions } from '@/state/api/track-session';
+import { useEffect } from 'react';
 
 type Checked = DropdownMenuCheckboxItemProps['checked'];
 
@@ -29,25 +26,13 @@ export function TrackSessionCards({
   limit = TRACK_SESSION_LIMIT_CARDS,
   sort = 'desc',
 }: TrackSessionSectionProps) {
-  const url = `/api/sessions?query=${query}&page=${currentPage}&order_by=${orderBy}&sort=${sort}&limit=${limit}`;
-
-  const { data, error, isLoading } = useSWR<{
-    sessions: TrackSessionJoined[];
-    meta: PaginationMeta;
-  }>(url, fetcher);
-
-  const filter = useSelector((state: RootState) => state.filter.country);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
+  const sessions = useSelector((state: RootState) => state.trackSession.data);
+  const meta = useSelector((state: RootState) => state.trackSession.meta);
 
   useEffect(() => {
-    console.log('filter to parse: ', filter);
-  }, [filter]);
-
-  if (error) return <div>Error loading sessions.</div>;
-  if (isLoading) return <div>Loading sessions...</div>;
-
-  const sessions = data?.sessions || [];
-  const meta = data?.meta;
+    dispatch(getTrackSessions(meta.currentPage || currentPage));
+  }, [dispatch, meta.currentPage, currentPage]);
 
   return (
     <div>
@@ -80,7 +65,7 @@ export function TrackSessionCards({
           ))
         )}
       </div>
-      <AppPagination meta={meta} className='py-6' />
+      <TrackSessionPagination className='py-6' />
     </div>
   );
 }

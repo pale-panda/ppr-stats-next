@@ -12,10 +12,10 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { formatLapTime, formatSpeed } from '@/lib/format-utils';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { Laps } from '@/types';
+import { Lap } from '@/types';
 
 interface LapSelectorProps {
-  laps: Laps;
+  laps: Lap[];
   selectedLap: number;
   onSelectLap: (lap: number) => void;
   comparisonLap: number | null;

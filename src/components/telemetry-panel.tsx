@@ -3,12 +3,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { TrackSessionJoined } from '@/types';
+import { formatLeanAngle } from '@/lib/format-utils';
 
 interface TelemetryPanelProps {
-  sessionId: string;
+  trackSession: TrackSessionJoined;
 }
 
-export function TelemetryPanel({ sessionId }: TelemetryPanelProps) {
+export function TelemetryPanel({ trackSession }: TelemetryPanelProps) {
   return (
     <div className='grid gap-6'>
       <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
@@ -39,7 +41,9 @@ export function TelemetryPanel({ sessionId }: TelemetryPanelProps) {
             <p className='text-xs text-muted-foreground uppercase tracking-wider mb-2'>
               Lean Angle
             </p>
-            <p className='text-3xl font-mono font-bold text-chart-2'>52°</p>
+            <p className='text-3xl font-mono font-bold text-chart-2'>
+              {formatLeanAngle(trackSession.max_lean_angle)}
+            </p>
             <p className='text-xs text-muted-foreground mt-1'>right</p>
             <Progress value={87} className='h-1 mt-2' />
           </CardContent>
@@ -49,7 +53,9 @@ export function TelemetryPanel({ sessionId }: TelemetryPanelProps) {
             <p className='text-xs text-muted-foreground uppercase tracking-wider mb-2'>
               Speed
             </p>
-            <p className='text-3xl font-mono font-bold text-primary'>287</p>
+            <p className='text-3xl font-mono font-bold text-primary'>
+              {trackSession.max_speed}
+            </p>
             <p className='text-xs text-muted-foreground mt-1'>km/h</p>
             <Progress value={87} className='h-1 mt-2' />
           </CardContent>

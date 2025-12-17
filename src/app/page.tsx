@@ -1,12 +1,11 @@
 import { Header } from '@/components/header';
 import { HeroSection } from '@/components/hero-section';
 import { Clock, Flag, Zap, Gauge } from 'lucide-react';
-import { getDashboardStats, getAllTracks } from '@/lib/data/track-session.data';
+import { getDashboardStats } from '@/lib/data/track-session.data';
 import { formatLapTime, formatSpeed } from '@/lib/format-utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { TrackSessionCards } from '@/components/track-session-cards';
 import { ReduxWrapper } from '@/components/redux-wrapper';
-import { Suspense } from 'react';
 import { TrackSessionFilter } from '@/components/track-session-filter';
 
 export default async function HomePage(props: {
@@ -16,9 +15,6 @@ export default async function HomePage(props: {
   const query = searchParams?.query || '';
   const currentPage = Number(searchParams?.page) || 1;
   const stats = await getDashboardStats();
-  const tracks = await getAllTracks();
-
-  const url = `/api/sessions?page=${currentPage}`;
 
   return (
     <ReduxWrapper>
@@ -126,11 +122,7 @@ export default async function HomePage(props: {
           </div>
         </section>
         <section className='container mx-auto px-4 py-6'>
-          <Suspense
-            key={query + currentPage}
-            fallback={<div>Loading sessions...</div>}>
-            <TrackSessionCards query={query} currentPage={currentPage} />
-          </Suspense>
+          <TrackSessionCards query={query} currentPage={currentPage} />
         </section>
       </div>
     </ReduxWrapper>

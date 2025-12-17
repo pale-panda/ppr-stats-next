@@ -15,21 +15,25 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useSearchParams, usePathname, useRouter } from 'next/navigation';
+import { useSelector, useDispatch } from 'react-redux';
+import { AppDispatch, RootState } from '@/state/store';
+import {
+  setFilter,
+  resetFilter,
+} from '@/state/reducers/track-sessions/track-session.reducer';
 
 export function TrackSessionFilter() {
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const { replace } = useRouter();
+  const trackSessionState = useSelector(
+    (state: RootState) => state.trackSession
+  );
+  const dispatch = useDispatch<AppDispatch>();
 
-  function handleSearch(searchTerm: string) {
-    const params = new URLSearchParams(searchParams);
-    if (searchTerm) {
-      params.set('query', searchTerm);
-    } else {
-      params.delete('query');
-    }
-    replace(`${pathname}?${params.toString()}`);
+  function handleSearch(filterColumn: string, searchTerm: string) {
+    dispatch(setFilter({ [filterColumn]: searchTerm }));
+  }
+
+  function handleResetFilter() {
+    dispatch(resetFilter());
   }
 
   return (
@@ -53,14 +57,14 @@ export function TrackSessionFilter() {
                   <DropdownMenuItem
                     textValue='Sweden'
                     onClick={(e) => {
-                      handleSearch(e.currentTarget.textContent);
+                      handleSearch('country', e.currentTarget.textContent);
                     }}>
                     Sweden
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     textValue='Finland'
                     onClick={(e) => {
-                      handleSearch(e.currentTarget.textContent);
+                      handleSearch('country', e.currentTarget.textContent);
                     }}>
                     Finland
                   </DropdownMenuItem>
@@ -74,27 +78,22 @@ export function TrackSessionFilter() {
                   <DropdownMenuItem
                     textValue='Mantorp Park'
                     onClick={(e) => {
-                      handleSearch(e.currentTarget.textContent);
+                      handleSearch('track.name', e.currentTarget.textContent);
                     }}>
                     Mantorp Park
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     textValue='Kemora'
                     onClick={(e) => {
-                      handleSearch(e.currentTarget.textContent);
+                      handleSearch('track.name', e.currentTarget.textContent);
                     }}>
                     Kemora
                   </DropdownMenuItem>
                 </DropdownMenuSubContent>
               </DropdownMenuPortal>
             </DropdownMenuSub>
-
-            <DropdownMenuItem>
-              Calendar
-              <DropdownMenuShortcut>⇧⌘D</DropdownMenuShortcut>
-            </DropdownMenuItem>
           </DropdownMenuGroup>
-          <DropdownMenuSeparator />
+          {/* <DropdownMenuSeparator />
           <DropdownMenuLabel>Sorting</DropdownMenuLabel>
           <DropdownMenuGroup>
             <DropdownMenuItem>Team</DropdownMenuItem>
@@ -122,7 +121,7 @@ export function TrackSessionFilter() {
           <DropdownMenuItem>
             Log out
             <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-          </DropdownMenuItem>
+          </DropdownMenuItem>*/}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -130,10 +129,7 @@ export function TrackSessionFilter() {
         variant='ghost'
         size='sm'
         className='text-primary'
-        onClick={() => {
-          console.log('### RESET_FILTER CLICKED! <-- Implement! ###');
-          //() => dispatch({ type: 'RESET_FILTER' });
-        }}>
+        onClick={() => handleResetFilter()}>
         View All
         <ChevronRight className='w-4 h-4 ml-1' />
       </Button>

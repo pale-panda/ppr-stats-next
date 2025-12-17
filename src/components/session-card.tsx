@@ -39,6 +39,10 @@ export function SessionCard({
     upcoming: 'Upcoming',
   };
 
+  imageUrl = imageUrl
+    ? process.env.NEXT_PUBLIC_STORAGE_URL! + imageUrl
+    : '/placeholder.svg';
+
   return (
     <Card className='group pt-0 overflow-hidden border-border/50 bg-card hover:border-primary/50 transition-all duration-300'>
       <div className='relative aspect-video overflow-hidden'>
