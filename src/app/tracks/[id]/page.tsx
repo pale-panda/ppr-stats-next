@@ -26,7 +26,6 @@ import {
   ChevronLeft,
   Trophy,
 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Lap } from '@/types';
@@ -86,7 +85,11 @@ export default async function TrackDetailPage({
       {/* Hero Section */}
       <section className='relative h-64 md:h-80'>
         <img
-          src={track.image_url || '/placeholder.svg'}
+          src={
+            track.image_url
+              ? process.env.NEXT_PUBLIC_STORAGE_URL! + track.image_url
+              : '/placeholder.svg'
+          }
           alt={track.name}
           className='absolute inset-0 w-full h-full object-fill'
         />

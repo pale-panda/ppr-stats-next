@@ -8,3 +8,4 @@ export const SESSION_COUNT_CACHE_TIME = 5 * 60;
 export const DASHBOARD_STATS_CACHE_TIME = 5 * 60;
 
 export const LINE_CHART_DATA_POINTS = 200;
+export const PAGINATION_MAX_PAGES = 5;

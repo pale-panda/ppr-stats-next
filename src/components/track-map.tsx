@@ -6,14 +6,12 @@ import { APIProvider, useMap, Map } from '@vis.gl/react-google-maps';
 import { LatLngLiteral, Telemetry } from '@/types';
 
 interface TrackMapProps {
-  telemetry?: Telemetry;
+  telemetry?: { main?: Telemetry; comparison?: Telemetry };
   selectedLap: number;
   comparisonLap: number | null;
   showComparison: boolean;
   center: LatLngLiteral;
 }
-
-type TelemetryEntry = NonNullable<TrackMapProps['telemetry']>[number];
 
 const MapTypeId = {
   HYBRID: 'hybrid',
@@ -81,36 +79,31 @@ function TrackMap({
     (process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string) ??
     globalThis.GOOGLE_MAPS_API_KEY;
 
-  const sortedTelemetry = useMemo<TelemetryEntry[]>(() => {
-    if (!telemetry?.length) {
-      console.error('No telemetry data available: ', telemetry);
-      return [];
-    }
-
-    return [...telemetry].sort((a, b) => a.record_number - b.record_number);
-  }, [telemetry]);
+  if (!telemetry || telemetry.main === undefined) {
+    return <div>No telemetry data available.</div>;
+  }
 
   const selectedLapPath = useMemo<google.maps.LatLngLiteral[]>(() => {
-    return sortedTelemetry
-      .filter((entry) => entry.lap_number === selectedLap)
+    return telemetry
+      .main!.filter((entry) => entry.lap_number === selectedLap)
       .map((entry) => {
         if (entry.gps_point) return entry.gps_point;
         else return { lat: 0, lng: 0 };
       });
-  }, [selectedLap, sortedTelemetry]);
+  }, [selectedLap, telemetry]);
 
   const comparisonLapPath = useMemo<google.maps.LatLngLiteral[]>(() => {
-    if (!showComparison || comparisonLap === null) {
+    if (!showComparison || comparisonLap === null || !telemetry.comparison) {
       return [];
     }
 
-    return sortedTelemetry
+    return telemetry.comparison
       .filter((entry) => entry.lap_number === comparisonLap)
       .map((entry) => {
         if (entry.gps_point) return entry.gps_point;
         else return { lat: 0, lng: 0 };
       });
-  }, [comparisonLap, showComparison, sortedTelemetry]);
+  }, [comparisonLap, showComparison, telemetry]);
 
   const selectedPolylineOptions = useMemo<google.maps.PolylineOptions>(
     () => ({
@@ -133,8 +126,6 @@ function TrackMap({
     }),
     []
   );
-
-  console.log(selectedLapPath);
 
   return (
     <APIProvider apiKey={API_KEY}>

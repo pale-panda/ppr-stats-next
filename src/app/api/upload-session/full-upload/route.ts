@@ -8,7 +8,7 @@ import { setTimeout } from 'timers/promises';
 
 export async function GET(request: NextRequest) {
   try {
-    const baseDir = path.join(os.tmpdir(), 'racebox-csv', 'to-upload');
+    const baseDir = path.join(os.tmpdir(), 'racebox-csv');
     const files = await fs.readdir(baseDir);
 
     const filesToUpload: { sessionSource: string; filePath: string }[] = [];

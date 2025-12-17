@@ -3,12 +3,10 @@ import { getTelemetry } from '@/lib/data/telemetry.data';
 
 export async function GET(
   _req: NextRequest,
-  ctx: RouteContext<'/api/sessions/[id]'>
+  ctx: RouteContext<'/api/sessions/[id]/[lap]'>
 ) {
   try {
-    const { id: sessionId } = await ctx.params;
-    const { searchParams } = new URL(_req.url);
-    const lapNumber = searchParams.get('lap');
+    const { id: sessionId, lap: lapNumber } = await ctx.params;
 
     if (!sessionId || !lapNumber) {
       console.error('Missing session or lap parameter', {

@@ -1,11 +1,14 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { parseRaceBoxCSV, calculateLapData } from '@/lib/csv-parser';
+import path from 'path';
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
+
+    const sessionSource = path.basename(file.name, '.csv');
 
     if (!file) {
       return NextResponse.json(
@@ -104,7 +107,7 @@ export async function POST(request: NextRequest) {
                 new Date(records[0].time).getTime()) /
               1000
             : 0,
-        file_name: file.name,
+        session_source: sessionSource,
       })
       .select('id')
       .single();
@@ -133,9 +136,11 @@ export async function POST(request: NextRequest) {
       max_speed_kmh: lap.maxSpeedKmh,
       max_lean_angle: lap.maxLeanAngle,
       max_g_force_x: lap.maxGForceX,
-      min_g_force_x: records.filter((r) => r.lap === lap.lapNumber).reduce((min, r) => r.gForceX < min ? r.gForceX : min, Infinity),
+      min_g_force_x: records
+        .filter((r) => r.lap === lap.lapNumber)
+        .reduce((min, r) => (r.gForceX < min ? r.gForceX : min), Infinity),
       max_g_force_z: lap.maxGForceZ,
-      
+
       start_time: new Date(lap.startTime).toISOString(),
       end_time: new Date(lap.endTime).toISOString(),
       sector_1: header.lapSummaries[lap.lapNumber - 1]?.sectorTimes[0] || null,

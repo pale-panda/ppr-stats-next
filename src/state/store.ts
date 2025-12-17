@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
-import filterReducer from '@/state/track-sessions/filter-slice';
+import trackSessionReducer from '@/state/reducers/track-sessions/track-session.reducer';
+import userReducer from '@/state/reducers/user/user.reducer';
 
 export const store = configureStore({
   reducer: {
-    filter: filterReducer,
+    trackSession: trackSessionReducer,
+    user: userReducer,
   },
 });
 

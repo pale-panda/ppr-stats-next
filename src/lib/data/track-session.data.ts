@@ -262,7 +262,7 @@ export async function getTrackSessionsByTrackId(
 
   if (error) {
     console.error('Error fetching track sessions:', error);
-    return [];
+    throw new Error('Failed to fetch track sessions data');
   }
 
   return sessions;

@@ -40,6 +40,9 @@ export default async function TracksPage() {
 
       return {
         ...track,
+        image_url: track.image_url
+          ? process.env.NEXT_PUBLIC_STORAGE_URL! + track.image_url
+          : '/placeholder.svg',
         stats: {
           totalSessions: sessions.length,
           totalLaps,

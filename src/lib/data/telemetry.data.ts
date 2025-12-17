@@ -8,7 +8,7 @@ export const getTelemetry = cache(
     const { data: telemetry, error: telemetryError } = await supabase
       .from('telemetry_points')
       .select(
-        'lap_number, record_number, timestamp, speed_kmh, g_force_x, g_force_z, lean_angle, gyro_x, gyro_y, gyro_z, gps_point'
+        'lap_number, record_number, timestamp, altitude, speed_kmh, g_force_x, g_force_z, lean_angle, gyro_x, gyro_y, gyro_z, gps_point'
       )
       .eq('session_id', sessionId)
       .filter('lap_number', lapNumber ? 'eq' : 'neq', lapNumber ?? 0)
