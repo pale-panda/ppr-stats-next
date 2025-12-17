@@ -172,8 +172,6 @@ export async function POST(request: NextRequest) {
       lap_number: record.lap,
       record_number: record.record,
       timestamp: new Date(record.time).toISOString(),
-      latitude: record.latitude,
-      longitude: record.longitude,
       altitude: record.altitude,
       speed_kmh: record.speed,
       g_force_x: record.gForceX,
@@ -182,6 +180,10 @@ export async function POST(request: NextRequest) {
       gyro_x: record.gyroX,
       gyro_y: record.gyroY,
       gyro_z: record.gyroZ,
+      gps_point: {
+        lat: record.latitude,
+        lng: record.longitude,
+      },
     }));
 
     // Insert in batches of 1000 to avoid payload size limits
