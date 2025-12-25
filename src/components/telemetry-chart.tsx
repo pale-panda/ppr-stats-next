@@ -52,7 +52,7 @@ export function TelemetryChart({
     }));
 
     return formatedTelemetry;
-  }, [telemetry]);
+  }, [selectedLap, telemetry]);
 
   if (!lap || !telemetry) {
     return (

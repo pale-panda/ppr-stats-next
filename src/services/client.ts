@@ -1,4 +1,4 @@
-export let BASE_ENDPOINT = '';
+export const BASE_ENDPOINT = '';
 
 const BASE_URL = `${BASE_ENDPOINT}/api`;
 

@@ -17,6 +17,7 @@ export default async function HomePage(props: {
   return (
     <>
       <HeroSection />
+
       <section className='py-8 border-b border-border bg-card/50'>
         <div className='container mx-auto px-4'>
           <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>

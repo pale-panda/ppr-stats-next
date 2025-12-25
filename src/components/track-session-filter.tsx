@@ -8,24 +8,19 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuPortal,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useSelector, useDispatch } from 'react-redux';
-import { AppDispatch, RootState } from '@/state/store';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/state/store';
 import {
   setFilter,
   resetFilter,
 } from '@/state/reducers/track-sessions/track-session.reducer';
 
 export function TrackSessionFilter() {
-  const trackSessionState = useSelector(
-    (state: RootState) => state.trackSession
-  );
   const dispatch = useDispatch<AppDispatch>();
 
   function handleSearch(filterColumn: string, searchTerm: string) {

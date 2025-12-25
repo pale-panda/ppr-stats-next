@@ -3,8 +3,12 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Analytics } from '@vercel/analytics/next';
-import './globals.css';
 import { Footer } from '@/components/footer';
+import { ReduxWrapper } from '@/components/redux-wrapper';
+import { navLinks } from '@/lib/data/nav-links';
+import { Header } from '@/components/header';
+import { createClient } from '@/lib/supabase/server';
+import './globals.css';
 
 const _geist = Geist({
   variable: '--font-geist-sans',
@@ -38,11 +42,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = await createClient();
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
+
+  if (error) {
+    console.error('Error fetching session in layout:', error.message);
+  }
+
   return (
     <html lang='en' className='dark' suppressHydrationWarning>
       <body
@@ -52,7 +66,16 @@ export default function RootLayout({
           defaultTheme='system'
           enableSystem
           disableTransitionOnChange>
-          {children}
+          <ReduxWrapper>
+            <div className='min-h-screen bg-background'>
+              <Header
+                navLinks={
+                  session && session.user ? navLinks.protected : navLinks.public
+                }
+              />
+              {children}
+            </div>
+          </ReduxWrapper>
           <Footer />
           <Analytics />
         </ThemeProvider>

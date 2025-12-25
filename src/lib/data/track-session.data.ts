@@ -1,5 +1,5 @@
 import { cache } from 'react';
-import { createServerClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import {
   Laps,
   Tracks,
@@ -12,7 +12,7 @@ import { TRACK_SESSION_LIMIT_CARDS } from '@/lib/data/constants';
 import { filterByFilterParams, FilterParams } from '@/lib/filter-utils';
 
 export async function getSessionById(id: string): Promise<TrackSessions> {
-  const supabase = await createServerClient();
+  const supabase = await createClient();
 
   const { data: session, error } = await supabase
     .from('sessions')
@@ -34,7 +34,7 @@ export async function getSessionById(id: string): Promise<TrackSessions> {
 }
 
 export async function getSessionLaps(sessionId: string): Promise<Laps> {
-  const supabase = await createServerClient();
+  const supabase = await createClient();
 
   const { data: laps, error } = await supabase
     .from('laps')
@@ -52,7 +52,7 @@ export async function getSessionLaps(sessionId: string): Promise<Laps> {
 }
 
 export async function getSessionStats(sessionId: string) {
-  const supabase = await createServerClient();
+  const supabase = await createClient();
 
   const { data: session, error } = await supabase
     .from('sessions')
@@ -94,7 +94,7 @@ export async function getSessionStats(sessionId: string) {
 }
 
 export async function getSessionCount(): Promise<number> {
-  const supabase = await createServerClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('sessions')
     .select('id')
@@ -126,7 +126,7 @@ export async function getAllSessions({
   meta: PaginationMeta;
 }> {
   const currentIndex = (currentPage - 1) * limit;
-  const supabase = await createServerClient();
+  const supabase = await createClient();
 
   const { data: tracks, error: trackError } = await supabase.from('tracks')
     .select(`id,
@@ -197,7 +197,7 @@ export async function getAllSessions({
 
 export const getTrackSessionsByIdFullJoin = cache(
   async (sessionId: string): Promise<TrackSessions> => {
-    const supabase = await createServerClient();
+    const supabase = await createClient();
 
     const { data: sessions, error } = await supabase
       .from('sessions')
@@ -216,7 +216,7 @@ export const getTrackSessionsByIdFullJoin = cache(
 );
 
 export async function getAllTracks(): Promise<Tracks> {
-  const supabase = await createServerClient();
+  const supabase = await createClient();
 
   const { data: tracks, error } = await supabase
     .from('tracks')
@@ -232,7 +232,7 @@ export async function getAllTracks(): Promise<Tracks> {
 }
 
 export async function getTrackById(id: string): Promise<Track> {
-  const supabase = await createServerClient();
+  const supabase = await createClient();
 
   const { data: track, error } = await supabase
     .from('tracks')
@@ -251,7 +251,7 @@ export async function getTrackById(id: string): Promise<Track> {
 export async function getTrackSessionsByTrackId(
   trackId: string
 ): Promise<TrackSessionJoined[]> {
-  const supabase = await createServerClient();
+  const supabase = await createClient();
 
   const { data: sessions, error } = await supabase
     .from('sessions')
@@ -269,7 +269,7 @@ export async function getTrackSessionsByTrackId(
 }
 
 export async function getDashboardStats() {
-  const supabase = await createServerClient();
+  const supabase = await createClient();
 
   // Get total sessions
   const { count: totalSessions } = await supabase
@@ -316,7 +316,7 @@ interface AnalyticsStats {
 }
 
 export async function getAnalyticsStats(): Promise<AnalyticsStats> {
-  const supabase = await createServerClient();
+  const supabase = await createClient();
 
   // Get all completed sessions with laps
   const { data: sessions } = await supabase
@@ -360,7 +360,7 @@ interface TrackMetaData {
 }
 
 export async function getTrackMetaData(): Promise<TrackMetaData> {
-  const supabase = await createServerClient();
+  const supabase = await createClient();
 
   const { data: tracks, error } = await supabase
     .from('tracks')
@@ -430,7 +430,7 @@ export async function getTracksWithStats(): Promise<TrackWithStats[]> {
 
 export const getTrackSessionWithStats = cache(
   async (sessionId: string): Promise<TrackSessionJoined> => {
-    const supabase = await createServerClient();
+    const supabase = await createClient();
 
     const { data: session, error: sessionError } = await supabase
       .from('sessions')
@@ -486,7 +486,7 @@ export const getTrackSessionWithStats = cache(
     }
 
     const laps = session.laps;
-    const track = session.track as unknown as Track;
+    const track = session.track;
 
     const { data: minSpeed, error: minSpeedError } = await supabase
       .from('telemetry_points')
@@ -517,14 +517,13 @@ export const getTrackSessionWithStats = cache(
       return (sector1Best || 0) + (sector2Best || 0) + (sector3Best || 0);
     };
 
-    const { track: trackArray, ...sessionRest } = session as any;
-    const trackObj = Array.isArray(trackArray)
-      ? (trackArray[0] as Track)
-      : (trackArray as Track | undefined);
+    const trackObj = Array.isArray(track)
+      ? (track[0] as Track)
+      : (track as Track | undefined);
 
     return {
-      ...sessionRest,
-      track: trackObj,
+      ...session,
+      track: trackObj!,
       avg_speed:
         laps.reduce((sum, l) => sum + (l.max_speed_kmh || 0), 0) / laps.length,
       min_speed: minSpeed?.speed_kmh ?? 0,

@@ -6,7 +6,7 @@ import { APIProvider, useMap, Map } from '@vis.gl/react-google-maps';
 import { LatLngLiteral, Telemetry } from '@/types';
 
 interface TrackMapProps {
-  telemetry?: { main?: Telemetry; comparison?: Telemetry };
+  telemetry: { main?: Telemetry; comparison?: Telemetry };
   selectedLap: number;
   comparisonLap: number | null;
   showComparison: boolean;
@@ -75,13 +75,7 @@ function TrackMap({
   showComparison,
   center,
 }: TrackMapProps) {
-  const API_KEY =
-    (process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string) ??
-    globalThis.GOOGLE_MAPS_API_KEY;
-
-  if (!telemetry || telemetry.main === undefined) {
-    return <div>No telemetry data available.</div>;
-  }
+  const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!;
 
   const selectedLapPath = useMemo<google.maps.LatLngLiteral[]>(() => {
     return telemetry

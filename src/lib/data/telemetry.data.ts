@@ -1,10 +1,10 @@
 import { cache } from 'react';
-import { createServerClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { Telemetry } from '@/types';
 
 export const getTelemetry = cache(
   async (sessionId: string, lapNumber?: number): Promise<Telemetry> => {
-    const supabase = await createServerClient();
+    const supabase = await createClient();
     const { data: telemetry, error: telemetryError } = await supabase
       .from('telemetry_points')
       .select(
@@ -25,7 +25,7 @@ export const getTelemetry = cache(
 
 export const getTelemetryPerLap = cache(
   async (sessionId: string, lapNumber: number): Promise<Telemetry> => {
-    const supabase = await createServerClient();
+    const supabase = await createClient();
     const { data: telemetry, error: telemetryError } = await supabase
       .from('telemetry_points')
       .select(

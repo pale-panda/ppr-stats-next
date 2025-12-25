@@ -25,6 +25,12 @@ export function DashboardAnalysis({ trackSession }: DashboardAnalysisProps) {
   );
   const dispatch = useDispatch<AppDispatch>();
 
+  useEffect(() => {
+    dispatch(
+      getLapTelemetry({ sessionId: trackSession.id, lapNumber: selectedLap })
+    );
+  }, [dispatch, trackSession.id, selectedLap]);
+
   if (!trackSession || !trackSession.laps) {
     return <div>Session not found.</div>;
   }
@@ -46,12 +52,6 @@ export function DashboardAnalysis({ trackSession }: DashboardAnalysisProps) {
       );
     }
   };
-
-  useEffect(() => {
-    dispatch(
-      getLapTelemetry({ sessionId: trackSession.id, lapNumber: selectedLap })
-    );
-  }, [dispatch, trackSession.id, selectedLap]);
 
   return (
     <>

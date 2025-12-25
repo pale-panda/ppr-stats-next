@@ -1,4 +1,3 @@
-import { Header } from '@/components/header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,6 +16,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Laps } from '@/types';
+import { AppImage } from '@/components/app-image';
 
 export default async function TracksPage() {
   const tracks = await getAllTracks();
@@ -40,9 +40,18 @@ export default async function TracksPage() {
 
       return {
         ...track,
-        image_url: track.image_url
-          ? process.env.NEXT_PUBLIC_STORAGE_URL! + track.image_url
-          : '/placeholder.svg',
+        ImageComponent: (
+          <AppImage
+            src={
+              `${process.env.NEXT_PUBLIC_STORAGE_SUPABASE_URL}${track.image_url}` ||
+              '/placeholder.svg'
+            }
+            className='absolute inset-0 w-full h-full object-cover 100vh'
+            alt={track.name}
+            width={400}
+            height={300}
+          />
+        ),
         stats: {
           totalSessions: sessions.length,
           totalLaps,
@@ -67,14 +76,14 @@ export default async function TracksPage() {
   );
 
   return (
-    <div className='min-h-screen bg-background'>
-      <Header />
-
+    <>
       {/* Hero Section */}
       <section className='relative h-64 md:h-80'>
-        <img
-          src={'/spa-francorchamps-race-track-aerial-view.jpg'}
-          alt={'Track Hero Image'}
+        <AppImage
+          src='/spa-francorchamps-race-track-aerial-view.jpg'
+          alt='Track Hero Image'
+          width={1200}
+          height={500}
           className='absolute inset-0 w-full h-full object-fill'
         />
 
@@ -87,7 +96,7 @@ export default async function TracksPage() {
               </h1>
               <p className='text-lg text-muted-foreground leading-relaxed'>
                 Explore circuit information, your personal statistics, and
-                performance data for each track you've raced on.
+                performance data for each track you&apos;ve raced on.
               </p>
             </div>
           </div>
@@ -140,11 +149,7 @@ export default async function TracksPage() {
                   <div className='grid md:grid-cols-[300px_1fr] lg:grid-cols-[400px_1fr]'>
                     {/* Track Image */}
                     <div className='relative h-48 md:h-auto'>
-                      <img
-                        src={track.image_url || '/placeholder.svg'}
-                        alt={track.name}
-                        className='absolute inset-0 w-full h-full object-cover 100vh'
-                      />
+                      {track.ImageComponent}
                       <div className='absolute inset-0 bg-linear-to-r from-transparent to-card/80 hidden md:block' />
                     </div>
 
@@ -267,6 +272,6 @@ export default async function TracksPage() {
           )}
         </div>
       </section>
-    </div>
+    </>
   );
 }

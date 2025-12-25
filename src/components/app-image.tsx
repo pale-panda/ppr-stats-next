@@ -1,10 +1,10 @@
 'use client';
 import Image from 'next/image';
 
-export function AppImage({
+export const AppImage = ({
   src,
   alt,
   ...props
-}: React.ComponentProps<typeof Image>) {
-  return <img src={src as string} alt={alt} {...props} />;
-}
+}: React.ComponentProps<typeof Image>) => (
+  <Image src={src as string} alt={alt} {...props} />
+);

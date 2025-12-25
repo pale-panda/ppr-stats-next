@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
-import { Header } from '@/components/header';
 import {
   Card,
   CardContent,
@@ -58,9 +57,7 @@ import {
   Flag,
   Target,
 } from 'lucide-react';
-import { formatSpeed, formatDuration, formatTime } from '@/lib/format-utils';
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+import { formatSpeed, formatTime } from '@/lib/format-utils';
 
 type AnalyticsSession = {
   id: string;
@@ -84,10 +81,66 @@ type AnalyticsSession = {
   }>;
 };
 
-export default function AnalyticsPage() {
-  const { data, error, isLoading } = useSWR('/api/analytics', fetcher);
+type AnalyticsResponse = {
+  sessions: AnalyticsSession[];
+  bestLapTime: number;
+  avgLapTime: number;
+  totalLaps: number;
+  topSpeed: number;
+};
 
-  const sessions: AnalyticsSession[] = data?.sessions || [];
+const fetcher = (url: string): Promise<AnalyticsResponse> =>
+  fetch(url).then((res) => res.json());
+
+export default function AnalyticsPage() {
+  const { data, error, isLoading } = useSWR<AnalyticsResponse>(
+    '/api/analytics',
+    fetcher
+  );
+
+  const [selectedSession1, setSelectedSession1] = useState<string>('');
+  const [selectedSession2, setSelectedSession2] = useState<string>('');
+  const [selectedLap1, setSelectedLap1] = useState<number>(0);
+  const [selectedLap2, setSelectedLap2] = useState<number>(0);
+
+  const sessions = useMemo(() => data?.sessions ?? [], [data]);
+
+  // Keep session selections pointing at existing sessions when data refreshes.
+  useEffect(() => {
+    if (!sessions.length) return;
+    async function setStateSafeSession1() {
+      setSelectedSession1((current) => {
+        if (current && sessions.some((s) => s.id === current)) {
+          return current;
+        }
+        return sessions[0].id;
+      });
+    }
+
+    setStateSafeSession1();
+  }, [sessions]);
+
+  useEffect(() => {
+    if (!sessions.length) return;
+
+    async function setStateSafeSession2() {
+      setSelectedSession2((current) => {
+        const hasValidSelection =
+          current && sessions.some((s) => s.id === current);
+        if (hasValidSelection) {
+          return current;
+        }
+
+        const alternative =
+          sessions.find((session) => session.id !== selectedSession1)?.id ??
+          sessions[0].id;
+        return alternative;
+      });
+    }
+
+    setStateSafeSession2();
+  }, [sessions, selectedSession1]);
+
   const allTimeStats = useMemo(
     () => ({
       bestLapTime: data?.bestLapTime || 0,
@@ -98,26 +151,33 @@ export default function AnalyticsPage() {
     [data]
   );
 
-  const [selectedSession1, setSelectedSession1] = useState<string>('');
-  const [selectedSession2, setSelectedSession2] = useState<string>('');
-  const [selectedLap1, setSelectedLap1] = useState<number>(1);
-  const [selectedLap2, setSelectedLap2] = useState<number>(1);
+  const session1 = useMemo(
+    () => sessions.find((s) => s.id === selectedSession1),
+    [sessions, selectedSession1]
+  );
+  const session2 = useMemo(
+    () => sessions.find((s) => s.id === selectedSession2),
+    [sessions, selectedSession2]
+  );
+  const laps1 = useMemo(() => session1?.laps || [], [session1]);
+  const laps2 = useMemo(() => session2?.laps || [], [session2]);
 
-  useEffect(() => {
-    if (sessions.length > 0 && !selectedSession1) {
-      setSelectedSession1(sessions[0].id);
-      if (sessions.length > 1) {
-        setSelectedSession2(sessions[1].id);
-      }
-    }
-  }, [sessions, selectedSession1]);
+  const resolvedSelectedLap1 = useMemo(() => {
+    if (!laps1.length) return undefined;
+    return laps1.some((lap) => lap.lap_number === selectedLap1)
+      ? selectedLap1
+      : laps1[0].lap_number;
+  }, [laps1, selectedLap1]);
 
-  const session1 = sessions.find((s) => s.id === selectedSession1);
-  const session2 = sessions.find((s) => s.id === selectedSession2);
-  const laps1 = session1?.laps || [];
-  const laps2 = session2?.laps || [];
+  const resolvedSelectedLap2 = useMemo(() => {
+    if (!laps2.length) return undefined;
+    return laps2.some((lap) => lap.lap_number === selectedLap2)
+      ? selectedLap2
+      : laps2[0].lap_number;
+  }, [laps2, selectedLap2]);
 
   // Session comparison data
+  /*
   const sessionComparisonData = useMemo(() => {
     if (!session1 || !session2) return [];
     return [
@@ -144,25 +204,22 @@ export default function AnalyticsPage() {
       },
     ];
   }, [session1, session2]);
+  */
 
   // Lap comparison chart data
   const lapComparisonData = useMemo(() => {
     const maxLaps = Math.max(laps1.length, laps2.length);
-    const data = [];
-    for (let i = 0; i < maxLaps; i++) {
-      data.push({
-        lap: i + 1,
-        session1: laps1[i]?.lap_time_seconds || null,
-        session2: laps2[i]?.lap_time_seconds || null,
-      });
-    }
-    return data;
+    return Array.from({ length: maxLaps }, (_, idx) => ({
+      lap: idx + 1,
+      session1: laps1[idx]?.lap_time_seconds ?? null,
+      session2: laps2[idx]?.lap_time_seconds ?? null,
+    }));
   }, [laps1, laps2]);
 
   // Sector comparison for selected laps
   const sectorComparisonData = useMemo(() => {
-    const lap1Data = laps1.find((l) => l.lap_number === selectedLap1);
-    const lap2Data = laps2.find((l) => l.lap_number === selectedLap2);
+    const lap1Data = laps1.find((l) => l.lap_number === resolvedSelectedLap1);
+    const lap2Data = laps2.find((l) => l.lap_number === resolvedSelectedLap2);
     if (!lap1Data || !lap2Data) return [];
     return [
       {
@@ -181,7 +238,7 @@ export default function AnalyticsPage() {
         session2: lap2Data.sector_3_seconds || 0,
       },
     ];
-  }, [laps1, laps2, selectedLap1, selectedLap2]);
+  }, [laps1, laps2, resolvedSelectedLap1, resolvedSelectedLap2]);
 
   // Radar chart data for overall performance
   const radarData = useMemo(() => {
@@ -241,32 +298,35 @@ export default function AnalyticsPage() {
     ];
   }, [session1, session2, laps1, laps2]);
 
+  const progressionData = useMemo(
+    () =>
+      sessions.map((s, idx) => ({
+        session: idx + 1,
+        bestLap: s.best_lap_time_seconds,
+        date: new Date(s.session_date).toLocaleDateString(),
+      })),
+    [sessions]
+  );
+
   if (isLoading) {
     return (
-      <div className='min-h-screen bg-background'>
-        <Header />
-        <div className='container mx-auto px-4 py-6'>
-          <p className='text-muted-foreground'>Loading analytics...</p>
-        </div>
+      <div className='container mx-auto px-4 py-6'>
+        <p className='text-muted-foreground'>Loading analytics...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className='min-h-screen bg-background'>
-        <Header />
-        <div className='container mx-auto px-4 py-6'>
-          <p className='text-red-500'>Error loading analytics data</p>
-        </div>
+      <div className='container mx-auto px-4 py-6'>
+        <p className='text-red-500'>Error loading analytics data</p>
       </div>
     );
   }
 
   if (sessions.length === 0) {
     return (
-      <div className='min-h-screen bg-background'>
-        <Header />
+      <>
         <div className='border-b border-border bg-card/50'>
           <div className='container mx-auto px-4 py-6'>
             <div className='flex items-center gap-3'>
@@ -292,14 +352,12 @@ export default function AnalyticsPage() {
             Upload some sessions to start analyzing your performance.
           </p>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className='min-h-screen bg-background'>
-      <Header />
-
+    <>
       {/* Page Header */}
       <div className='border-b border-border bg-card/50'>
         <div className='container mx-auto px-4 py-6'>
@@ -764,7 +822,11 @@ export default function AnalyticsPage() {
                 </CardHeader>
                 <CardContent>
                   <Select
-                    value={selectedLap1.toString()}
+                    value={
+                      resolvedSelectedLap1 !== undefined
+                        ? resolvedSelectedLap1.toString()
+                        : undefined
+                    }
                     onValueChange={(v) => setSelectedLap1(Number(v))}>
                     <SelectTrigger className='bg-background border-border'>
                       <SelectValue placeholder='Select lap' />
@@ -791,7 +853,11 @@ export default function AnalyticsPage() {
                 </CardHeader>
                 <CardContent>
                   <Select
-                    value={selectedLap2.toString()}
+                    value={
+                      resolvedSelectedLap2 !== undefined
+                        ? resolvedSelectedLap2.toString()
+                        : undefined
+                    }
                     onValueChange={(v) => setSelectedLap2(Number(v))}>
                     <SelectTrigger className='bg-background border-border'>
                       <SelectValue placeholder='Select lap' />
@@ -1018,11 +1084,7 @@ export default function AnalyticsPage() {
                   className='h-[300px]'>
                   <ResponsiveContainer width='100%' height='100%'>
                     <LineChart
-                      data={sessions.map((s, idx) => ({
-                        session: idx + 1,
-                        bestLap: s.best_lap_time_seconds,
-                        date: new Date(s.session_date).toLocaleDateString(),
-                      }))}
+                      data={progressionData}
                       margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                       <CartesianGrid
                         strokeDasharray='3 3'
@@ -1112,6 +1174,6 @@ export default function AnalyticsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </>
   );
 }

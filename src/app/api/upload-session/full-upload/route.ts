@@ -1,12 +1,12 @@
-import { type NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { parseRaceBoxCSV, calculateLapData } from '@/lib/csv-parser';
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
 import { setTimeout } from 'timers/promises';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const baseDir = path.join(os.tmpdir(), 'racebox-csv');
     const files = await fs.readdir(baseDir);
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Initialize Supabase client
-      const supabase = await createServerClient();
+      const supabase = await createClient();
 
       // Find or create track
       const { data: existingTrack, error: trackError } = await supabase
@@ -53,6 +53,14 @@ export async function GET(request: NextRequest) {
         .select('id, name')
         .ilike('name', header.track)
         .single();
+
+      if (trackError && trackError.code !== 'PGRST116') {
+        console.error('Error fetching track:', trackError);
+        console.log(
+          { success: false, message: 'Failed to fetch track' },
+          { status: 500 }
+        );
+      }
 
       let trackId: string;
 

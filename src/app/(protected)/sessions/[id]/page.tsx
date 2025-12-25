@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { AppImage as Image } from '@/components/app-image';
-import { Header } from '@/components/header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -41,15 +40,13 @@ export default async function SessionPage({ params }: SessionPageProps) {
   }
 
   return (
-    <div className='min-h-screen bg-background'>
-      <Header />
-
+    <>
       {/* Hero Section */}
       <div className='relative h-64 md:h-80 overflow-hidden'>
         <Image
           src={
             track.image_url
-              ? process.env.NEXT_PUBLIC_STORAGE_URL! + track.image_url
+              ? process.env.NEXT_PUBLIC_STORAGE_SUPABASE_URL! + track.image_url
               : '/placeholder.svg'
           }
           alt={track.name || 'Track'}
@@ -282,6 +279,6 @@ export default async function SessionPage({ params }: SessionPageProps) {
           </Card>
         </div>
       </div>
-    </div>
+    </>
   );
 }

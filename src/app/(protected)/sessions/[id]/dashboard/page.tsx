@@ -1,4 +1,3 @@
-import { Header } from '@/components/header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TelemetryPanel } from '@/components/telemetry-panel';
 import { DashboardAnalysis } from '@/components/dashboard-analysis';
@@ -20,9 +19,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
   }
 
   return (
-    <div className='min-h-screen bg-background'>
-      <Header />
-
+    <>
       {/* Dashboard Header */}
       <DashboardHeader trackSession={trackSession} />
 
@@ -47,6 +44,6 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </>
   );
 }

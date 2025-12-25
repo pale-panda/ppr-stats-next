@@ -1,4 +1,3 @@
-import { Header } from '@/components/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -29,6 +28,7 @@ import {
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Lap } from '@/types';
+import { AppImage } from '@/components/app-image';
 
 export default async function TrackDetailPage({
   params,
@@ -78,19 +78,20 @@ export default async function TrackDetailPage({
     .sort((a, b) => a.lap_time_seconds - b.lap_time_seconds)
     .slice(0, 10);
 
-  return (
-    <div className='min-h-screen bg-background'>
-      <Header />
+  const imageUrl =
+    `${process.env.NEXT_PUBLIC_STORAGE_SUPABASE_URL}${track.image_url}` ||
+    '/placeholder.svg';
 
+  return (
+    <>
       {/* Hero Section */}
       <section className='relative h-64 md:h-80'>
-        <img
-          src={
-            track.image_url
-              ? process.env.NEXT_PUBLIC_STORAGE_URL! + track.image_url
-              : '/placeholder.svg'
-          }
+        <AppImage
+          src={imageUrl}
           alt={track.name}
+          fill
+          width={500}
+          height={500}
           className='absolute inset-0 w-full h-full object-fill'
         />
 
@@ -435,6 +436,6 @@ export default async function TrackDetailPage({
           </Tabs>
         </div>
       </section>
-    </div>
+    </>
   );
 }

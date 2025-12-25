@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const page = parseInt(searchParams.get('page') || '1', 10);
-  let filter = searchParams.get('filter') || '';
+  const filter = searchParams.get('filter') || '';
 
   const data = await getAllSessions({
     currentPage: page,

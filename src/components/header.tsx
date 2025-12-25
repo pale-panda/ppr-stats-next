@@ -5,20 +5,20 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Menu, X, Settings, User } from 'lucide-react';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { Separator } from './ui/separator';
 
-const navLinks = [
-  { href: '/', label: 'Sessions' },
-  { href: '/analytics', label: 'Analytics' },
-  { href: '/tracks', label: 'Tracks' },
-  { href: '/upload', label: 'Upload' },
-  { href: '/leaderboard', label: 'Leaderboard' },
-];
+interface HeaderProps {
+  navLinks: { href: string; label: string }[];
+}
 
-export function Header() {
+export function Header({ navLinks }: HeaderProps) {
+  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className='sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md'>
+    <header className='h-16 sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md'>
       <div className='container mx-auto px-4'>
         <div className='flex items-center justify-between h-16'>
           {/* Logo */}
@@ -40,13 +40,20 @@ export function Header() {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className='hidden md:flex items-center gap-1'>
+          <nav className='hidden md:flex items-center gap-12'>
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className='px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors'>
+                className={cn(
+                  'flex flex-col group h-16 px-4 py-5.5 text-sm font-medium hover:text-foreground transition-colors hover:bg-linear-to-b hover:from-transparent hover:to-muted/30',
+                  pathname === link.href
+                    ? 'bg-linear-to-b from-transparent to-muted/30 text-foreground transition-colors'
+                    : 'text-muted-foreground'
+                )}
+                aria-current={pathname === link.href ? 'page' : undefined}>
                 {link.label}
+                <Separator className='w-max mt-5 h-px opacity-0 transition-opacity group-hover:opacity-100 group-hover:bg-radial group-hover:from-primary/80 group-hover:to-transparent' />
               </Link>
             ))}
           </nav>
@@ -75,14 +82,27 @@ export function Header() {
 
         {/* Mobile Nav */}
         {isMenuOpen && (
-          <nav className='md:hidden py-4 border-t border-border'>
+          <nav className='md:hidden bg-background backdrop-blur-md rounded-b-md shadow-md grid grid-cols-2 gap-0'>
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className='block px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors'
+                className={cn(
+                  'group text-center block p-6 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors',
+                  pathname === link.href
+                    ? 'bg-linear-to-b from-transparent to-muted/30 text-foreground transition-colors'
+                    : 'text-muted-foreground'
+                )}
+                aria-current={pathname === link.href ? 'page' : undefined}
                 onClick={() => setIsMenuOpen(false)}>
                 {link.label}
+                <Separator
+                  className={cn(
+                    'w-max mt-5 h-px opacity-0 transition-opacity group-hover:opacity-100 group-hover:bg-radial group-hover:from-primary/80 group-hover:to-transparent',
+                    pathname === link.href &&
+                      'opacity-100 bg-radial from-primary/80 to-transparent'
+                  )}
+                />
               </Link>
             ))}
           </nav>

@@ -1,15 +1,11 @@
 'use client';
 import { SessionCard } from '@/components/session-card';
 import { formatLapTime } from '@/lib/format-utils';
-import { type DropdownMenuCheckboxItemProps } from '@radix-ui/react-dropdown-menu';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/state/store';
-import { TRACK_SESSION_LIMIT_CARDS } from '@/lib/data/constants';
 import { TrackSessionPagination } from '@/components/track-session-pagination';
 import { getTrackSessions } from '@/state/api/track-session';
 import { useEffect } from 'react';
-
-type Checked = DropdownMenuCheckboxItemProps['checked'];
 
 interface TrackSessionSectionProps {
   query?: string;
@@ -20,15 +16,12 @@ interface TrackSessionSectionProps {
 }
 
 export function TrackSessionCards({
-  query = '',
   currentPage = 1,
-  orderBy = '',
-  limit = TRACK_SESSION_LIMIT_CARDS,
-  sort = 'desc',
 }: TrackSessionSectionProps) {
   const dispatch = useDispatch<AppDispatch>();
-  const sessions = useSelector((state: RootState) => state.trackSession.data);
-  const meta = useSelector((state: RootState) => state.trackSession.meta);
+  const { data: sessions, meta } = useSelector(
+    (state: RootState) => state.trackSession
+  );
 
   useEffect(() => {
     dispatch(getTrackSessions(meta.currentPage || currentPage));
