@@ -1,14 +1,18 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+/*
 const publicRoutes = [
   '/about',
   '/contact',
+  '/auth',
+  '/login',
   '/auth/login',
   '/auth/signup',
   '/auth/forgot-password',
   '/api/sessions',
 ];
+*/
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -51,8 +55,10 @@ export async function updateSession(request: NextRequest) {
 
   if (
     !user &&
-    !publicRoutes.some((route) => request.nextUrl.pathname.startsWith(route)) &&
-    request.nextUrl.pathname !== '/'
+    //publicRoutes.some((route) => !request.nextUrl.pathname.startsWith(route)) &&
+    !request.nextUrl.pathname.startsWith('/auth') &&
+    !request.nextUrl.pathname.startsWith('/login') &&
+    !request.nextUrl.pathname.startsWith('/auth/login')
   ) {
     console.log('No user session found, redirecting to login page');
     console.log('Requested URL:', request.nextUrl.pathname);

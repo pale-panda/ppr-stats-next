@@ -5,9 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Analytics } from '@vercel/analytics/next';
 import { Footer } from '@/components/footer';
 import { ReduxWrapper } from '@/components/redux-wrapper';
-import { navLinks } from '@/lib/data/nav-links';
 import { Header } from '@/components/header';
-import { createClient } from '@/lib/supabase/server';
 import './globals.css';
 
 const _geist = Geist({
@@ -47,16 +45,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await createClient();
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession();
-
-  if (error) {
-    console.error('Error fetching session in layout:', error.message);
-  }
-
   return (
     <html lang='en' className='dark' suppressHydrationWarning>
       <body
@@ -68,11 +56,7 @@ export default async function RootLayout({
           disableTransitionOnChange>
           <ReduxWrapper>
             <div className='min-h-screen bg-background'>
-              <Header
-                navLinks={
-                  session && session.user ? navLinks.protected : navLinks.public
-                }
-              />
+              <Header />
               {children}
             </div>
           </ReduxWrapper>
