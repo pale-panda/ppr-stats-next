@@ -8,7 +8,10 @@ import {
   Track,
   TrackSessionJoined,
 } from '@/types';
-import { TRACK_SESSION_LIMIT_CARDS } from '@/lib/data/constants';
+import {
+  DEFAULT_PAGE_SIZE,
+  TRACK_SESSION_LIMIT_CARDS,
+} from '@/lib/data/constants';
 import { filterByFilterParams, FilterParams } from '@/lib/filter-utils';
 import { DashboardStats } from '@/types/stats.type';
 
@@ -115,18 +118,18 @@ export async function getSessionCount(): Promise<number> {
 interface GetAllSessionsProps {
   filter?: FilterParams;
   currentPage?: number;
-  limit?: number;
+  pageSize?: number;
 }
 
 export async function getAllSessions({
   filter,
   currentPage = 1,
-  limit = TRACK_SESSION_LIMIT_CARDS,
+  pageSize = TRACK_SESSION_LIMIT_CARDS,
 }: GetAllSessionsProps): Promise<{
   sessions: TrackSessionJoined[];
   meta: PaginationMeta;
 }> {
-  const currentIndex = (currentPage - 1) * limit;
+  const currentIndex = (currentPage - 1) * pageSize;
   const supabase = await createClient();
 
   const { data: tracks, error: trackError } = await supabase.from('tracks')
@@ -173,7 +176,7 @@ export async function getAllSessions({
     .select('*, track:tracks(*)')
     .in(`track_id`, trackIds)
     .order('session_date', { ascending: false })
-    .range(currentIndex, currentIndex + limit - 1);
+    .range(currentIndex, currentIndex + pageSize - 1);
   if (error) {
     console.error('Error fetching sessions:', error);
     throw new Error('Failed to fetch sessions');
@@ -181,8 +184,11 @@ export async function getAllSessions({
 
   const sessions: TrackSessionJoined[] = data;
 
-  const totalPages = Math.ceil((totalCount || 0) / limit);
-  const remainingCount = Math.max((totalCount || 0) - currentPage * limit, 0);
+  const totalPages = Math.ceil((totalCount || 0) / pageSize);
+  const remainingCount = Math.max(
+    (totalCount || 0) - currentPage * pageSize,
+    0
+  );
 
   return {
     sessions,
@@ -390,7 +396,7 @@ interface TrackWithStats extends Track {
 
 export async function getTracksWithStats(): Promise<TrackWithStats[]> {
   const tracks = await getAllTracks();
-  const { sessions } = await getAllSessions({ limit: 100000 });
+  const { sessions } = await getAllSessions({ pageSize: DEFAULT_PAGE_SIZE });
 
   const tracksWithStats = tracks
     .map((track) => {

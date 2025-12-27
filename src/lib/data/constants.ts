@@ -1,6 +1,8 @@
 export const TRACK_SESSION_LIMIT_CARDS = 24;
 export const TRACK_SESSION_LIMIT_TABLE = 100;
 
+export const DEFAULT_PAGE_SIZE = 12;
+
 export const DASHBOARD_TOP_SESSIONS_LIMIT = 5;
 
 export const TELEMETRY_CACHE_TIME = 10 * 60;

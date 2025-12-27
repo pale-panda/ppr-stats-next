@@ -9,9 +9,10 @@ export const trackSessionApi = createApi({
   endpoints: (builder) => ({
     fetchTrackSessions: builder.query<
       TrackSessionApiResponse,
-      { page?: number; limit?: number }
+      { page?: number; pageSize?: number }
     >({
-      query: ({ page = 1, limit = 5 }) => `/page/${page}?limit=${limit}`,
+      query: ({ page = 1, pageSize = 5 }) =>
+        `/page/${page}?pageSize=${pageSize}`,
     }),
     fetchTrackSessionById: builder.query<Telemetry, string>({
       query: (sessionId: string) => `/${sessionId}`,

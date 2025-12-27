@@ -9,7 +9,7 @@ export async function GET(
   try {
     const { index } = await ctx.params;
     const { searchParams } = new URL(_req.url);
-    const limit = searchParams.get('limit') || '';
+    const pageSize = searchParams.get('pageSize') || '';
     const filter = searchParams.get('filter') || '';
     const page = parseInt(index, 10);
 
@@ -21,7 +21,7 @@ export async function GET(
     const data = await getAllSessions({
       currentPage: page,
       filter: createFilterParams(filter),
-      limit: limit ? parseInt(limit, 10) : undefined,
+      pageSize: pageSize ? parseInt(pageSize, 10) : undefined,
     });
 
     if (!data.sessions || data.sessions.length === 0) {

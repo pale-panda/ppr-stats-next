@@ -4,12 +4,13 @@ import { formatLapTime } from '@/lib/format-utils';
 import { TrackSessionPagination } from '@/components/track-session-pagination';
 import { useFetchTrackSessionsQuery } from '@/state/services/track-session';
 import { useState } from 'react';
+import { DEFAULT_PAGE_SIZE } from '@/lib/data/constants';
 
 interface TrackSessionSectionProps {
   query?: string;
   currentPage?: number;
   orderBy?: string;
-  limit?: number;
+  pageSize?: number;
   sort?: 'asc' | 'desc';
 }
 
@@ -18,12 +19,13 @@ export function TrackSessionCards({ ...props }: TrackSessionSectionProps) {
     // Implement search functionality here in the future
   }
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const {
     data: sessionData,
     error,
     isLoading,
-  } = useFetchTrackSessionsQuery({ page: currentPage, limit: 2 });
+  } = useFetchTrackSessionsQuery({ page: currentPage, pageSize });
 
   if (error) {
     return (
@@ -47,7 +49,7 @@ export function TrackSessionCards({ ...props }: TrackSessionSectionProps) {
   const meta = sessionData?.meta;
 
   return (
-    <div>
+    <>
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
         {sessions.length === 0 ? (
           <div className='text-center py-12'>
@@ -83,7 +85,8 @@ export function TrackSessionCards({ ...props }: TrackSessionSectionProps) {
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
         isLoading={isLoading}
+        size={{ pageSize, setPageSize }}
       />
-    </div>
+    </>
   );
 }

@@ -10,6 +10,14 @@ import {
 } from '@/components/ui/pagination';
 import { PAGINATION_MAX_PAGES } from '@/lib/data/constants';
 import { PaginationMeta } from '@/types';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
+import { cn } from '@/lib/utils';
 
 interface PageItemsProps {
   pages: number[];
@@ -72,6 +80,10 @@ interface PaginationLinkProps {
   currentPage: number;
   setCurrentPage: Dispatch<SetStateAction<number>>;
   isLoading: boolean;
+  size: {
+    pageSize: number;
+    setPageSize: Dispatch<SetStateAction<number>>;
+  };
 }
 
 export function TrackSessionPagination({
@@ -80,6 +92,7 @@ export function TrackSessionPagination({
   currentPage,
   setCurrentPage,
   isLoading,
+  size,
 }: PaginationLinkProps) {
   if (!meta || meta.totalPages <= 1) {
     return null;
@@ -125,64 +138,90 @@ export function TrackSessionPagination({
   const shouldShowTrailingEllipsis = lastVisiblePage < meta.totalPages - 1;
 
   return (
-    <Pagination className={className}>
-      <PaginationContent>
-        {currentPage !== 1 && (
-          <PaginationItem>
-            <PaginationPrevious
-              onClick={() => !isLoading && handlePrevious()}
-              href='#'
-            />
-          </PaginationItem>
-        )}
-        {hasHiddenLeadingPages && (
-          <>
-            <PaginationItem>
-              <PaginationLink
-                onClick={() => !isLoading && handlePageChange(1)}
-                href='#'
-                isActive={currentPage === 1}>
-                1
-              </PaginationLink>
-            </PaginationItem>
-            {shouldShowLeadingEllipsis && (
+    <div className={cn('flex flex-col gap-4 md:flex-row ', className)}>
+      <div className='w-50 flex-none hidden md:block' />
+      <div className='flex grow justify-center md:flex-1'>
+        <Pagination className='w-auto'>
+          <PaginationContent>
+            {currentPage !== 1 && (
               <PaginationItem>
-                <PaginationEllipsis />
+                <PaginationPrevious
+                  onClick={() => !isLoading && handlePrevious()}
+                  href='#'
+                />
               </PaginationItem>
             )}
-          </>
-        )}
-        <PageItems
-          pages={visiblePages}
-          currentPage={currentPage}
-          handlePageChange={handlePageChange}
-        />
-        {hasHiddenTrailingPages && (
-          <>
-            {shouldShowTrailingEllipsis && (
+            {hasHiddenLeadingPages && (
+              <>
+                <PaginationItem>
+                  <PaginationLink
+                    onClick={() => !isLoading && handlePageChange(1)}
+                    href='#'
+                    isActive={currentPage === 1}>
+                    1
+                  </PaginationLink>
+                </PaginationItem>
+                {shouldShowLeadingEllipsis && (
+                  <PaginationItem>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                )}
+              </>
+            )}
+            <PageItems
+              pages={visiblePages}
+              currentPage={currentPage}
+              handlePageChange={handlePageChange}
+            />
+            {hasHiddenTrailingPages && (
+              <>
+                {shouldShowTrailingEllipsis && (
+                  <PaginationItem>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                )}
+                <PaginationItem>
+                  <PaginationLink
+                    onClick={() =>
+                      !isLoading && handlePageChange(meta.totalPages)
+                    }
+                    href='#'
+                    isActive={currentPage === meta.totalPages}>
+                    {meta.totalPages}
+                  </PaginationLink>
+                </PaginationItem>
+              </>
+            )}
+            {currentPage < meta.totalPages && (
               <PaginationItem>
-                <PaginationEllipsis />
+                <PaginationNext
+                  onClick={() => !isLoading && handleNext()}
+                  href='#'
+                />
               </PaginationItem>
             )}
-            <PaginationItem>
-              <PaginationLink
-                onClick={() => !isLoading && handlePageChange(meta.totalPages)}
-                href='#'
-                isActive={currentPage === meta.totalPages}>
-                {meta.totalPages}
-              </PaginationLink>
-            </PaginationItem>
-          </>
-        )}
-        {currentPage < meta.totalPages && (
-          <PaginationItem>
-            <PaginationNext
-              onClick={() => !isLoading && handleNext()}
-              href='#'
-            />
-          </PaginationItem>
-        )}
-      </PaginationContent>
-    </Pagination>
+          </PaginationContent>
+        </Pagination>
+      </div>
+      <div className='flex flex-none items-center gap-2 justify-center w-full md:w-50 md:justify-end'>
+        <p className='text-sm font-medium text-nowrap'>Items per page</p>
+        <Select
+          value={`${size.pageSize}`}
+          onValueChange={(value) => {
+            size.setPageSize(Number(value));
+          }}>
+          <SelectTrigger>
+            <SelectValue placeholder={size.pageSize} />
+          </SelectTrigger>
+          <SelectContent side='top'>
+            {[6, 12, 24, 36, 48, 60, 72].map((pageSize) => (
+              <SelectItem key={pageSize} value={`${pageSize}`}>
+                {pageSize}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
   );
 }
