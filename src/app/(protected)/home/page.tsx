@@ -9,8 +9,8 @@ export default async function HomePage(props: {
 }) {
   const searchParams = await props.searchParams;
   const query = searchParams?.query || '';
-  const currentPage = Number(searchParams?.page) || 1;
   const stats = await createDashboardStats();
+  
 
   return (
     <>
@@ -30,7 +30,7 @@ export default async function HomePage(props: {
           </div>
           <TrackSessionFilter />
         </div>
-        <TrackSessionCards query={query} currentPage={currentPage} />
+        <TrackSessionCards query={query} />
       </section>
     </>
   );

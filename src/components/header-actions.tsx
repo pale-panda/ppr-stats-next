@@ -67,7 +67,7 @@ export function HeaderActions() {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <LogoutButton variant='ghost'>
+              <LogoutButton className='flex flex-row w-full items-center gap-2'>
                 <LogOut />
                 Log out
               </LogoutButton>

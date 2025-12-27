@@ -1,11 +1,9 @@
 'use client';
 import { SessionCard } from '@/components/session-card';
 import { formatLapTime } from '@/lib/format-utils';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '@/state/store';
 import { TrackSessionPagination } from '@/components/track-session-pagination';
-import { getTrackSessions } from '@/state/api/track-session';
-import { useEffect } from 'react';
+import { useFetchTrackSessionsQuery } from '@/state/services/track-session';
+import { useState } from 'react';
 
 interface TrackSessionSectionProps {
   query?: string;
@@ -15,17 +13,38 @@ interface TrackSessionSectionProps {
   sort?: 'asc' | 'desc';
 }
 
-export function TrackSessionCards({
-  currentPage = 1,
-}: TrackSessionSectionProps) {
-  const dispatch = useDispatch<AppDispatch>();
-  const { data: sessions, meta } = useSelector(
-    (state: RootState) => state.trackSession
-  );
+export function TrackSessionCards({ ...props }: TrackSessionSectionProps) {
+  if (props.query) {
+    // Implement search functionality here in the future
+  }
+  const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
-    dispatch(getTrackSessions(meta.currentPage || currentPage));
-  }, [dispatch, meta.currentPage, currentPage]);
+  const {
+    data: sessionData,
+    error,
+    isLoading,
+  } = useFetchTrackSessionsQuery({ page: currentPage, limit: 2 });
+
+  if (error) {
+    return (
+      <div className='text-center py-12'>
+        <p className='text-red-500'>
+          Error loading sessions. Please try again later.
+        </p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className='text-center py-12'>
+        <p className='text-muted-foreground'>Loading sessions...</p>
+      </div>
+    );
+  }
+
+  const sessions = sessionData?.sessions || [];
+  const meta = sessionData?.meta;
 
   return (
     <div>
@@ -58,7 +77,13 @@ export function TrackSessionCards({
           ))
         )}
       </div>
-      <TrackSessionPagination className='py-6' />
+      <TrackSessionPagination
+        className='py-6'
+        meta={meta}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

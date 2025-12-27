@@ -1,3 +1,4 @@
+import { Dispatch, SetStateAction } from 'react';
 import {
   Pagination,
   PaginationContent,
@@ -8,14 +9,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import { PAGINATION_MAX_PAGES } from '@/lib/data/constants';
-import {
-  setPage,
-  incrementPage,
-  decrementPage,
-} from '@/state/reducers/track-sessions/track-session.reducer';
-import { AppDispatch, RootState } from '@/state/store';
 import { PaginationMeta } from '@/types';
-import { useDispatch, useSelector } from 'react-redux';
 
 interface PageItemsProps {
   pages: number[];
@@ -74,44 +68,52 @@ function PageItems({ pages, currentPage, handlePageChange }: PageItemsProps) {
 
 interface PaginationLinkProps {
   meta?: PaginationMeta;
-  onPageChange?: (page: number) => void;
   className?: string;
+  currentPage: number;
+  setCurrentPage: Dispatch<SetStateAction<number>>;
+  isLoading: boolean;
 }
 
-export function TrackSessionPagination({ className }: PaginationLinkProps) {
-  const trackSession = useSelector((state: RootState) => state.trackSession);
-  const meta = trackSession.meta;
-  const isLoading = trackSession.isLoading;
-  const dispatch = useDispatch<AppDispatch>();
-
+export function TrackSessionPagination({
+  className,
+  meta,
+  currentPage,
+  setCurrentPage,
+  isLoading,
+}: PaginationLinkProps) {
   if (!meta || meta.totalPages <= 1) {
     return null;
   }
 
-  function handlePageChange(page: number) {
+  const handlePageChange = (page: number) => {
     if (
-      isLoading ||
+      !meta ||
       page < 1 ||
       page > meta.totalPages ||
       page === meta.currentPage
     ) {
       return;
     }
-    dispatch(setPage(page));
-  }
+    setCurrentPage(page);
+  };
 
   function handlePrevious() {
-    if (isLoading || meta.currentPage <= 1) {
+    if (!meta || meta.currentPage <= 1) {
       return;
     }
-    dispatch(decrementPage());
+    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
   }
 
   function handleNext() {
-    if (isLoading || meta.currentPage >= meta.totalPages) {
+    console.log('Handling next page');
+    if (!meta || currentPage >= meta.totalPages) {
+      console.log('No next page available');
       return;
     }
-    dispatch(incrementPage());
+    console.log('Moving to next page', currentPage);
+    return setCurrentPage((prevPage) =>
+      Math.min(prevPage + 1, meta.totalPages)
+    );
   }
 
   const visiblePages = getVisiblePages(meta);
@@ -125,18 +127,21 @@ export function TrackSessionPagination({ className }: PaginationLinkProps) {
   return (
     <Pagination className={className}>
       <PaginationContent>
-        {meta.currentPage !== 1 && (
+        {currentPage !== 1 && (
           <PaginationItem>
-            <PaginationPrevious onClick={() => handlePrevious()} href='#' />
+            <PaginationPrevious
+              onClick={() => !isLoading && handlePrevious()}
+              href='#'
+            />
           </PaginationItem>
         )}
         {hasHiddenLeadingPages && (
           <>
             <PaginationItem>
               <PaginationLink
-                onClick={() => handlePageChange(1)}
+                onClick={() => !isLoading && handlePageChange(1)}
                 href='#'
-                isActive={meta.currentPage === 1}>
+                isActive={currentPage === 1}>
                 1
               </PaginationLink>
             </PaginationItem>
@@ -149,7 +154,7 @@ export function TrackSessionPagination({ className }: PaginationLinkProps) {
         )}
         <PageItems
           pages={visiblePages}
-          currentPage={meta.currentPage}
+          currentPage={currentPage}
           handlePageChange={handlePageChange}
         />
         {hasHiddenTrailingPages && (
@@ -161,17 +166,20 @@ export function TrackSessionPagination({ className }: PaginationLinkProps) {
             )}
             <PaginationItem>
               <PaginationLink
-                onClick={() => handlePageChange(meta.totalPages)}
+                onClick={() => !isLoading && handlePageChange(meta.totalPages)}
                 href='#'
-                isActive={meta.currentPage === meta.totalPages}>
+                isActive={currentPage === meta.totalPages}>
                 {meta.totalPages}
               </PaginationLink>
             </PaginationItem>
           </>
         )}
-        {meta.currentPage < meta.totalPages && (
+        {currentPage < meta.totalPages && (
           <PaginationItem>
-            <PaginationNext onClick={() => handleNext()} href='#' />
+            <PaginationNext
+              onClick={() => !isLoading && handleNext()}
+              href='#'
+            />
           </PaginationItem>
         )}
       </PaginationContent>

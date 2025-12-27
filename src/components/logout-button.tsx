@@ -2,21 +2,13 @@
 
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
-import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { PropsWithChildren } from 'react';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/state/store';
+import Link from 'next/link';
 
 type LogoutButtonProps = {
-  variant?:
-    | 'default'
-    | 'destructive'
-    | 'outline'
-    | 'secondary'
-    | 'ghost'
-    | 'link';
-  size?: 'default' | 'sm' | 'lg' | 'icon' | 'icon-sm' | 'icon-lg';
   className?: string;
 };
 
@@ -31,19 +23,15 @@ export const logoutAction = async () => {
 export function LogoutButton({
   children,
   className,
-  variant = 'default',
-  size = 'default',
-  ...props
 }: PropsWithChildren<LogoutButtonProps>) {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
   return (
-    <Button
-      className={cn(className)}
-      variant={variant}
-      size={size}
-      {...props}
+    <Link
+      href='#'
+      title='Logout'
+      className={cn('', className)}
       onClick={() =>
         logoutAction().then((path) => {
           dispatch({ type: 'user/clearUser' });
@@ -51,6 +39,6 @@ export function LogoutButton({
         })
       }>
       {children}
-    </Button>
+    </Link>
   );
 }
