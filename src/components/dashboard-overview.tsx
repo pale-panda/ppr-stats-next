@@ -105,7 +105,7 @@ export function DashboardOverview({ trackSession }: DashboardOverviewProps) {
         />
         <SpeedChart
           sessionId={trackSession.id}
-          topSpeed={formatSpeed(trackSession.max_speed) as string}
+          topSpeed={formatSpeed(trackSession.max_speed)}
         />
       </div>
 

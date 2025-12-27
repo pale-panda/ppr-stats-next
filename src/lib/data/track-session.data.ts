@@ -10,6 +10,7 @@ import {
 } from '@/types';
 import { TRACK_SESSION_LIMIT_CARDS } from '@/lib/data/constants';
 import { filterByFilterParams, FilterParams } from '@/lib/filter-utils';
+import { DashboardStats } from '@/types/stats.type';
 
 export async function getSessionById(id: string): Promise<TrackSessions> {
   const supabase = await createClient();
@@ -268,7 +269,7 @@ export async function getTrackSessionsByTrackId(
   return sessions;
 }
 
-export async function getDashboardStats() {
+export const getDashboardStats = cache(async (): Promise<DashboardStats> => {
   const supabase = await createClient();
 
   // Get total sessions
@@ -305,7 +306,7 @@ export async function getDashboardStats() {
     bestLapTime: bestLap?.lap_time_seconds || null,
     topSpeed: topSpeed?.max_speed_kmh || null,
   };
-}
+});
 
 interface AnalyticsStats {
   bestLapTime: number;

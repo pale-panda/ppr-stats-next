@@ -13,34 +13,44 @@ import {
   FieldSeparator,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import Link from 'next/link';
 import { AppImage } from '@/components/app-image';
 
-export function LoginForm({
+export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     const supabase = createClient();
     setIsLoading(true);
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            full_name: `${firstName} ${lastName}`,
+          },
+        },
       });
       if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push('/home');
+
+      router.push('/login');
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
@@ -52,15 +62,42 @@ export function LoginForm({
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card className='overflow-hidden p-0'>
         <CardContent className='grid p-0 md:grid-cols-2'>
-          <form className='p-6 md:p-8' onSubmit={handleLogin}>
+          <form className='p-6 md:p-8' onSubmit={handleSignup}>
             <FieldGroup>
               <div className='flex flex-col items-center gap-2 text-center'>
-                <h1 className='text-2xl font-bold'>Welcome back</h1>
-                <p className='text-muted-foreground text-balance'>
-                  Login to your account to access your track session data and
-                  analytics.
+                <h1 className='text-2xl font-bold'>Create your account</h1>
+                <p className='text-muted-foreground text-sm text-balance'>
+                  Enter your details below to create your account
                 </p>
               </div>
+
+              <Field>
+                <Field className='grid grid-cols-2 gap-4'>
+                  <Field>
+                    <FieldLabel htmlFor='first-name'>First Name</FieldLabel>
+                    <Input
+                      id='first-name'
+                      type='text'
+                      required
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor='last-name'>Last Name</FieldLabel>
+                    <Input
+                      id='last-name'
+                      type='text'
+                      required
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                    />
+                  </Field>
+                </Field>
+                <FieldDescription>
+                  This is how we&apos;ll address you in the app.
+                </FieldDescription>
+              </Field>
               <Field>
                 <FieldLabel htmlFor='email'>Email</FieldLabel>
                 <Input
@@ -71,28 +108,44 @@ export function LoginForm({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
+                <FieldDescription>
+                  We&apos;ll use this to contact you. We will not share your
+                  email with anyone else.
+                </FieldDescription>
               </Field>
               <Field>
-                <div className='flex items-center'>
-                  <FieldLabel htmlFor='password'>Password</FieldLabel>
-                  <Link
-                    href='/auth/forgot-password'
-                    className='ml-auto text-sm underline-offset-2 hover:underline'>
-                    Forgot your password?
-                  </Link>
-                </div>
-                <Input
-                  id='password'
-                  type='password'
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <Field className='grid grid-cols-2 gap-4'>
+                  <Field>
+                    <FieldLabel htmlFor='password'>Password</FieldLabel>
+                    <Input
+                      id='password'
+                      type='password'
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor='confirm-password'>
+                      Confirm Password
+                    </FieldLabel>
+                    <Input
+                      id='confirm-password'
+                      type='password'
+                      required
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
+                  </Field>
+                </Field>
+                <FieldDescription>
+                  Must be at least 8 characters long.
+                </FieldDescription>
               </Field>
               {error && <p className='text-sm text-red-500'>{error}</p>}
               <Field>
                 <Button type='submit' disabled={isLoading}>
-                  {isLoading ? 'Logging in...' : 'Login'}
+                  {isLoading ? 'Creating Account...' : 'Create Account'}
                 </Button>
               </Field>
               <FieldSeparator className='*:data-[slot=field-separator-content]:bg-card'>
@@ -106,7 +159,7 @@ export function LoginForm({
                       fill='currentColor'
                     />
                   </svg>
-                  <span className='sr-only'>Login with Apple</span>
+                  <span className='sr-only'>Sign up with Apple</span>
                 </Button>
                 <Button variant='outline' type='button'>
                   <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>
@@ -115,7 +168,7 @@ export function LoginForm({
                       fill='currentColor'
                     />
                   </svg>
-                  <span className='sr-only'>Login with Google</span>
+                  <span className='sr-only'>Sign up with Google</span>
                 </Button>
                 <Button variant='outline' type='button'>
                   <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>
@@ -124,11 +177,11 @@ export function LoginForm({
                       fill='currentColor'
                     />
                   </svg>
-                  <span className='sr-only'>Login with Meta</span>
+                  <span className='sr-only'>Sign up with Meta</span>
                 </Button>
               </Field>
               <FieldDescription className='text-center'>
-                Don&apos;t have an account? <Link href='signup'>Sign up</Link>
+                Already have an account? <Link href='login'>Sign in</Link>
               </FieldDescription>
             </FieldGroup>
           </form>

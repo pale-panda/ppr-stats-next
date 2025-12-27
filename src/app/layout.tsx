@@ -48,22 +48,22 @@ export default async function RootLayout({
   return (
     <html lang='en' className='dark' suppressHydrationWarning>
       <body
-        className={`${_geist.variable} ${_geistMono.variable}  font-sans antialiased`}>
+        className={`${_geist.variable} ${_geistMono.variable} font-sans antialiased min-h-svh bg-background flex flex-col`}>
         <ThemeProvider
           attribute='class'
           defaultTheme='system'
           enableSystem
           disableTransitionOnChange>
           <ReduxWrapper>
-            <div className='min-h-screen bg-background'>
-              <Header />
+            <Header />
+            <main role='main' className='flex-1 w-full'>
               {children}
-            </div>
+            </main>
           </ReduxWrapper>
           <Footer />
-          <Analytics />
         </ThemeProvider>
       </body>
+      <Analytics />
     </html>
   );
 }

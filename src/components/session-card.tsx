@@ -100,10 +100,10 @@ export function SessionCard({
         </div>
         <div className='flex gap-2'>
           <Button variant='outline' className='flex-1 bg-transparent' asChild>
-            <Link href={`/session/${id}`}>View Results</Link>
+            <Link href={`sessions/${id}`}>View Results</Link>
           </Button>
           <Button className='flex-1 bg-primary hover:bg-primary/90' asChild>
-            <Link href={`/session/${id}/dashboard`}>
+            <Link href={`sessions/${id}/dashboard`}>
               Dashboard
               <ChevronRight className='w-4 h-4 ml-1' />
             </Link>

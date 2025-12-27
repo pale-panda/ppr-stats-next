@@ -169,7 +169,7 @@ export function LapSelector({
             />
             <StatItem
               label='Max Speed'
-              value={formatSpeed(currentLap.max_speed_kmh) as string}
+              value={formatSpeed(currentLap.max_speed_kmh)}
             />
           </div>
 

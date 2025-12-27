@@ -29,23 +29,23 @@ export function formatDuration(seconds: number | null): string {
   return `${minutes} min`;
 }
 
+interface FormatSpeedOptions {
+  unit?: string;
+  showUnit: boolean;
+}
+
 export function formatSpeed(
   kmh: number | null,
-  options?: { unit?: string; component?: React.ReactNode }
-): React.ReactNode | string {
+  options: FormatSpeedOptions = {
+    unit: 'km/h',
+    showUnit: true,
+  }
+) {
   if (kmh === null || kmh === undefined) return 'N/A';
 
-  const { unit, component } = options || {};
+  const { unit, showUnit } = options || {};
 
-  if (component) {
-    return (
-      <>
-        {kmh.toFixed(2)} {component}
-      </>
-    );
-  }
-
-  return `${kmh.toFixed(2)} ${unit || 'kph'}`;
+  return `${kmh.toFixed(2)} ${showUnit === false ? '' : unit || 'km/h'}`;
 }
 
 export function formatMinMaxSpeed(
@@ -56,7 +56,7 @@ export function formatMinMaxSpeed(
     minKmh === null || minKmh === undefined ? 'N/A' : minKmh.toFixed(2);
   const maxSpeed =
     maxKmh === null || maxKmh === undefined ? 'N/A' : maxKmh.toFixed(2);
-  return `${maxSpeed} / ${minSpeed} kph`;
+  return `${maxSpeed} / ${minSpeed} km/h`;
 }
 
 export function formatLeanAngle(angle: number | null): string {

@@ -17,12 +17,28 @@ export const useCurrentUserAuth = () => {
   useEffect(() => {
     const fetchAuthStatus = async () => {
       const supabase = createClient();
-      const { data, error } = await supabase.auth.getUser();
+
+      supabase.auth.getClaims().then((value) => {
+        console.log('Auth Claims:', value);
+      });
+
+      supabase.auth.getSession().then((value) => {
+        console.log('Auth Session:', value);
+      });
+
+      supabase.auth.getUser().then((value) => {
+        console.log('Auth User:', value);
+      });
+
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
       if (error) {
         console.error(error);
       }
 
-      if (!data.user) {
+      if (!session) {
         setIsAuthenticated(false);
         setCurrentUser(null);
         return;
@@ -30,16 +46,16 @@ export const useCurrentUserAuth = () => {
 
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('id, full_name, avatar_url')
-        .eq('id', data.user.id)
+        .select('*')
+        .eq('id', session.user.id)
         .single();
       if (profileError) {
         console.error(profileError);
       }
 
       setCurrentProfile(profileData);
-      setCurrentUser(data.user);
-      setIsAuthenticated(!!data.user);
+      setCurrentUser(session.user);
+      setIsAuthenticated(!!session.user);
     };
 
     fetchAuthStatus();

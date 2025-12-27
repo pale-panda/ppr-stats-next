@@ -58,7 +58,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
         <div className='absolute inset-0 flex items-end'>
           <div className='container mx-auto px-4 pb-6'>
             <Link
-              href='/'
+              href='/sessions'
               className='inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors'>
               <ArrowLeft className='w-4 h-4' />
               Back to Sessions
@@ -82,7 +82,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
                 </div>
               </div>
               <Button className='bg-primary hover:bg-primary/90 w-fit' asChild>
-                <Link href={`/session/${id}/dashboard`}>
+                <Link href={`${id}/dashboard`}>
                   <BarChart3 className='w-4 h-4 mr-2' />
                   Open Dashboard
                 </Link>

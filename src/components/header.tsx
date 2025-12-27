@@ -16,11 +16,13 @@ export function Header() {
   const pathname = usePathname();
   const auth = useCurrentUserAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
+  console.log(auth);
   const navLinks = auth.isAuthenticated ? navLinksProtected : navLinksPublic;
 
   return (
-    <header className='h-16 sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md'>
+    <header
+      role='banner'
+      className='h-16 sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md'>
       <div className='container mx-auto px-4'>
         <div className='flex items-center justify-between h-16'>
           {/* Logo */}
@@ -42,7 +44,7 @@ export function Header() {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className='hidden md:flex items-center gap-6'>
+          <nav role='navigation' className='hidden md:flex items-center gap-6'>
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -62,7 +64,9 @@ export function Header() {
 
           {/* Actions */}
           <div className='flex items-center gap-2'>
-            <HeaderActions />
+            <HeaderActions isAuthenticated={auth.isAuthenticated} />
+
+            {/* Mobile Menu Button */}
             <Button
               variant='ghost'
               size='icon'
@@ -79,7 +83,9 @@ export function Header() {
 
         {/* Mobile Nav */}
         {isMenuOpen && (
-          <nav className='md:hidden backdrop-blur-md flex items-center bg-background/70 rounded-b-md shadow-md'>
+          <nav
+            role='navigation'
+            className='md:hidden backdrop-blur-md flex items-center bg-background/70 rounded-b-md shadow-md'>
             <div className='backdrop-blur-md bg-background/70 rounded-b-md grid grid-cols-2 gap-0 w-full'>
               {navLinks.map((link) => (
                 <Link

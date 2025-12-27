@@ -1,47 +1,60 @@
-import { Timer, Gauge, TrendingUp, Trophy } from "lucide-react"
+import { StatItem, StatsType } from '@/types';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
-const stats = [
-  {
-    icon: Timer,
-    value: "1:42.847",
-    label: "Personal Best",
-    sublabel: "Spa-Francorchamps",
-  },
-  {
-    icon: Gauge,
-    value: "287",
-    label: "Top Speed",
-    sublabel: "km/h",
-  },
-  {
-    icon: TrendingUp,
-    value: "24",
-    label: "Sessions",
-    sublabel: "This Season",
-  },
-  {
-    icon: Trophy,
-    value: "3",
-    label: "Track Records",
-    sublabel: "Held",
-  },
-]
+const createStatCard = (stat: StatItem, index: number) => {
+  const Icon = stat.icon || (() => null);
 
-export function StatsBar() {
   return (
-    <section className="border-y border-border bg-card/50">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border">
-          {stats.map((stat, index) => (
-            <div key={index} className="py-6 px-4 md:px-6 text-center">
-              <stat.icon className="w-5 h-5 text-primary mx-auto mb-2" />
-              <p className="text-2xl md:text-3xl font-bold font-mono text-foreground">{stat.value}</p>
-              <p className="text-sm text-foreground font-medium">{stat.label}</p>
-              <p className="text-xs text-muted-foreground">{stat.sublabel}</p>
-            </div>
-          ))}
+    <Card className='bg-card border-border/50' key={index}>
+      <CardContent className='px-6 sm:px-6'>
+        <div className='flex items-center justify-between mb-2 sm:mb-0'>
+          <p className='text-xs text-muted-foreground uppercase tracking-wider text-nowrap'>
+            {stat.label}
+          </p>
         </div>
+        <div className='flex items-center justify-between'>
+          <div>
+            <p className='text-2xl font-mono font-bold mt-1'>{stat.value} </p>
+          </div>
+          <div
+            className={cn(
+              'w-10 h-10 rounded-lg flex items-center justify-center',
+              index === 0 && 'bg-chart-1/10',
+              index === 1 && 'bg-chart-2/10',
+              index === 2 && 'bg-chart-3/10',
+              index === 3 && 'bg-chart-4/10'
+            )}>
+            <Icon
+              className={cn(
+                'w-5 h-5',
+                index === 0 && 'text-chart-1',
+                index === 1 && 'text-chart-2',
+                index === 2 && 'text-chart-3',
+                index === 3 && 'text-chart-4'
+              )}
+            />
+          </div>
+        </div>
+      </CardContent>
+      <CardFooter>
+        <p className='text-xs text-muted-foreground'>{stat.sublabel}</p>
+      </CardFooter>
+    </Card>
+  );
+};
+
+interface StatsBarProps {
+  type: StatsType;
+  statItems: StatItem[];
+}
+
+export function StatsBar({ ...props }: StatsBarProps) {
+  return (
+    <section className='border-b border-border bg-card/50'>
+      <div className='px-4 py-8 container mx-auto  grid grid-cols-2 md:grid-cols-4 gap-4 divide-x divide-border'>
+        {props.statItems.map((stat, index) => createStatCard(stat, index))}
       </div>
     </section>
-  )
+  );
 }
