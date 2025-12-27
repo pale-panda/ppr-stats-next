@@ -16,6 +16,8 @@ import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { AppImage } from '@/components/app-image';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/state/store';
 
 export function LoginForm({
   className,
@@ -26,6 +28,7 @@ export function LoginForm({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,12 +37,14 @@ export function LoginForm({
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) throw error;
       // Update this route to redirect to an authenticated route. The user already has an active session.
+      console.log('Login successful:', data);
+      dispatch({ type: 'user/setUser', payload: data.user });
       router.push('/home');
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An error occurred');

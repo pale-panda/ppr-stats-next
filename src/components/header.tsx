@@ -10,13 +10,12 @@ import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { HeaderActions } from '@/components/header-actions';
 import { navLinksPublic, navLinksProtected } from '@/lib/data/nav-links';
-import { useCurrentUserAuth } from '@/hooks/use-current-user-auth';
+import { useAuth } from '@/hooks/use-auth';
 
 export function Header() {
   const pathname = usePathname();
-  const auth = useCurrentUserAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  console.log(auth);
+  const auth = useAuth();
   const navLinks = auth.isAuthenticated ? navLinksProtected : navLinksPublic;
 
   return (
@@ -64,7 +63,7 @@ export function Header() {
 
           {/* Actions */}
           <div className='flex items-center gap-2'>
-            <HeaderActions isAuthenticated={auth.isAuthenticated} />
+            <HeaderActions />
 
             {/* Mobile Menu Button */}
             <Button

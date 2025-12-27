@@ -1,17 +1,13 @@
 'use client';
 
-import { useCurrentUserAuth } from '@/hooks/use-current-user-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/state/store';
 
-interface CurrentUserAvatarProps {
-  avatarUrl?: string | null;
-  fullName?: string | null;
-}
+export const CurrentUserAvatar = () => {
+  const userState = useSelector((state: RootState) => state.user);
 
-export const CurrentUserAvatar = ({
-  avatarUrl,
-  fullName,
-}: CurrentUserAvatarProps) => {
+  const fullName: string = userState.user?.user_metadata.full_name || '';
   const initials = fullName
     ?.split(' ')
     ?.map((word) => word[0])
@@ -20,26 +16,31 @@ export const CurrentUserAvatar = ({
 
   return (
     <Avatar>
-      {avatarUrl && <AvatarImage src={avatarUrl} alt={initials} />}
+      {userState.user?.user_metadata.avatar_url && (
+        <AvatarImage
+          src={userState.user.user_metadata.avatar_url}
+          alt={initials}
+        />
+      )}
       <AvatarFallback>{initials}</AvatarFallback>
     </Avatar>
   );
 };
 
 export const CurrentUserAvatarWithName = () => {
-  const { isAuthenticated, currentUser, currentProfile } = useCurrentUserAuth();
+  const userState = useSelector((state: RootState) => state.user);
 
-  if (!isAuthenticated) return null;
+  if (!userState.isAuthenticated) return null;
 
   return (
     <div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
       <CurrentUserAvatar />
       <div className='flex flex-col p-1'>
         <span className='font-medium text-foreground truncate w-40'>
-          {currentProfile?.full_name}
+          {userState.user?.user_metadata.full_name}
         </span>
         <span className='text-xs text-muted-foreground truncate w-40'>
-          {currentUser?.email}
+          {userState.user?.email}
         </span>
       </div>
     </div>

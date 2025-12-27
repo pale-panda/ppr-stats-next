@@ -1,3 +1,5 @@
+'use client';
+
 import {
   BadgeCheck,
   Bell,
@@ -21,17 +23,16 @@ import {
   CurrentUserAvatar,
   CurrentUserAvatarWithName,
 } from '@/components/current-user-avatar';
-import { logoutAction } from '@/components/logout-button';
+import { LogoutButton } from '@/components/logout-button';
 import Link from 'next/link';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/state/store';
 
-interface HeaderActionsProps {
-  isAuthenticated?: boolean;
-}
-
-export function HeaderActions({ isAuthenticated }: HeaderActionsProps) {
+export function HeaderActions() {
+  const userState = useSelector((state: RootState) => state.user);
   return (
     <div className='flex items-center justify-end gap-2 md:min-w-38'>
-      {isAuthenticated ? (
+      {userState.isAuthenticated ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -65,9 +66,11 @@ export function HeaderActions({ isAuthenticated }: HeaderActionsProps) {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logoutAction}>
-              <LogOut />
-              Log out
+            <DropdownMenuItem>
+              <LogoutButton variant='ghost'>
+                <LogOut />
+                Log out
+              </LogoutButton>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
