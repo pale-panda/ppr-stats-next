@@ -21,6 +21,27 @@ const _geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Pale Panda Racing Team - Home',
   description: 'Racing telemetry and lap analysis',
+  applicationName: 'Pale Panda Racing Team Stats',
+  keywords: [
+    'Pale Panda Racing Team',
+    'Pale Panda',
+    'Racing',
+    'PPR',
+    'Telemetry',
+    'Lap Analysis',
+    'Roadracing',
+  ],
+  authors: [
+    {
+      name: 'Pale Panda Racing Team',
+      url: 'https://ppr-stats-next.vercel.app/',
+    },
+  ],
+  creator: 'Pale Panda Racing Team',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: 'white' },
+    { media: '(prefers-color-scheme: dark)', color: 'black' },
+  ],
   icons: {
     icon: [
       {
