@@ -29,6 +29,14 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Lap } from '@/types';
 import { AppImage } from '@/components/app-image';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Track Details',
+  description:
+    'View detailed information about a specific track in the Pale Panda Racing Team',
+  keywords: ['Pale Panda Racing Team', 'Track', 'Details'],
+};
 
 export default async function TrackDetailPage({
   params,

@@ -7,8 +7,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       alternates: {
         languages: {
-          sv: 'https://ppr-stats-next.vercel.app',
-          en: 'https://ppr-stats-next.vercel.app/en',
+          en: 'https://ppr-stats-next.vercel.app',
         },
       },
     },
@@ -17,8 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       alternates: {
         languages: {
-          sv: 'https://ppr-stats-next.vercel.app/about',
-          en: 'https://ppr-stats-next.vercel.app/en/about',
+          en: 'https://ppr-stats-next.vercel.app/about',
         },
       },
     },
@@ -27,8 +25,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       alternates: {
         languages: {
-          sv: 'https://ppr-stats-next.vercel.app/contact',
-          en: 'https://ppr-stats-next.vercel.app/en/contact',
+          en: 'https://ppr-stats-next.vercel.app/contact',
         },
       },
     },
@@ -37,8 +34,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       alternates: {
         languages: {
-          sv: 'https://ppr-stats-next.vercel.app/auth/login',
-          en: 'https://ppr-stats-next.vercel.app/en/auth/login',
+          en: 'https://ppr-stats-next.vercel.app/auth/login',
         },
       },
     },
@@ -47,8 +43,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       alternates: {
         languages: {
-          sv: 'https://ppr-stats-next.vercel.app/auth/register',
-          en: 'https://ppr-stats-next.vercel.app/en/auth/register',
+          en: 'https://ppr-stats-next.vercel.app/auth/register',
         },
       },
     },
@@ -57,8 +52,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       alternates: {
         languages: {
-          sv: 'https://ppr-stats-next.vercel.app/analytics',
-          en: 'https://ppr-stats-next.vercel.app/en/analytics',
+          en: 'https://ppr-stats-next.vercel.app/analytics',
         },
       },
     },
@@ -67,8 +61,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       alternates: {
         languages: {
-          sv: 'https://ppr-stats-next.vercel.app/leaderboard',
-          en: 'https://ppr-stats-next.vercel.app/en/leaderboard',
+          en: 'https://ppr-stats-next.vercel.app/leaderboard',
         },
       },
     },
@@ -77,8 +70,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       alternates: {
         languages: {
-          sv: 'https://ppr-stats-next.vercel.app/upload',
-          en: 'https://ppr-stats-next.vercel.app/en/upload',
+          en: 'https://ppr-stats-next.vercel.app/upload',
         },
       },
     },
@@ -87,8 +79,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       alternates: {
         languages: {
-          sv: 'https://ppr-stats-next.vercel.app/home',
-          en: 'https://ppr-stats-next.vercel.app/en/home',
+          en: 'https://ppr-stats-next.vercel.app/home',
         },
       },
     },
@@ -97,8 +88,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       alternates: {
         languages: {
-          sv: 'https://ppr-stats-next.vercel.app/sessions',
-          en: 'https://ppr-stats-next.vercel.app/en/sessions',
+          en: 'https://ppr-stats-next.vercel.app/sessions',
         },
       },
     },
@@ -107,8 +97,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       alternates: {
         languages: {
-          sv: 'https://ppr-stats-next.vercel.app/tracks',
-          en: 'https://ppr-stats-next.vercel.app/en/tracks',
+          en: 'https://ppr-stats-next.vercel.app/tracks',
         },
       },
     },
@@ -117,8 +106,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       alternates: {
         languages: {
-          sv: 'https://ppr-stats-next.vercel.app/tracks/[trackId]',
-          en: 'https://ppr-stats-next.vercel.app/en/tracks/[trackId]',
+          en: 'https://ppr-stats-next.vercel.app/tracks/[trackId]',
         },
       },
     },
@@ -127,8 +115,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       alternates: {
         languages: {
-          sv: 'https://ppr-stats-next.vercel.app/sessions/[sessionId]',
-          en: 'https://ppr-stats-next.vercel.app/en/sessions/[sessionId]',
+          en: 'https://ppr-stats-next.vercel.app/sessions/[sessionId]',
         },
       },
     },

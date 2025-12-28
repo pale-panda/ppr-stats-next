@@ -25,6 +25,14 @@ import {
   formatTrackLength,
 } from '@/lib/format-utils';
 import { getTrackSessionWithStats } from '@/lib/data/track-session.data';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Session Details',
+  description:
+    'View detailed information about a specific Pale Panda Racing Team session',
+  keywords: ['Pale Panda Racing Team', 'Session', 'Details'],
+};
 
 interface SessionPageProps {
   params: Promise<{ id: string }>;

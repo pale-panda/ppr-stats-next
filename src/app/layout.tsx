@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/next';
 import { Footer } from '@/components/footer';
 import { ReduxWrapper } from '@/components/redux-wrapper';
 import { Header } from '@/components/header';
+import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
 const _geist = Geist({
@@ -19,8 +20,11 @@ const _geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Pale Panda Racing Team - Home',
-  description: 'Racing telemetry and lap analysis',
+  title: {
+    template: '%s | Pale Panda Racing Team ',
+    default: 'Pale Panda Racing Team',
+  },
+  description: 'Racing telemetry and }lap analysis',
   applicationName: 'Pale Panda Racing Team Stats',
   keywords: [
     'Pale Panda Racing Team',
@@ -38,10 +42,6 @@ export const metadata: Metadata = {
     },
   ],
   creator: 'Pale Panda Racing Team',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: 'white' },
-    { media: '(prefers-color-scheme: dark)', color: 'black' },
-  ],
   icons: {
     icon: [
       {
@@ -77,6 +77,7 @@ export default async function RootLayout({
           disableTransitionOnChange>
           <ReduxWrapper>
             <Header />
+            <Toaster  />
             <main role='main' className='flex-1 w-full'>
               {children}
             </main>
