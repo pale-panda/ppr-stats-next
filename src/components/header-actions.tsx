@@ -27,11 +27,13 @@ import { LogoutButton } from '@/components/logout-button';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/state/store';
+import { ModeToggle } from '@/components/mode-toggle';
 
 export function HeaderActions() {
   const userState = useSelector((state: RootState) => state.user);
   return (
     <div className='flex items-center justify-end gap-2 md:min-w-38'>
+      <ModeToggle />
       {userState.isAuthenticated ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

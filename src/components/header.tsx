@@ -35,7 +35,7 @@ export function Header() {
               />
             </div>
             <div className='flex flex-col leading-tight'>
-              <span className='font-bold text-md text-nowrap  text-foreground'>
+              <span className='font-bold text-md text-nowrap text-foreground'>
                 PALE <span className='text-primary'>PANDA</span>
               </span>
               <span className='text-nowrap text-foreground'>Racing Team</span>
