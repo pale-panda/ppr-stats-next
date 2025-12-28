@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, MapPin, Flag, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { AppImage } from '@/components/app-image';
 
 interface SessionCardProps {
   id: string;
@@ -40,15 +41,17 @@ export function SessionCard({
   };
 
   imageUrl = imageUrl
-    ? process.env.NEXT_PUBLIC_STORAGE_URL! + imageUrl
+    ? process.env.NEXT_PUBLIC_STORAGE_SUPABASE_URL! + imageUrl
     : '/placeholder.svg';
 
   return (
     <Card className='group pt-0 overflow-hidden border-border/50 bg-card hover:border-primary/50 transition-all duration-300'>
       <div className='relative aspect-video overflow-hidden'>
-        <img
-          src={imageUrl || '/placeholder.svg'}
+        <AppImage
+          src={imageUrl ?? '/placeholder.svg'}
           alt={title}
+          width={400}
+          height={300}
           className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-105'
         />
         <div className='absolute inset-0 bg-linear-to-t from-background/90 via-background/20 to-transparent' />
@@ -97,10 +100,10 @@ export function SessionCard({
         </div>
         <div className='flex gap-2'>
           <Button variant='outline' className='flex-1 bg-transparent' asChild>
-            <Link href={`/session/${id}`}>View Results</Link>
+            <Link href={`sessions/${id}`}>View Results</Link>
           </Button>
           <Button className='flex-1 bg-primary hover:bg-primary/90' asChild>
-            <Link href={`/session/${id}/dashboard`}>
+            <Link href={`sessions/${id}/dashboard`}>
               Dashboard
               <ChevronRight className='w-4 h-4 ml-1' />
             </Link>

@@ -4,12 +4,15 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  let filter = searchParams.get('filter') || '';
+  const page = Number(searchParams.get('page')) || undefined;
+  const pageSize = Number(searchParams.get('pageSize')) || undefined;
+  const queryParams = searchParams.get('query') || undefined;
+  const query = queryParams ? createFilterParams(queryParams) : undefined;
 
   const data = await getAllSessions({
-    currentPage: page,
-    filter: createFilterParams(filter),
+    page,
+    pageSize,
+    query,
   });
 
   if (!data.sessions || data.sessions.length === 0) {

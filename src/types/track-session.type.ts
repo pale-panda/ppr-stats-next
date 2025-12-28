@@ -1,6 +1,7 @@
 import { Track } from '@/types/track.type';
 import { Lap } from '@/types/lap.type';
 import { Telemetry } from '@/types/telemetry.type';
+import { PaginationMeta } from '@/types';
 
 export type TrackSessionValues = Record<string, unknown>;
 
@@ -54,3 +55,20 @@ export type TrackSessionJoined = {
 };
 
 export type TrackSessions = Array<TrackSession> | Array<TrackSessionJoined>;
+
+export type TrackSessionApiResponse = {
+  sessions: TrackSessionJoined[];
+  meta: PaginationMeta;
+};
+
+export type TrackSessionByIdApiResponse = {
+  session: TrackSessionJoined;
+};
+
+export type TrackSessionSearchParams = {
+  query?: string | null;
+  page?: number | null;
+  orderBy?: string | null;
+  pageSize?: number | null;
+  sort?: 'asc' | 'desc' | null;
+};

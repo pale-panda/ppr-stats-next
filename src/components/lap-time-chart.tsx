@@ -34,6 +34,13 @@ const lapData = [
 ];
 
 export function LapTimeChart({ sessionId, bestLap }: LapTimeChartProps) {
+  console.log(
+    'Rendering LapTimeChart for session:',
+    sessionId,
+    'bestLap:',
+    bestLap
+  );
+
   return (
     <Card className='bg-card border-border/50'>
       <CardHeader>

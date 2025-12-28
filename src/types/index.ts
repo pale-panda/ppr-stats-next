@@ -3,6 +3,7 @@ export * from './lap.type';
 export * from './track.type';
 export * from './telemetry.type';
 export * from './profile.type';
+export * from './stats.type';
 
 export type LatLngLiteral = {
   lat: number;
@@ -15,6 +16,7 @@ export type PaginationMeta = {
   totalPages: number;
   totalCount: number;
   remainingCount: number;
+  pageSize: number;
 };
 
 // CSV parsing types

@@ -3,22 +3,25 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Settings, User } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import Image from 'next/image';
-
-const navLinks = [
-  { href: '/', label: 'Sessions' },
-  { href: '/analytics', label: 'Analytics' },
-  { href: '/tracks', label: 'Tracks' },
-  { href: '/upload', label: 'Upload' },
-  { href: '/leaderboard', label: 'Leaderboard' },
-];
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
+import { HeaderActions } from '@/components/header-actions';
+import { navLinksPublic, navLinksProtected } from '@/lib/data/nav-links';
+import { useAuth } from '@/hooks/use-auth';
 
 export function Header() {
+  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const auth = useAuth();
+  const navLinks = auth.isAuthenticated ? navLinksProtected : navLinksPublic;
 
   return (
-    <header className='sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md'>
+    <header
+      role='banner'
+      className='h-16 sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md'>
       <div className='container mx-auto px-4'>
         <div className='flex items-center justify-between h-16'>
           {/* Logo */}
@@ -32,33 +35,37 @@ export function Header() {
               />
             </div>
             <div className='flex flex-col leading-tight'>
-              <span className='font-bold text-lg text-foreground'>
+              <span className='font-bold text-md text-nowrap  text-foreground'>
                 PALE <span className='text-primary'>PANDA</span>
               </span>
-              <span className=''>Racing Team</span>
+              <span className='text-nowrap text-foreground'>Racing Team</span>
             </div>
           </Link>
 
           {/* Desktop Nav */}
-          <nav className='hidden md:flex items-center gap-1'>
+          <nav role='navigation' className='hidden md:flex items-center gap-6'>
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className='px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors'>
+                className={cn(
+                  'flex flex-col group h-16 px-4 py-5.5 text-sm font-medium hover:text-foreground transition-colors hover:bg-linear-to-b hover:from-transparent hover:to-muted/30',
+                  pathname === link.href
+                    ? 'bg-linear-to-b from-transparent to-muted/30 text-foreground transition-colors'
+                    : 'text-muted-foreground'
+                )}
+                aria-current={pathname === link.href ? 'page' : undefined}>
                 {link.label}
+                <Separator className='w-max mt-5 h-px opacity-0 transition-opacity group-hover:opacity-100 group-hover:bg-radial group-hover:from-primary/80 group-hover:to-transparent' />
               </Link>
             ))}
           </nav>
 
           {/* Actions */}
           <div className='flex items-center gap-2'>
-            <Button variant='ghost' size='icon' className='hidden md:flex'>
-              <Settings className='w-5 h-5' />
-            </Button>
-            <Button variant='ghost' size='icon' className='hidden md:flex'>
-              <User className='w-5 h-5' />
-            </Button>
+            <HeaderActions />
+
+            {/* Mobile Menu Button */}
             <Button
               variant='ghost'
               size='icon'
@@ -75,16 +82,33 @@ export function Header() {
 
         {/* Mobile Nav */}
         {isMenuOpen && (
-          <nav className='md:hidden py-4 border-t border-border'>
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className='block px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors'
-                onClick={() => setIsMenuOpen(false)}>
-                {link.label}
-              </Link>
-            ))}
+          <nav
+            role='navigation'
+            className='md:hidden backdrop-blur-md flex items-center bg-background/70 rounded-b-md shadow-md'>
+            <div className='backdrop-blur-md bg-background/70 rounded-b-md grid grid-cols-2 gap-0 w-full'>
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    'group text-center block p-6 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors',
+                    pathname === link.href
+                      ? 'text-foreground'
+                      : 'text-muted-foreground'
+                  )}
+                  aria-current={pathname === link.href ? 'page' : undefined}
+                  onClick={() => setIsMenuOpen(false)}>
+                  {link.label}
+                  <Separator
+                    className={cn(
+                      'w-max mt-5 h-px opacity-0 transition-opacity group-hover:opacity-100 group-hover:bg-radial group-hover:from-primary/80 group-hover:to-transparent',
+                      pathname === link.href &&
+                        'opacity-100 bg-radial from-primary/80 to-transparent'
+                    )}
+                  />
+                </Link>
+              ))}
+            </div>
           </nav>
         )}
       </div>

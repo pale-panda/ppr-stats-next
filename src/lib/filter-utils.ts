@@ -27,23 +27,15 @@ export const createFilterParams = (filter: string): FilterParams => {
     }, {});
 };
 
-export const filterByFilterParams = <T>(
-  data: T[],
+export const filterByFilterParams = (
+  data: Array<Record<string, unknown>>,
   filterParams: FilterParams
-): T[] => {
+) => {
   if (Object.keys(filterParams).length === 0) return data;
   return data.filter((item) =>
     Object.entries(filterParams).every(([key, values]) => {
-      const itemValue = (item as any)[key];
-      /*
-      console.log(
-        'Filtering item key:',
-        key,
-        'itemValue:',
-        itemValue,
-        'against values:',
-        values
-      );*/
+      const itemValue = item[key];
+
       if (itemValue === undefined || itemValue === null) return false;
 
       if (Array.isArray(itemValue)) {

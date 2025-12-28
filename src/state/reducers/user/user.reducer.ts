@@ -1,9 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Profile } from '@/types';
+import { User } from '@supabase/supabase-js';
 
 interface UserState {
-  token?: string;
-  profile?: Profile;
+  user?: User;
   isAuthenticated: boolean;
 }
 
@@ -15,18 +14,16 @@ const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    setUser: (state, action: PayloadAction<Partial<UserState>>) => {
-      state.token = action.payload.token;
-      state.profile = action.payload.profile;
+    setUser: (state, action: PayloadAction<User>) => {
+      state.user = action.payload;
       state.isAuthenticated = true;
     },
     clearUser: (state) => {
-      state.token = undefined;
-      state.profile = undefined;
+      state.user = undefined;
       state.isAuthenticated = false;
     },
-    updateUserProfile: (state, action: PayloadAction<Profile | undefined>) => {
-      state.profile = action.payload;
+    updateUserProfile: (state, action: PayloadAction<User | undefined>) => {
+      state.user = action.payload;
     },
   },
 });

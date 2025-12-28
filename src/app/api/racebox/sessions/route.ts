@@ -182,7 +182,7 @@ async function mapLimit<T, R>(
   limit: number,
   fn: (item: T, index: number) => Promise<R>
 ): Promise<R[]> {
-  const results: R[] = new Array(items.length) as any;
+  const results: R[] = new Array(items.length);
   let i = 0;
 
   const workers = Array.from(
@@ -226,8 +226,8 @@ export async function GET(_req: NextRequest) {
     downloadCsvForSession(jar, p, outDir)
   );
 
-  const ok = results.filter((r: any) => r.ok);
-  const failed = results.filter((r: any) => !r.ok);
+  const ok = results.filter((r) => r.ok);
+  const failed = results.filter((r) => !r.ok);
 
   return Response.json({
     outDir,

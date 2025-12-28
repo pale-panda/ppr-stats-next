@@ -3,8 +3,10 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Analytics } from '@vercel/analytics/next';
-import './globals.css';
 import { Footer } from '@/components/footer';
+import { ReduxWrapper } from '@/components/redux-wrapper';
+import { Header } from '@/components/header';
+import './globals.css';
 
 const _geist = Geist({
   variable: '--font-geist-sans',
@@ -19,6 +21,27 @@ const _geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Pale Panda Racing Team - Home',
   description: 'Racing telemetry and lap analysis',
+  applicationName: 'Pale Panda Racing Team Stats',
+  keywords: [
+    'Pale Panda Racing Team',
+    'Pale Panda',
+    'Racing',
+    'PPR',
+    'Telemetry',
+    'Lap Analysis',
+    'Roadracing',
+  ],
+  authors: [
+    {
+      name: 'Pale Panda Racing Team',
+      url: 'https://ppr-stats-next.vercel.app/',
+    },
+  ],
+  creator: 'Pale Panda Racing Team',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: 'white' },
+    { media: '(prefers-color-scheme: dark)', color: 'black' },
+  ],
   icons: {
     icon: [
       {
@@ -38,7 +61,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -46,17 +69,22 @@ export default function RootLayout({
   return (
     <html lang='en' className='dark' suppressHydrationWarning>
       <body
-        className={`${_geist.variable} ${_geistMono.variable}  font-sans antialiased`}>
+        className={`${_geist.variable} ${_geistMono.variable} font-sans antialiased min-h-svh bg-background flex flex-col`}>
         <ThemeProvider
           attribute='class'
           defaultTheme='system'
           enableSystem
           disableTransitionOnChange>
-          {children}
+          <ReduxWrapper>
+            <Header />
+            <main role='main' className='flex-1 w-full'>
+              {children}
+            </main>
+          </ReduxWrapper>
           <Footer />
-          <Analytics />
         </ThemeProvider>
       </body>
+      <Analytics />
     </html>
   );
 }

@@ -40,6 +40,12 @@ const speedData = [
 ];
 
 export function SpeedChart({ sessionId, topSpeed }: SpeedChartProps) {
+  console.log(
+    'Rendering SpeedChart for session:',
+    sessionId,
+    'topSpeed:',
+    topSpeed
+  );
   return (
     <Card className='bg-card border-border/50'>
       <CardHeader>
