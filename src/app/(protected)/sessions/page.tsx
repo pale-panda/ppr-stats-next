@@ -3,6 +3,13 @@ import { TrackSessionCards } from '@/components/track-session-cards';
 import { TrackSessionFilter } from '@/components/track-session-filter';
 import { StatsBar } from '@/components/stats-bar';
 import { createDashboardStats } from '@/lib/create-stats-items';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Sessions',
+  description: 'View your Pale Panda Racing Team sessions',
+  keywords: ['Pale Panda Racing Team', 'Sessions', 'Stats'],
+};
 
 export default async function HomePage(props: {
   searchParams?: Promise<{ query?: string; pageSize?: string }>;

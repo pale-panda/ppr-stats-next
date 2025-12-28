@@ -5,6 +5,13 @@ import { DashboardHeader } from '@/components/dashboard-header';
 import { DashboardOverview } from '@/components/dashboard-overview';
 import { getTrackSessionWithStats } from '@/lib/data/track-session.data';
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Dashboard',
+  description: 'Welcome to your Pale Panda Racing Team dashboard',
+  keywords: ['Pale Panda Racing Team', 'Dashboard'],
+};
 
 interface DashboardPageProps {
   params: Promise<{ id: string }>;

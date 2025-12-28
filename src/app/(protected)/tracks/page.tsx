@@ -17,6 +17,14 @@ import {
 import Link from 'next/link';
 import { Laps } from '@/types';
 import { AppImage } from '@/components/app-image';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Tracks',
+  description:
+    "Explore circuit information and your personal statistics for each track you've raced on with the Pale Panda Racing Team",
+  keywords: ['Pale Panda Racing Team', 'Tracks', 'Stats'],
+};
 
 export default async function TracksPage() {
   const tracks = await getAllTracks();

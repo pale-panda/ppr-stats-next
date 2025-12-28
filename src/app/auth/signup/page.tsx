@@ -1,4 +1,11 @@
 import { SignupForm } from '@/components/signup-form';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Signup',
+  description: 'Create your Pale Panda Racing Team account',
+  keywords: ['Pale Panda Racing Team', 'Signup', 'Account'],
+};
 
 export default function Page() {
   return (

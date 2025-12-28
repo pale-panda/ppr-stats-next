@@ -19,8 +19,11 @@ const _geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Pale Panda Racing Team - Home',
-  description: 'Racing telemetry and lap analysis',
+  title: {
+    template: '%s | Pale Panda Racing Team ',
+    default: 'Pale Panda Racing Team',
+  },
+  description: 'Racing telemetry and }lap analysis',
   applicationName: 'Pale Panda Racing Team Stats',
   keywords: [
     'Pale Panda Racing Team',
@@ -38,10 +41,6 @@ export const metadata: Metadata = {
     },
   ],
   creator: 'Pale Panda Racing Team',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: 'white' },
-    { media: '(prefers-color-scheme: dark)', color: 'black' },
-  ],
   icons: {
     icon: [
       {

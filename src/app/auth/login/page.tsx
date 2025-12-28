@@ -1,4 +1,11 @@
 import { LoginForm } from '@/components/login-form';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Login',
+  description: 'Access your Pale Panda Racing Team account',
+  keywords: ['Pale Panda Racing Team', 'Login', 'Account'],
+};
 
 export default function Page() {
   return (
