@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/next';
 import { Footer } from '@/components/footer';
 import { ReduxWrapper } from '@/components/redux-wrapper';
 import { Header } from '@/components/header';
+import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
 const _geist = Geist({
@@ -76,6 +77,7 @@ export default async function RootLayout({
           disableTransitionOnChange>
           <ReduxWrapper>
             <Header />
+            <Toaster  />
             <main role='main' className='flex-1 w-full'>
               {children}
             </main>

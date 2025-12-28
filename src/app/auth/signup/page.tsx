@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <section className='flex w-full items-center justify-center p-6 md:p-10'>
-      <div className='w-full max-w-sm md:max-w-4xl'>
+    <section className='container mx-auto px-2 py-8 md:px-10 md:py-10'>
+      <div className='mx-auto max-w-sm md:max-w-6xl'>
         <SignupForm />
       </div>
     </section>
