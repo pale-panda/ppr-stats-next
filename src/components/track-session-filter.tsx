@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CheckIcon, ChevronRight, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,31 +36,17 @@ export function TrackSessionFilter() {
     (state: { [key: string]: string[] }) => {
       const allTracks = tracks ?? [];
 
-      const matchesOtherFilters = (
-        track: { name: string; country: string },
-        ignoredKey: string
-      ) => {
-        for (const [key, values] of Object.entries(state)) {
-          if (!values.length || key === ignoredKey) continue;
+      // Country är "master" och ska inte påverkas av name
+      const countrySet = new Set(allTracks.map((t) => t.country));
 
-          if (key === 'name' && !values.includes(track.name)) return false;
-          if (key === 'country' && !values.includes(track.country))
-            return false;
-        }
-        return true;
-      };
+      // Name ska bero på country (om country-filter är valt)
+      const selectedCountries = state.country ?? [];
+      const filteredByCountry =
+        selectedCountries.length > 0
+          ? allTracks.filter((t) => selectedCountries.includes(t.country))
+          : allTracks;
 
-      const nameSet = new Set(
-        allTracks
-          .filter((track) => matchesOtherFilters(track, 'name'))
-          .map((track) => track.name)
-      );
-
-      const countrySet = new Set(
-        allTracks
-          .filter((track) => matchesOtherFilters(track, 'country'))
-          .map((track) => track.country)
-      );
+      const nameSet = new Set(filteredByCountry.map((t) => t.name));
 
       return {
         name: nameSet,
@@ -106,38 +93,33 @@ export function TrackSessionFilter() {
   function updateFilterQuery(query: { [key: string]: string }) {
     const searchColumn = Object.keys(query)[0];
     const searchValue = query[searchColumn];
+
     setFilterState((prevState) => {
       const currentFilterValues = prevState[searchColumn] || [];
-
       const nextState: { [key: string]: string[] } = { ...prevState };
+
+      // toggle value
       if (currentFilterValues.includes(searchValue)) {
-        const pruned = currentFilterValues.filter(
-          (value) => value !== searchValue
-        );
-        if (pruned.length) {
-          nextState[searchColumn] = pruned;
-        } else {
-          delete nextState[searchColumn];
-        }
+        const pruned = currentFilterValues.filter((v) => v !== searchValue);
+        if (pruned.length) nextState[searchColumn] = pruned;
+        else delete nextState[searchColumn];
       } else {
         nextState[searchColumn] = [...currentFilterValues, searchValue];
       }
 
+      if (searchColumn === 'country') {
+        delete nextState.name;
+      }
+
       const allowed = computeAvailableFilterValues(nextState);
 
-      const pruneByAllowed = (key: 'name' | 'country') => {
-        const current = nextState[key] ?? [];
-        if (!current.length) return;
-        const pruned = current.filter((value) => allowed[key].has(value));
-        if (pruned.length) {
-          nextState[key] = pruned;
-        } else {
-          delete nextState[key];
-        }
-      };
-
-      pruneByAllowed('name');
-      pruneByAllowed('country');
+      // prune ONLY name based on selected country
+      const currentNames = nextState.name ?? [];
+      if (currentNames.length) {
+        const prunedNames = currentNames.filter((v) => allowed.name.has(v));
+        if (prunedNames.length) nextState.name = prunedNames;
+        else delete nextState.name;
+      }
 
       return nextState;
     });
@@ -163,6 +145,7 @@ export function TrackSessionFilter() {
       disabled?: boolean;
       value: string;
     }[];
+    getSelectedCount: () => number;
   };
 
   const getTrackFilters = (): trackFilterItem[] => {
@@ -181,6 +164,9 @@ export function TrackSessionFilter() {
             !availableFilterValues.name.has(item) &&
             !filterState['name']?.includes(item),
         })),
+        getSelectedCount: () => {
+          return filterState['name']?.length || 0;
+        },
       },
       {
         key: 'country',
@@ -188,10 +174,11 @@ export function TrackSessionFilter() {
         items: trackCountries.map((item) => ({
           value: item,
           active: filterState['country']?.includes(item),
-          disabled:
-            !availableFilterValues.country.has(item) &&
-            !filterState['country']?.includes(item),
+          disabled: false,
         })),
+        getSelectedCount: () => {
+          return filterState['country']?.length || 0;
+        },
       },
     ];
   };
@@ -215,7 +202,14 @@ export function TrackSessionFilter() {
           <DropdownMenuGroup>
             {trackFilters.map((queryObject) => (
               <DropdownMenuSub key={queryObject.key}>
-                <DropdownMenuSubTrigger>
+                <DropdownMenuSubTrigger className='cursor-pointer focus:bg-accent/30! data-[state=open]:bg-accent/30!'>
+                  {queryObject.getSelectedCount() > 0 && (
+                    <Badge
+                      className='h-5 min-w-5 rounded-full px-1 font-mono tabular-nums'
+                      variant='destructive'>
+                      {queryObject.getSelectedCount()}
+                    </Badge>
+                  )}
                   {queryObject.label}
                 </DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
@@ -229,14 +223,17 @@ export function TrackSessionFilter() {
                             [queryObject.key]: item.value,
                           });
                         }}
-                        disabled={item.disabled}>
+                        disabled={item.disabled}
+                        className='group cursor-pointer focus:bg-primary/30!'>
                         <span
                           className={cn(
                             'flex items-center gap-2',
                             item.disabled && 'text-muted-foreground'
                           )}>
                           {item.active && (
-                            <CheckIcon className='text-chart-1' />
+                            <div className='group-focus:bg-muted size-6 rounded-lg flex items-center justify-center bg-primary/10'>
+                              <CheckIcon className='text-chart-1' />
+                            </div>
                           )}
                           {item.value}
                         </span>
@@ -247,35 +244,6 @@ export function TrackSessionFilter() {
               </DropdownMenuSub>
             ))}
           </DropdownMenuGroup>
-          {/* <DropdownMenuSeparator />
-          <DropdownMenuLabel>Sorting</DropdownMenuLabel>
-          <DropdownMenuGroup>
-            <DropdownMenuItem>Team</DropdownMenuItem>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>Invite users</DropdownMenuSubTrigger>
-              <DropdownMenuPortal>
-                <DropdownMenuSubContent>
-                  <DropdownMenuItem>Email</DropdownMenuItem>
-                  <DropdownMenuItem>Message</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>More...</DropdownMenuItem>
-                </DropdownMenuSubContent>
-              </DropdownMenuPortal>
-            </DropdownMenuSub>
-            <DropdownMenuItem>
-              New Team
-              <DropdownMenuShortcut>⌘+T</DropdownMenuShortcut>
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>GitHub</DropdownMenuItem>
-          <DropdownMenuItem>Support</DropdownMenuItem>
-          <DropdownMenuItem disabled>API</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            Log out
-            <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-          </DropdownMenuItem>*/}
         </DropdownMenuContent>
       </DropdownMenu>
 

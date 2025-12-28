@@ -307,7 +307,7 @@ export const getDashboardStats = cache(
     // Get best lap time
     const { data: bestLap } = await supabase
       .from('laps')
-      .select('lap_time_seconds')
+      .select('lap_time_seconds, tracks(name)')
       .filter('track_id', 'in', `(${trackIds})`)
       .order('lap_time_seconds', { ascending: true })
       .neq('lap_number', 0)
@@ -317,18 +317,49 @@ export const getDashboardStats = cache(
     // Get top speed
     const { data: topSpeed } = await supabase
       .from('laps')
-      .select('max_speed_kmh')
+      .select('max_speed_kmh, tracks(name)')
       .filter('track_id', 'in', `(${trackIds})`)
       .order('max_speed_kmh', { ascending: false })
       .neq('lap_number', 0)
       .limit(1)
       .single();
 
+    type BestLapType = {
+      lap_time_seconds: number | null;
+      tracks: {
+        name: string;
+      };
+    };
+
+    type TopSpeedType = {
+      max_speed_kmh: number | null;
+      tracks: {
+        name: string;
+      };
+    };
+
+    let bestLapTrackName;
+    let topSpeedTrackName;
+    if (bestLap) {
+      const bestLapTyped = bestLap as unknown as BestLapType;
+      bestLapTrackName = '@' + bestLapTyped.tracks.name;
+    }
+    if (topSpeed) {
+      const topSpeedTyped = topSpeed as unknown as TopSpeedType;
+      topSpeedTrackName = '@' + topSpeedTyped.tracks.name;
+    }
+
     return {
       totalSessions: totalSessions || 0,
       totalLaps: totalLaps || 0,
-      bestLapTime: bestLap?.lap_time_seconds || null,
-      topSpeed: topSpeed?.max_speed_kmh || null,
+      bestLapTime: {
+        lapTimeSeconds: bestLap?.lap_time_seconds || null,
+        trackName: bestLapTrackName || null,
+      },
+      topSpeed: {
+        maxSpeedKmh: topSpeed?.max_speed_kmh || null,
+        trackName: topSpeedTrackName || null,
+      },
     };
   }
 );

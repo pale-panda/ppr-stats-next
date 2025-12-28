@@ -90,8 +90,6 @@ export default async function TrackDetailPage({
           src={imageUrl}
           alt={track.name}
           fill
-          width={500}
-          height={500}
           className='absolute inset-0 w-full h-full object-fill'
         />
 

@@ -56,26 +56,27 @@ const createDashboardStats = async (query?: string) => {
   const statsList: StatItem[] = [
     {
       label: 'Best Lap',
-      value: formatLapTime(data.bestLapTime),
-      sublabel: '',
+      value: formatLapTime(data.bestLapTime.lapTimeSeconds),
+      sublabel: data.bestLapTime.trackName || '',
       icon: Zap,
     },
     {
       label: 'Top Speed',
-      value: formatSpeed(data.topSpeed, { showUnit: false }),
-      sublabel: 'km/h',
+      value: formatSpeed(data.topSpeed.maxSpeedKmh, { showUnit: false }),
+      unit: 'km/h',
+      sublabel: data.topSpeed.trackName || '',
       icon: Gauge,
     },
     {
       label: 'Sessions',
       value: data.totalSessions,
-      sublabel: '',
+      sublabel: 'At the selected tracks',
       icon: Clock,
     },
     {
       label: 'Total Laps',
       value: data.totalLaps,
-      sublabel: '',
+      sublabel: 'At the selected tracks',
       icon: Flag,
     },
   ];

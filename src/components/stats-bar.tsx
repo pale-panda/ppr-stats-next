@@ -15,7 +15,16 @@ const createStatCard = (stat: StatItem, index: number) => {
         </div>
         <div className='flex items-center justify-between'>
           <div>
-            <p className='text-2xl font-mono font-bold mt-1'>{stat.value} </p>
+            <p className='text-2xl font-mono font-bold mt-1'>
+              {stat.value}{' '}
+              {stat.unit ? (
+                <span className='text-sm text-muted-foreground'>
+                  {stat.unit}
+                </span>
+              ) : (
+                ''
+              )}
+            </p>
           </div>
           <div
             className={cn(

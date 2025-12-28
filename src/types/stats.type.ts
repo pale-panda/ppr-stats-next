@@ -1,8 +1,8 @@
 export type DashboardStats = {
   totalSessions: number;
   totalLaps: number;
-  bestLapTime: number | null;
-  topSpeed: number | null;
+  bestLapTime: { lapTimeSeconds: number | null; trackName: string | null };
+  topSpeed: { maxSpeedKmh: number | null; trackName: string | null };
 };
 
 export type UserStats = {
@@ -44,11 +44,18 @@ export type AppStats = {
   totalUsers: number;
 };
 
-export type StatsType = 'dashboard' | 'user' | 'track' | 'session' | 'lap' | 'app';
+export type StatsType =
+  | 'dashboard'
+  | 'user'
+  | 'track'
+  | 'session'
+  | 'lap'
+  | 'app';
 
 export type StatItem = {
   label: string;
   value: string | number | null;
+  unit?: string;
   sublabel?: string;
-  icon? : React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 };
