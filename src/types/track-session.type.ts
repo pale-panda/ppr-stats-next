@@ -64,3 +64,11 @@ export type TrackSessionApiResponse = {
 export type TrackSessionByIdApiResponse = {
   session: TrackSessionJoined;
 };
+
+export type TrackSessionSearchParams = {
+  query?: string | null;
+  page?: number | null;
+  orderBy?: string | null;
+  pageSize?: number | null;
+  sort?: 'asc' | 'desc' | null;
+};

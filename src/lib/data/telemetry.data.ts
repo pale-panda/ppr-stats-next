@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Telemetry } from '@/types';
 
 export const getTelemetry = cache(
-  async (sessionId: string, lapNumber?: number): Promise<Telemetry> => {
+  async (sessionId: string, lapNumber?: number): Promise<Telemetry | null> => {
     const supabase = await createClient();
     const { data: telemetry, error: telemetryError } = await supabase
       .from('telemetry_points')

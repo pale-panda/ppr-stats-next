@@ -8,12 +8,10 @@ import {
   Track,
   TrackSessionJoined,
 } from '@/types';
-import {
-  DEFAULT_PAGE_SIZE,
-  TRACK_SESSION_LIMIT_CARDS,
-} from '@/lib/data/constants';
+import { DEFAULT_PAGE_SIZE } from '@/lib/data/constants';
 import { filterByFilterParams, FilterParams } from '@/lib/filter-utils';
 import { DashboardStats } from '@/types/stats.type';
+import { getTracks } from './tracks.data';
 
 export async function getSessionById(id: string): Promise<TrackSessions> {
   const supabase = await createClient();
@@ -116,20 +114,21 @@ export async function getSessionCount(): Promise<number> {
 }
 
 interface GetAllSessionsProps {
-  filter?: FilterParams;
-  currentPage?: number;
+  page?: number;
   pageSize?: number;
+  query?: FilterParams;
 }
 
 export async function getAllSessions({
-  filter,
-  currentPage = 1,
-  pageSize = TRACK_SESSION_LIMIT_CARDS,
+  query,
+  page = 1,
+  pageSize = DEFAULT_PAGE_SIZE,
 }: GetAllSessionsProps): Promise<{
   sessions: TrackSessionJoined[];
   meta: PaginationMeta;
+  error?: unknown;
 }> {
-  const currentIndex = (currentPage - 1) * pageSize;
+  const currentIndex = (page - 1) * pageSize;
   const supabase = await createClient();
 
   const { data: tracks, error: trackError } = await supabase.from('tracks')
@@ -142,14 +141,27 @@ export async function getAllSessions({
 
   if (trackError) {
     console.error('Error fetching tracks:', trackError);
-    throw new Error('Failed to fetch tracks');
+    return {
+      sessions: [],
+      meta: {
+        currentPage: page,
+        nextPage: null,
+        totalPages: 0,
+        totalCount: 0,
+        remainingCount: 0,
+        pageSize,
+      },
+      error: trackError,
+    };
   }
 
   let filteredTracks;
 
-  if (filter !== undefined)
-    filteredTracks = filterByFilterParams(tracks, filter);
-  else filteredTracks = tracks;
+  if (query !== undefined) {
+    filteredTracks = filterByFilterParams(tracks, query);
+  } else {
+    filteredTracks = tracks;
+  }
 
   const trackIds = filteredTracks.map((t) => t.id) || [];
 
@@ -157,11 +169,12 @@ export async function getAllSessions({
     return {
       sessions: [],
       meta: {
-        currentPage,
+        currentPage: page,
         nextPage: null,
         totalPages: 0,
         totalCount: 0,
         remainingCount: 0,
+        pageSize,
       },
     };
   }
@@ -185,19 +198,17 @@ export async function getAllSessions({
   const sessions: TrackSessionJoined[] = data;
 
   const totalPages = Math.ceil((totalCount || 0) / pageSize);
-  const remainingCount = Math.max(
-    (totalCount || 0) - currentPage * pageSize,
-    0
-  );
+  const remainingCount = Math.max((totalCount || 0) - page * pageSize, 0);
 
   return {
     sessions,
     meta: {
-      currentPage,
-      nextPage: currentPage < (totalPages || 0) ? currentPage + 1 : null,
+      currentPage: page,
+      nextPage: page < (totalPages || 0) ? page + 1 : null,
       totalPages,
       totalCount: totalCount || 0,
       remainingCount,
+      pageSize,
     },
   };
 }
@@ -275,44 +286,52 @@ export async function getTrackSessionsByTrackId(
   return sessions;
 }
 
-export const getDashboardStats = cache(async (): Promise<DashboardStats> => {
-  const supabase = await createClient();
+export const getDashboardStats = cache(
+  async (query?: FilterParams): Promise<DashboardStats> => {
+    const supabase = await createClient();
 
-  // Get total sessions
-  const { count: totalSessions } = await supabase
-    .from('sessions')
-    .select('*', { count: 'exact', head: true });
+    const filteredTracks = await getTracks({ query });
+    const trackIds = filteredTracks.map((t) => t.id).join(',') || '';
+    // Get total sessions
+    const { count: totalSessions } = await supabase
+      .from('sessions')
+      .select('*', { count: 'exact', head: true })
+      .filter('track_id', 'in', `(${trackIds})`);
 
-  // Get total laps
-  const { count: totalLaps } = await supabase
-    .from('laps')
-    .select('*', { count: 'exact', head: true });
+    // Get total laps
+    const { count: totalLaps } = await supabase
+      .from('laps')
+      .select('*', { count: 'exact', head: true })
+      .filter('track_id', 'in', `(${trackIds})`);
 
-  // Get best lap time
-  const { data: bestLap } = await supabase
-    .from('laps')
-    .select('lap_time_seconds')
-    .order('lap_time_seconds', { ascending: true })
-    .neq('lap_number', 0)
-    .limit(1)
-    .single();
+    // Get best lap time
+    const { data: bestLap } = await supabase
+      .from('laps')
+      .select('lap_time_seconds')
+      .filter('track_id', 'in', `(${trackIds})`)
+      .order('lap_time_seconds', { ascending: true })
+      .neq('lap_number', 0)
+      .limit(1)
+      .single();
 
-  // Get top speed
-  const { data: topSpeed } = await supabase
-    .from('laps')
-    .select('max_speed_kmh')
-    .order('max_speed_kmh', { ascending: false })
-    .neq('lap_number', 0)
-    .limit(1)
-    .single();
+    // Get top speed
+    const { data: topSpeed } = await supabase
+      .from('laps')
+      .select('max_speed_kmh')
+      .filter('track_id', 'in', `(${trackIds})`)
+      .order('max_speed_kmh', { ascending: false })
+      .neq('lap_number', 0)
+      .limit(1)
+      .single();
 
-  return {
-    totalSessions: totalSessions || 0,
-    totalLaps: totalLaps || 0,
-    bestLapTime: bestLap?.lap_time_seconds || null,
-    topSpeed: topSpeed?.max_speed_kmh || null,
-  };
-});
+    return {
+      totalSessions: totalSessions || 0,
+      totalLaps: totalLaps || 0,
+      bestLapTime: bestLap?.lap_time_seconds || null,
+      topSpeed: topSpeed?.max_speed_kmh || null,
+    };
+  }
+);
 
 interface AnalyticsStats {
   bestLapTime: number;

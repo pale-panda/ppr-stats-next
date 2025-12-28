@@ -16,6 +16,7 @@ export type PaginationMeta = {
   totalPages: number;
   totalCount: number;
   remainingCount: number;
+  pageSize: number;
 };
 
 // CSV parsing types

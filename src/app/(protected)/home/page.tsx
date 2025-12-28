@@ -5,12 +5,11 @@ import { StatsBar } from '@/components/stats-bar';
 import { createDashboardStats } from '@/lib/create-stats-items';
 
 export default async function HomePage(props: {
-  searchParams?: Promise<{ query?: string; page?: string }>;
+  searchParams?: Promise<{ query?: string; pageSize?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const query = searchParams?.query || '';
-  const stats = await createDashboardStats();
-  
+  const stats = await createDashboardStats(query);
 
   return (
     <>
@@ -30,7 +29,7 @@ export default async function HomePage(props: {
           </div>
           <TrackSessionFilter />
         </div>
-        <TrackSessionCards query={query} />
+        <TrackSessionCards />
       </section>
     </>
   );

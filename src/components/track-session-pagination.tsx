@@ -1,4 +1,3 @@
-import { Dispatch, SetStateAction } from 'react';
 import {
   Pagination,
   PaginationContent,
@@ -16,7 +15,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from './ui/select';
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
 interface PageItemsProps {
@@ -63,7 +62,7 @@ function getVisiblePages(meta: PaginationMeta) {
 
 function PageItems({ pages, currentPage, handlePageChange }: PageItemsProps) {
   return pages.map((page) => (
-    <PaginationItem key={page}>
+    <PaginationItem key={page} value={page}>
       <PaginationLink
         onClick={() => handlePageChange(page)}
         href='#'
@@ -75,60 +74,18 @@ function PageItems({ pages, currentPage, handlePageChange }: PageItemsProps) {
 }
 
 interface PaginationLinkProps {
-  meta?: PaginationMeta;
+  meta: PaginationMeta;
   className?: string;
-  currentPage: number;
-  setCurrentPage: Dispatch<SetStateAction<number>>;
-  isLoading: boolean;
-  size: {
-    pageSize: number;
-    setPageSize: Dispatch<SetStateAction<number>>;
-  };
+  onPageChange: (newPage: number) => void;
+  onPageSizeChange: (newPageSize: number) => void;
 }
 
 export function TrackSessionPagination({
   className,
   meta,
-  currentPage,
-  setCurrentPage,
-  isLoading,
-  size,
+  onPageChange,
+  onPageSizeChange,
 }: PaginationLinkProps) {
-  if (!meta || meta.totalPages <= 1) {
-    return null;
-  }
-
-  const handlePageChange = (page: number) => {
-    if (
-      !meta ||
-      page < 1 ||
-      page > meta.totalPages ||
-      page === meta.currentPage
-    ) {
-      return;
-    }
-    setCurrentPage(page);
-  };
-
-  function handlePrevious() {
-    if (!meta || meta.currentPage <= 1) {
-      return;
-    }
-    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
-  }
-
-  function handleNext() {
-    console.log('Handling next page');
-    if (!meta || currentPage >= meta.totalPages) {
-      console.log('No next page available');
-      return;
-    }
-    console.log('Moving to next page', currentPage);
-    return setCurrentPage((prevPage) =>
-      Math.min(prevPage + 1, meta.totalPages)
-    );
-  }
-
   const visiblePages = getVisiblePages(meta);
   const firstVisiblePage = visiblePages[0];
   const lastVisiblePage = visiblePages[visiblePages.length - 1];
@@ -140,82 +97,79 @@ export function TrackSessionPagination({
   return (
     <div className={cn('flex flex-col gap-4 md:flex-row ', className)}>
       <div className='w-50 flex-none hidden md:block' />
-      <div className='flex grow justify-center md:flex-1'>
-        <Pagination className='w-auto'>
-          <PaginationContent>
-            {currentPage !== 1 && (
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => !isLoading && handlePrevious()}
-                  href='#'
-                />
-              </PaginationItem>
-            )}
-            {hasHiddenLeadingPages && (
-              <>
-                <PaginationItem>
-                  <PaginationLink
-                    onClick={() => !isLoading && handlePageChange(1)}
+      {meta && meta.totalPages > 1 && (
+        <div className='flex grow justify-center md:flex-1'>
+          <Pagination className='w-auto'>
+            <PaginationContent>
+              {meta.currentPage !== 1 && (
+                <PaginationItem value={meta.currentPage - 1}>
+                  <PaginationPrevious
+                    onClick={() => onPageChange(meta.currentPage - 1)}
                     href='#'
-                    isActive={currentPage === 1}>
-                    1
-                  </PaginationLink>
+                  />
                 </PaginationItem>
-                {shouldShowLeadingEllipsis && (
-                  <PaginationItem>
-                    <PaginationEllipsis />
+              )}
+              {hasHiddenLeadingPages && (
+                <>
+                  <PaginationItem value={1}>
+                    <PaginationLink onClick={() => onPageChange(1)} href='#'>
+                      1
+                    </PaginationLink>
                   </PaginationItem>
-                )}
-              </>
-            )}
-            <PageItems
-              pages={visiblePages}
-              currentPage={currentPage}
-              handlePageChange={handlePageChange}
-            />
-            {hasHiddenTrailingPages && (
-              <>
-                {shouldShowTrailingEllipsis && (
-                  <PaginationItem>
-                    <PaginationEllipsis />
+                  {shouldShowLeadingEllipsis && (
+                    <PaginationItem>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  )}
+                </>
+              )}
+              <PageItems
+                pages={visiblePages}
+                currentPage={meta.currentPage}
+                handlePageChange={onPageChange}
+              />
+              {hasHiddenTrailingPages && (
+                <>
+                  {shouldShowTrailingEllipsis && (
+                    <PaginationItem>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  )}
+                  <PaginationItem value={meta.totalPages}>
+                    <PaginationLink
+                      onClick={() => onPageChange(meta.totalPages)}
+                      href='#'>
+                      {meta.totalPages}
+                    </PaginationLink>
                   </PaginationItem>
-                )}
-                <PaginationItem>
-                  <PaginationLink
-                    onClick={() =>
-                      !isLoading && handlePageChange(meta.totalPages)
-                    }
+                </>
+              )}
+              {meta.currentPage < meta.totalPages && (
+                <PaginationItem value={meta.currentPage + 1}>
+                  <PaginationNext
+                    onClick={() => onPageChange(meta.currentPage + 1)}
                     href='#'
-                    isActive={currentPage === meta.totalPages}>
-                    {meta.totalPages}
-                  </PaginationLink>
+                  />
                 </PaginationItem>
-              </>
-            )}
-            {currentPage < meta.totalPages && (
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => !isLoading && handleNext()}
-                  href='#'
-                />
-              </PaginationItem>
-            )}
-          </PaginationContent>
-        </Pagination>
-      </div>
-      <div className='flex flex-none items-center gap-2 justify-center w-full md:w-50 md:justify-end'>
+              )}
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
+      <div className='ml-auto flex flex-none items-center gap-2 justify-center w-full md:w-50 md:justify-end'>
         <p className='text-sm font-medium text-nowrap'>Items per page</p>
         <Select
-          value={`${size.pageSize}`}
-          onValueChange={(value) => {
-            size.setPageSize(Number(value));
-          }}>
+          value={`${meta.pageSize}`}
+          onValueChange={(value) => onPageSizeChange(Number(value))}>
           <SelectTrigger>
-            <SelectValue placeholder={size.pageSize} />
+            <SelectValue placeholder={`${meta.pageSize}`} />
           </SelectTrigger>
           <SelectContent side='top'>
-            {[6, 12, 24, 36, 48, 60, 72].map((pageSize) => (
-              <SelectItem key={pageSize} value={`${pageSize}`}>
+            {[6, 12, 24, 36, 48, 60, 84, 108].map((pageSize) => (
+              <SelectItem
+                key={pageSize}
+                value={`${pageSize}`}
+                disabled={pageSize > meta.totalCount}>
                 {pageSize}
               </SelectItem>
             ))}

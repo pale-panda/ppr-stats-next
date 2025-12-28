@@ -5,27 +5,33 @@ import { TrackSessionPagination } from '@/components/track-session-pagination';
 import { useFetchTrackSessionsQuery } from '@/state/services/track-session';
 import { useState } from 'react';
 import { DEFAULT_PAGE_SIZE } from '@/lib/data/constants';
+import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 
-interface TrackSessionSectionProps {
-  query?: string;
-  currentPage?: number;
-  orderBy?: string;
-  pageSize?: number;
-  sort?: 'asc' | 'desc';
-}
+export function TrackSessionCards() {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { replace } = useRouter();
+  const query = searchParams.get('query') || '';
+  const page = Number(searchParams.get('page')) || 1;
+  const pageSizeParam =
+    Number(searchParams.get('pageSize')) || DEFAULT_PAGE_SIZE;
 
-export function TrackSessionCards({ ...props }: TrackSessionSectionProps) {
-  if (props.query) {
+  if (query) {
     // Implement search functionality here in the future
   }
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  const [currentPage, setCurrentPage] = useState(page);
+  const [pageSize, setPageSize] = useState(pageSizeParam);
 
   const {
     data: sessionData,
     error,
     isLoading,
-  } = useFetchTrackSessionsQuery({ page: currentPage, pageSize });
+  } = useFetchTrackSessionsQuery({
+    page: currentPage,
+    pageSize: pageSize,
+    query,
+  });
 
   if (error) {
     return (
@@ -45,8 +51,50 @@ export function TrackSessionCards({ ...props }: TrackSessionSectionProps) {
     );
   }
 
-  const sessions = sessionData?.sessions || [];
-  const meta = sessionData?.meta;
+  if (!sessionData || !sessionData.sessions || !sessionData.meta) {
+    return (
+      <div className='text-center py-12'>
+        <p className='text-muted-foreground'>No session data available.</p>
+      </div>
+    );
+  }
+
+  const sessions = sessionData.sessions || [];
+  const meta = sessionData.meta;
+
+  function onSearchParams(
+    param: string,
+    value: string | number,
+    callback?: (value: string | number) => void
+  ) {
+    const params: URLSearchParams = new URLSearchParams(searchParams);
+
+    if (value) {
+      params.set(param, `${value}`);
+    } else {
+      params.delete(param);
+    }
+
+    const newSearch = params.toString();
+
+    if (callback) {
+      callback(value);
+    }
+
+    if (param !== 'page') {
+      replace(`${pathname}?${newSearch}`);
+    }
+  }
+
+  const handlePageChange = (newPage: number) =>
+    onSearchParams('page', newPage, (page) => setCurrentPage(Number(page)));
+
+  function handlePageSizeChange(newPageSize: string | number) {
+    onSearchParams('pageSize', newPageSize, (pageSize) => {
+      setPageSize(Number(pageSize));
+      setCurrentPage(1);
+    });
+  }
 
   return (
     <>
@@ -82,10 +130,8 @@ export function TrackSessionCards({ ...props }: TrackSessionSectionProps) {
       <TrackSessionPagination
         className='py-6'
         meta={meta}
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-        isLoading={isLoading}
-        size={{ pageSize, setPageSize }}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
       />
     </>
   );

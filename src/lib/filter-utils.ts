@@ -35,15 +35,7 @@ export const filterByFilterParams = (
   return data.filter((item) =>
     Object.entries(filterParams).every(([key, values]) => {
       const itemValue = item[key];
-      /*
-      console.log(
-        'Filtering item key:',
-        key,
-        'itemValue:',
-        itemValue,
-        'against values:',
-        values
-      );*/
+
       if (itemValue === undefined || itemValue === null) return false;
 
       if (Array.isArray(itemValue)) {

@@ -14,26 +14,28 @@ import {
 } from 'recharts';
 import { formatLapTime, formatTime } from '@/lib/format-utils';
 import { Laps, Telemetry } from '@/types';
+//import { useFetchLapTelemetryQuery } from '@/state/services/track-session';
 
 interface TelemetryChartProps {
+  //sessionId: string;
   selectedLap: number;
   laps: Laps;
   telemetry?: Telemetry;
 }
 
 export function TelemetryChart({
+  //sessionId,
   selectedLap,
   laps,
   telemetry,
 }: TelemetryChartProps) {
   const lap = laps.find((lap) => lap.lap_number === selectedLap);
+
   const downsampledTelemetry = useMemo(() => {
-    if (!telemetry || telemetry.length === 0) {
+    if (!telemetry) {
       return [] as Telemetry;
     }
-    let telemetryFiltered = telemetry.filter(
-      (point) => point.lap_number === selectedLap
-    );
+    let telemetryFiltered = telemetry;
 
     const maxRows = 200;
     const step = Math.ceil(telemetryFiltered.length / maxRows);
@@ -52,7 +54,7 @@ export function TelemetryChart({
     }));
 
     return formatedTelemetry;
-  }, [selectedLap, telemetry]);
+  }, [telemetry]);
 
   if (!lap || !telemetry) {
     return (

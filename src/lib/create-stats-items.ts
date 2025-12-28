@@ -13,6 +13,7 @@ import {
   Flag,
 } from 'lucide-react';
 import { StatItem } from '@/types';
+import { createFilterParams } from './filter-utils';
 
 const createAppStats = async () => {
   const data = await getAppStats();
@@ -47,8 +48,10 @@ const createAppStats = async () => {
   return statsList;
 };
 
-const createDashboardStats = async () => {
-  const data = await getDashboardStats();
+const createDashboardStats = async (query?: string) => {
+  const filterQuery = createFilterParams(query || '');
+
+  const data = await getDashboardStats(filterQuery);
 
   const statsList: StatItem[] = [
     {

@@ -19,7 +19,7 @@ interface LapSelectorProps {
   selectedLap: number;
   onSelectLap: (lap: number) => void;
   comparisonLap: number | null;
-  onSelectComparisonLap: (lap: number | null) => void;
+  onSelectComparisonLap: (lap: number) => void;
   showComparison: boolean;
   onToggleComparison: (show: boolean) => void;
 }
@@ -33,7 +33,9 @@ export function LapSelector({
   showComparison,
   onToggleComparison,
 }: LapSelectorProps) {
-  const currentLap = laps[selectedLap - 1];
+  const currentLap = laps.sort((a, b) => a.lap_number - b.lap_number)[
+    selectedLap - 1
+  ];
   const bestLap = laps.reduce(
     (best, lap) => (lap.lap_time_seconds < best.lap_time_seconds ? lap : best),
     laps[0]
