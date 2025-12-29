@@ -10,18 +10,12 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from '@/components/ui/carousel';
-import { Icon } from 'lucide-react';
+import { FeatureItem } from '@/lib/data/feature-items';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 interface CarouselFeaturesProps {
-  items: {
-    title: string;
-    description: string;
-    image: string;
-    keywords: string[];
-    icon: typeof Icon;
-  }[];
+  items: FeatureItem[];
   current: number;
   setCurrent: (index: number) => void;
 }
