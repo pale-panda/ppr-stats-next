@@ -1,7 +1,8 @@
-import { Track } from '@/types/track.type';
+import { PaginationMeta } from '@/types';
 import { Lap } from '@/types/lap.type';
 import { Telemetry } from '@/types/telemetry.type';
-import { PaginationMeta } from '@/types';
+import { Track } from '@/types/track.type';
+import { ReadonlyURLSearchParams } from 'next/navigation';
 
 export type TrackSessionValues = Record<string, unknown>;
 
@@ -66,9 +67,13 @@ export type TrackSessionByIdApiResponse = {
 };
 
 export type TrackSessionSearchParams = {
-  query?: string | null;
-  page?: number | null;
-  orderBy?: string | null;
-  pageSize?: number | null;
-  sort?: 'asc' | 'desc' | null;
+  page: number | null;
+  size: number | null;
+  order: string | null;
+  sort: 'asc' | 'desc' | null;
+  [key: string]: string | number | null;
+};
+
+export type SearchQueryParams = {
+  searchParams: ReadonlyURLSearchParams;
 };

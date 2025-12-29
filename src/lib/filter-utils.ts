@@ -1,5 +1,5 @@
 export interface FilterParams {
-  [key: string]: string[];
+  [key: string]: string | string[];
 }
 
 export const createFilterParams = (filter: string): FilterParams => {
@@ -38,10 +38,12 @@ export const filterByFilterParams = (
 
       if (itemValue === undefined || itemValue === null) return false;
 
+      const valuesArray = Array.isArray(values) ? values : [values];
       if (Array.isArray(itemValue)) {
-        return values.some((value) => itemValue.includes(value));
+        return valuesArray.some((value) => itemValue.includes(value));
       }
-      return values.includes(String(itemValue));
+
+      return valuesArray.includes(String(itemValue));
     })
   );
 };

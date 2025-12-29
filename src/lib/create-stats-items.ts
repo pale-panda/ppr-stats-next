@@ -1,19 +1,18 @@
-import { formatLapTime, formatSpeed } from '@/lib/format-utils';
 import { getAppStats } from '@/lib/data/app.data';
 import { getDashboardStats } from '@/lib/data/track-session.data';
+import { formatLapTime, formatSpeed } from '@/lib/format-utils';
 
+import { StatItem } from '@/types';
 import {
-  UserCheck2Icon,
-  MapPinned,
-  UploadCloud,
   ChartLine,
-  Zap,
-  Gauge,
   Clock,
   Flag,
+  Gauge,
+  MapPinned,
+  UploadCloud,
+  UserCheck2Icon,
+  Zap,
 } from 'lucide-react';
-import { StatItem } from '@/types';
-import { createFilterParams } from './filter-utils';
 
 const createAppStats = async () => {
   const data = await getAppStats();
@@ -48,10 +47,10 @@ const createAppStats = async () => {
   return statsList;
 };
 
-const createDashboardStats = async (query?: string) => {
-  const filterQuery = createFilterParams(query || '');
-
-  const data = await getDashboardStats(filterQuery);
+const createDashboardStats = async (query?: {
+  [key: string]: string | string[];
+}) => {
+  const data = await getDashboardStats(query);
 
   const statsList: StatItem[] = [
     {

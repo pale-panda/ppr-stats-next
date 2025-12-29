@@ -1,16 +1,16 @@
-import { cache } from 'react';
+import { DEFAULT_PAGE_SIZE } from '@/lib/data/constants';
+import { FilterParams } from '@/lib/filter-utils';
 import { createClient } from '@/lib/supabase/server';
 import {
   Laps,
-  Tracks,
-  TrackSessions,
   PaginationMeta,
   Track,
+  Tracks,
   TrackSessionJoined,
+  TrackSessions,
 } from '@/types';
-import { DEFAULT_PAGE_SIZE } from '@/lib/data/constants';
-import { filterByFilterParams, FilterParams } from '@/lib/filter-utils';
 import { DashboardStats } from '@/types/stats.type';
+import { cache } from 'react';
 import { getTracks } from './tracks.data';
 
 export async function getSessionById(id: string): Promise<TrackSessions> {
@@ -115,29 +115,37 @@ export async function getSessionCount(): Promise<number> {
 
 interface GetAllSessionsProps {
   page?: number;
-  pageSize?: number;
-  query?: FilterParams;
+  size?: number;
+  filter?: {
+    [key: string]: string[];
+  };
 }
 
 export async function getAllSessions({
-  query,
+  filter,
   page = 1,
-  pageSize = DEFAULT_PAGE_SIZE,
+  size = DEFAULT_PAGE_SIZE,
 }: GetAllSessionsProps): Promise<{
   sessions: TrackSessionJoined[];
   meta: PaginationMeta;
   error?: unknown;
 }> {
-  const currentIndex = (page - 1) * pageSize;
+  const currentIndex = (page - 1) * size;
   const supabase = await createClient();
 
-  const { data: tracks, error: trackError } = await supabase.from('tracks')
-    .select(`id,
-      name,
-      country,
-      configuration,
-      length_meters,
-      turns`);
+  const { data: tracks, error: trackError } = await supabase
+    .from('tracks')
+    .select(`id, name, country`)
+    .filter(
+      'name',
+      `${filter?.name ? 'in' : 'neq'}`,
+      `(${(filter?.name || []).join(',')})`
+    )
+    .filter(
+      'country',
+      `${filter?.country ? 'in' : 'neq'}`,
+      `(${(filter?.country || []).join(',')})`
+    );
 
   if (trackError) {
     console.error('Error fetching tracks:', trackError);
@@ -149,21 +157,13 @@ export async function getAllSessions({
         totalPages: 0,
         totalCount: 0,
         remainingCount: 0,
-        pageSize,
+        size,
       },
       error: trackError,
     };
   }
 
-  let filteredTracks;
-
-  if (query !== undefined) {
-    filteredTracks = filterByFilterParams(tracks, query);
-  } else {
-    filteredTracks = tracks;
-  }
-
-  const trackIds = filteredTracks.map((t) => t.id) || [];
+  const trackIds = tracks.map((t) => t.id) || [];
 
   if (trackIds.length === 0) {
     return {
@@ -174,7 +174,7 @@ export async function getAllSessions({
         totalPages: 0,
         totalCount: 0,
         remainingCount: 0,
-        pageSize,
+        size,
       },
     };
   }
@@ -189,7 +189,7 @@ export async function getAllSessions({
     .select('*, track:tracks(*)')
     .in(`track_id`, trackIds)
     .order('session_date', { ascending: false })
-    .range(currentIndex, currentIndex + pageSize - 1);
+    .range(currentIndex, currentIndex + size - 1);
   if (error) {
     console.error('Error fetching sessions:', error);
     throw new Error('Failed to fetch sessions');
@@ -197,8 +197,8 @@ export async function getAllSessions({
 
   const sessions: TrackSessionJoined[] = data;
 
-  const totalPages = Math.ceil((totalCount || 0) / pageSize);
-  const remainingCount = Math.max((totalCount || 0) - page * pageSize, 0);
+  const totalPages = Math.ceil((totalCount || 0) / size);
+  const remainingCount = Math.max((totalCount || 0) - page * size, 0);
 
   return {
     sessions,
@@ -208,7 +208,7 @@ export async function getAllSessions({
       totalPages,
       totalCount: totalCount || 0,
       remainingCount,
-      pageSize,
+      size,
     },
   };
 }
@@ -446,7 +446,7 @@ interface TrackWithStats extends Track {
 
 export async function getTracksWithStats(): Promise<TrackWithStats[]> {
   const tracks = await getAllTracks();
-  const { sessions } = await getAllSessions({ pageSize: DEFAULT_PAGE_SIZE });
+  const { sessions } = await getAllSessions({ size: DEFAULT_PAGE_SIZE });
 
   const tracksWithStats = tracks
     .map((track) => {

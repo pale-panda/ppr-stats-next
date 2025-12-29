@@ -1,18 +1,25 @@
 import { getAllSessions } from '@/lib/data/track-session.data';
-import { createFilterParams } from '@/lib/filter-utils';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const page = Number(searchParams.get('page')) || undefined;
-  const pageSize = Number(searchParams.get('pageSize')) || undefined;
-  const queryParams = searchParams.get('query') || undefined;
-  const query = queryParams ? createFilterParams(queryParams) : undefined;
+  const size = Number(searchParams.get('size')) || undefined;
+  const country = searchParams.getAll('country') || undefined;
+  const name = searchParams.getAll('name') || undefined;
+
+  let filter = {};
+  if (country.length > 0) {
+    filter = { ...filter, country };
+  }
+  if (name.length > 0) {
+    filter = { ...filter, name };
+  }
 
   const data = await getAllSessions({
     page,
-    pageSize,
-    query,
+    size,
+    filter,
   });
 
   if (!data.sessions || data.sessions.length === 0) {
