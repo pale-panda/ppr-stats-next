@@ -1,7 +1,7 @@
-import { cache } from 'react';
+import { filterByFilterParams, FilterParams } from '@/lib/filter-utils';
 import { createClient } from '@/lib/supabase/server';
 import type { Tracks } from '@/types';
-import { filterByFilterParams, FilterParams } from '@/lib/filter-utils';
+import { cache } from 'react';
 
 export const getTracks = cache(
   async ({ query }: { query?: FilterParams }): Promise<Tracks> => {
@@ -16,12 +16,28 @@ export const getTracks = cache(
       throw new Error('Failed to fetch tracks data');
     }
 
+    let filterQuery = {};
     let filteredTracks;
-    const filterQuery = query || {};
+    const filterCountry = query?.country;
+    const filterName = query?.name;
+
+    if (filterCountry !== undefined) {
+      filterQuery = {
+        ...filterQuery,
+        country: filterCountry,
+      };
+    }
+
+    if (filterName !== undefined) {
+      filterQuery = {
+        ...filterQuery,
+        name: filterName,
+      };
+    }
 
     const tracksData: Tracks = tracks;
 
-    if (filterQuery !== undefined) {
+    if (Object.keys(filterQuery).length > 0) {
       filteredTracks = filterByFilterParams(tracksData, filterQuery);
     } else {
       filteredTracks = tracksData;

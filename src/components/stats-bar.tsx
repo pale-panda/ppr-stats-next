@@ -1,6 +1,7 @@
-import { StatItem, StatsType } from '@/types';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { StatItem, StatsType } from '@/types';
+import { use } from 'react';
 
 const createStatCard = (stat: StatItem, index: number) => {
   const Icon = stat.icon || (() => null);
@@ -55,14 +56,15 @@ const createStatCard = (stat: StatItem, index: number) => {
 
 interface StatsBarProps {
   type: StatsType;
-  statItems: StatItem[];
+  statItems: Promise<StatItem[]>;
 }
 
 export function StatsBar({ ...props }: StatsBarProps) {
+  const stats = use(props.statItems);
   return (
     <section className='border-b border-border bg-card/50'>
       <div className='px-4 py-8 container mx-auto  grid grid-cols-2 md:grid-cols-4 gap-4 divide-x divide-border'>
-        {props.statItems.map((stat, index) => createStatCard(stat, index))}
+        {stats.map((stat, index) => createStatCard(stat, index))}
       </div>
     </section>
   );

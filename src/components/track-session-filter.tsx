@@ -1,13 +1,11 @@
 'use client';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CheckIcon, ChevronRight, Filter } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuGroup,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuPortal,
   DropdownMenuSeparator,
@@ -16,24 +14,43 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useFetchTracksQuery } from '@/state/services/tracks';
 import { cn } from '@/lib/utils';
+import { useFetchTracksQuery } from '@/state/services/tracks';
+import { type DropdownMenuCheckboxItemProps } from '@radix-ui/react-dropdown-menu';
+import { BadgeCheck, ChevronRight, Filter } from 'lucide-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useCallback, useMemo } from 'react';
+
+type FilterKey = 'name' | 'country';
+type Checked = DropdownMenuCheckboxItemProps['checked'];
+
+function uniq(values: string[]) {
+  return [...new Set(values)];
+}
+
+function serializeSelected(params: URLSearchParams) {
+  const keys: FilterKey[] = ['country', 'name'];
+  return keys
+    .map((k) => `${k}=${uniq(params.getAll(k)).slice().sort().join(',')}`)
+    .join('&');
+}
 
 export function TrackSessionFilter() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { replace } = useRouter();
-  const baseQueryString = searchParams.toString();
-
-  const [filterState, setFilterState] = useState<{ [key: string]: string[] }>(
-    {}
-  );
 
   const { data: tracks, isLoading, error } = useFetchTracksQuery({});
 
+  const selected = useMemo(() => {
+    return {
+      name: uniq(searchParams.getAll('name')),
+      country: uniq(searchParams.getAll('country')),
+    };
+  }, [searchParams]);
+
   const computeAvailableFilterValues = useCallback(
-    (state: { [key: string]: string[] }) => {
+    (state: { name?: string[]; country?: string[] }) => {
       const allTracks = tracks ?? [];
 
       // Country är "master" och ska inte påverkas av name
@@ -57,77 +74,80 @@ export function TrackSessionFilter() {
   );
 
   const availableFilterValues = useMemo(() => {
-    return computeAvailableFilterValues(filterState);
-  }, [computeAvailableFilterValues, filterState]);
+    return computeAvailableFilterValues(selected);
+  }, [computeAvailableFilterValues, selected]);
 
-  const activeFilters = useMemo(() => {
-    return Object.entries(filterState)
-      .filter(([, values]) => values.length)
-      .map(([key, values]) => `${key}:${values.join(',')}`)
-      .join(';');
-  }, [filterState]);
+  // Visuell hint: vilka länder innehåller valt "name"?
+  const countryHasSelectedName = useMemo(() => {
+    const allTracks = tracks ?? [];
+    const selectedNames = new Set(selected.name);
 
-  useEffect(() => {
-    const params = new URLSearchParams(baseQueryString);
-    if (activeFilters) {
-      params.set('query', activeFilters);
-    } else {
-      params.delete('query');
+    // Om inget "name" valt: inga hints behövs
+    if (selectedNames.size === 0) return new Set<string>();
+
+    const matchingCountries = new Set<string>();
+    for (const t of allTracks) {
+      if (selectedNames.has(t.name)) matchingCountries.add(t.country);
     }
+    return matchingCountries;
+  }, [selected.name, tracks]);
 
-    const nextQueryString = params.toString();
-    const currentUrl = baseQueryString
-      ? `${pathname}?${baseQueryString}`
-      : pathname;
-    const nextUrl = nextQueryString
-      ? `${pathname}?${nextQueryString}`
-      : pathname;
+  const navigateWithParams = useCallback(
+    (params: URLSearchParams) => {
+      params.sort();
+      const qs = params.toString();
+      const nextUrl = qs ? `${pathname}?${qs}` : pathname;
+      replace(nextUrl);
+    },
+    [pathname, replace]
+  );
 
-    if (nextUrl === currentUrl) {
-      return;
-    }
+  const updateFilterQuery = useCallback(
+    (key: FilterKey, value: string, checked: Checked) => {
+      const before = new URLSearchParams(searchParams.toString());
+      const beforeSig = serializeSelected(before);
 
-    replace(nextUrl);
-  }, [activeFilters, baseQueryString, pathname, replace]);
+      const params = new URLSearchParams(searchParams.toString());
+      const current = uniq(params.getAll(key));
 
-  function updateFilterQuery(query: { [key: string]: string }) {
-    const searchColumn = Object.keys(query)[0];
-    const searchValue = query[searchColumn];
+      const next = !checked
+        ? current.filter((v) => v !== value)
+        : [...current, value];
 
-    setFilterState((prevState) => {
-      const currentFilterValues = prevState[searchColumn] || [];
-      const nextState: { [key: string]: string[] } = { ...prevState };
+      // write key
+      params.delete(key);
+      next.forEach((v) => params.append(key, v));
 
-      // toggle value
-      if (currentFilterValues.includes(searchValue)) {
-        const pruned = currentFilterValues.filter((v) => v !== searchValue);
-        if (pruned.length) nextState[searchColumn] = pruned;
-        else delete nextState[searchColumn];
-      } else {
-        nextState[searchColumn] = [...currentFilterValues, searchValue];
+      if (key === 'country') {
+        // prune names that no longer exist for selected countries
+        const allowedNames = computeAvailableFilterValues({
+          country: next,
+        }).name;
+
+        const currentNames = uniq(params.getAll('name'));
+        const prunedNames = currentNames.filter((n) => allowedNames.has(n));
+
+        params.delete('name');
+        prunedNames.forEach((n) => params.append('name', n));
       }
 
-      if (searchColumn === 'country') {
-        delete nextState.name;
+      const afterSig = serializeSelected(params);
+      if (afterSig !== beforeSig) {
+        params.set('page', '1');
       }
 
-      const allowed = computeAvailableFilterValues(nextState);
+      navigateWithParams(params);
+    },
+    [computeAvailableFilterValues, navigateWithParams, searchParams]
+  );
 
-      // prune ONLY name based on selected country
-      const currentNames = nextState.name ?? [];
-      if (currentNames.length) {
-        const prunedNames = currentNames.filter((v) => allowed.name.has(v));
-        if (prunedNames.length) nextState.name = prunedNames;
-        else delete nextState.name;
-      }
-
-      return nextState;
-    });
-  }
-
-  function handleResetFilter() {
-    setFilterState({});
-  }
+  const handleResetFilter = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('name');
+    params.delete('country');
+    params.delete('page');
+    navigateWithParams(params);
+  }, [navigateWithParams, searchParams]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -137,21 +157,36 @@ export function TrackSessionFilter() {
     return <div>Error loading filters</div>;
   }
 
-  type trackFilterItem = {
-    key: string;
+  type TrackFilterItem = {
+    key: FilterKey;
     label: string;
     items: {
-      active?: boolean;
+      active?: Checked;
       disabled?: boolean;
       value: string;
+      // endast för visual hint i country-menyn
+      matchesSelectedName?: boolean;
+      getOppositeCount?: () => number;
     }[];
     getSelectedCount: () => number;
   };
 
-  const getTrackFilters = (): trackFilterItem[] => {
+  const getTrackFilters = (): TrackFilterItem[] => {
     if (!tracks) return [];
+
     const trackNames = [...new Set(tracks.map((track) => track.name))];
     const trackCountries = [...new Set(tracks.map((track) => track.country))];
+
+    const getDisabledState = (item: string, key: FilterKey) => {
+      if (key === 'name') {
+        return (
+          !availableFilterValues.name.has(item) && !selected.name.includes(item)
+        );
+      }
+      return false;
+    };
+
+    const shouldHintCountries = selected.name.length > 0;
 
     return [
       {
@@ -159,26 +194,31 @@ export function TrackSessionFilter() {
         label: 'Track Name',
         items: trackNames.map((item) => ({
           value: item,
-          active: filterState['name']?.includes(item),
-          disabled:
-            !availableFilterValues.name.has(item) &&
-            !filterState['name']?.includes(item),
+          active: selected.name.includes(item),
+          disabled: getDisabledState(item, 'name'),
         })),
-        getSelectedCount: () => {
-          return filterState['name']?.length || 0;
-        },
+        getSelectedCount: () => selected.name.length,
       },
       {
         key: 'country',
         label: 'Country',
         items: trackCountries.map((item) => ({
           value: item,
-          active: filterState['country']?.includes(item),
+          active: selected.country.includes(item),
           disabled: false,
+          matchesSelectedName: shouldHintCountries
+            ? countryHasSelectedName.has(item)
+            : undefined,
+          getOppositeCount: () => {
+            if (!shouldHintCountries) return 0;
+            const allTracks = tracks ?? [];
+            const selectedNamesSet = new Set(selected.name);
+            return allTracks.filter(
+              (t) => t.country === item && selectedNamesSet.has(t.name)
+            ).length;
+          },
         })),
-        getSelectedCount: () => {
-          return filterState['country']?.length || 0;
-        },
+        getSelectedCount: () => selected.country.length,
       },
     ];
   };
@@ -186,7 +226,7 @@ export function TrackSessionFilter() {
   const trackFilters = getTrackFilters();
 
   return (
-    <div className='flex gap-2'>
+    <div className='flex gap-2 justify-between w-full md:w-auto'>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant='outline' size='sm'>
@@ -194,7 +234,7 @@ export function TrackSessionFilter() {
             Filter
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className='w-56' align='start'>
+        <DropdownMenuContent className='w-44' align='center'>
           <DropdownMenuLabel className='font-medium text-muted-foreground'>
             Filter by
           </DropdownMenuLabel>
@@ -203,42 +243,69 @@ export function TrackSessionFilter() {
             {trackFilters.map((queryObject) => (
               <DropdownMenuSub key={queryObject.key}>
                 <DropdownMenuSubTrigger className='cursor-pointer focus:bg-accent/30! data-[state=open]:bg-accent/30!'>
-                  {queryObject.getSelectedCount() > 0 && (
-                    <Badge
-                      className='h-5 min-w-5 rounded-full px-1 font-mono tabular-nums'
-                      variant='destructive'>
-                      {queryObject.getSelectedCount()}
-                    </Badge>
-                  )}
-                  {queryObject.label}
+                  <span className='flex w-full items-center gap-2'>
+                    {queryObject.label}
+                    {queryObject.getSelectedCount() > 0 && (
+                      <Badge className='ml-auto text-xs' variant='secondary'>
+                        {queryObject.getSelectedCount()}
+                      </Badge>
+                    )}
+                  </span>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
-                  <DropdownMenuSubContent>
-                    {queryObject.items.map((item) => (
-                      <DropdownMenuItem
-                        key={item.value}
-                        textValue={item.value}
-                        onClick={() => {
-                          updateFilterQuery({
-                            [queryObject.key]: item.value,
-                          });
-                        }}
-                        disabled={item.disabled}
-                        className='group cursor-pointer focus:bg-primary/30!'>
-                        <span
+                  <DropdownMenuSubContent className='w-fit'>
+                    {queryObject.items.map((item) => {
+                      const showCountryHint =
+                        queryObject.key === 'country' &&
+                        selected.name.length > 0;
+
+                      const countryMismatch =
+                        showCountryHint && item.matchesSelectedName === false;
+
+                      const countryMatch =
+                        showCountryHint && item.matchesSelectedName === true;
+
+                      return (
+                        <DropdownMenuCheckboxItem
+                          key={item.value}
+                          textValue={item.value}
+                          onCheckedChange={(checked) =>
+                            updateFilterQuery(
+                              queryObject.key,
+                              item.value,
+                              checked
+                            )
+                          }
+                          disabled={item.disabled}
                           className={cn(
-                            'flex items-center gap-2',
-                            item.disabled && 'text-muted-foreground'
-                          )}>
-                          {item.active && (
-                            <div className='group-focus:bg-muted size-6 rounded-lg flex items-center justify-center bg-primary/10'>
-                              <CheckIcon className='text-chart-1' />
-                            </div>
+                            'group cursor-pointer focus:bg-primary/30!',
+                            countryMismatch && 'text-muted-foreground'
                           )}
-                          {item.value}
-                        </span>
-                      </DropdownMenuItem>
-                    ))}
+                          checked={item.active}>
+                          <span
+                            className={cn(
+                              'flex w-full items-center gap-2',
+                              item.disabled && 'text-muted-foreground'
+                            )}>
+                            <span
+                              className={cn(countryMatch && 'text-foreground')}>
+                              {item.value}
+                            </span>
+                            {countryMatch && item.getOppositeCount && (
+                              <Badge
+                                className='ml-auto text-xs'
+                                variant='secondary'>
+                                <BadgeCheck className='h-2 w-2' />
+                                {item.getOppositeCount()}{' '}
+                                {item.getOppositeCount() === 1
+                                  ? 'track'
+                                  : 'tracks'}
+                              </Badge>
+                            )}
+                          </span>
+                        </DropdownMenuCheckboxItem>
+                      );
+                    })}
                   </DropdownMenuSubContent>
                 </DropdownMenuPortal>
               </DropdownMenuSub>
@@ -251,7 +318,7 @@ export function TrackSessionFilter() {
         variant='ghost'
         size='sm'
         className='text-primary'
-        onClick={() => handleResetFilter()}>
+        onClick={handleResetFilter}>
         View All
         <ChevronRight className='w-4 h-4 ml-1' />
       </Button>

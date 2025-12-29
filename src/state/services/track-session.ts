@@ -1,9 +1,5 @@
+import { TrackSessionApiResponse as ApiResponse, Telemetry } from '@/types';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import {
-  Telemetry,
-  TrackSessionApiResponse as ApiResponse,
-  TrackSessionSearchParams as SearchParams,
-} from '@/types';
 
 type LapTelemetryParams = {
   sessionId: string;
@@ -17,9 +13,8 @@ export const trackSessionApi = createApi({
     baseUrl: '/api/sessions',
   }),
   endpoints: (builder) => ({
-    fetchTrackSessions: builder.query<ApiResponse, SearchParams>({
-      query: ({ page = 1, pageSize, query }) =>
-        `?page=${page}&pageSize=${pageSize}&query=${query}`,
+    fetchTrackSessions: builder.query<ApiResponse, string>({
+      query: (query) => (query ? `?${query}` : ''),
     }),
     fetchTrackSessionById: builder.query<Telemetry, string>({
       query: (sessionId: string) => `/${sessionId}`,
