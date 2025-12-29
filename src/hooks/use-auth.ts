@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
+import { clearUser, setUser } from '@/state/reducers/user/user.reducer';
 import { AppDispatch, RootState } from '@/state/store';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,26 +9,41 @@ export const useAuth = () => {
   const userState = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
-    const fetchAuthStatus = async () => {
-      const supabase = createClient();
+    const supabase = createClient();
 
+    const fetchAuthStatus = async () => {
       const {
         data: { session },
         error,
       } = await supabase.auth.getSession();
+
       if (error) {
         console.error(error);
       }
 
-      if (!session) {
-        dispatch({ type: 'user/clearUser' });
+      if (!session?.user) {
+        dispatch(clearUser());
         return;
       }
 
-      dispatch({ type: 'user/setUser', payload: session.user });
+      dispatch(setUser(session.user));
     };
 
     fetchAuthStatus();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!session?.user) {
+          dispatch(clearUser());
+          return;
+        }
+        dispatch(setUser(session.user));
+      }
+    );
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
   }, [dispatch]);
 
   return userState;

@@ -1,14 +1,12 @@
 'use client';
 
 import {
-  BadgeCheck,
-  Bell,
-  LogIn,
-  LogOut,
-  Settings,
-  UserCircle2,
-  UserRoundPlus,
-} from 'lucide-react';
+  CurrentUserAvatar,
+  CurrentUserAvatarWithName,
+} from '@/components/current-user-avatar';
+import { LogoutButton } from '@/components/logout-button';
+import { ModeToggle } from '@/components/mode-toggle';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,30 +16,29 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
+import { RootState } from '@/state/store';
 import {
-  CurrentUserAvatar,
-  CurrentUserAvatarWithName,
-} from '@/components/current-user-avatar';
-import { LogoutButton } from '@/components/logout-button';
+  BadgeCheck,
+  Bell,
+  LogIn,
+  LogOut,
+  Settings,
+  UserCircle2,
+  UserRoundPlus,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
-import { RootState } from '@/state/store';
-import { ModeToggle } from '@/components/mode-toggle';
 
 export function HeaderActions() {
   const userState = useSelector((state: RootState) => state.user);
   return (
-    <div className='flex items-center justify-end gap-2 md:min-w-38'>
-      <ModeToggle />
+    <div className='flex items-center justify-end gap-4'>
+      <ModeToggle className='cursor-pointer' />
       {userState.isAuthenticated ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              size='icon'
-              variant='ghost'
-              className='p-0 rounded-full  hover:ring-ring active:ring-ring focus-visible:ring-1 focus-visible:ring-offset-0'>
-              <CurrentUserAvatar />
+            <Button size='icon' variant='ghost' className='rounded-xl'>
+              <CurrentUserAvatar className='size-10 rounded-xl' />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -50,25 +47,31 @@ export function HeaderActions() {
             align='start'
             sideOffset={4}>
             <DropdownMenuLabel className='px-1 py-0 font-normal'>
-              <CurrentUserAvatarWithName />
+              <CurrentUserAvatarWithName className='size-14 rounded-xl hover:ring-0 cursor-default' />
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
-              </DropdownMenuItem>
+              <Link href='/user/account'>
+                <DropdownMenuItem className='dark:focus:bg-primary/50 cursor-pointer'>
+                  <BadgeCheck />
+                  Account
+                </DropdownMenuItem>
+              </Link>
+              <Link href='/user/settings'>
+                <DropdownMenuItem className='dark:focus:bg-primary/50 cursor-pointer'>
+                  <Settings />
+                  Settings
+                </DropdownMenuItem>
+              </Link>
+              <Link href='/user/notifications'>
+                <DropdownMenuItem className='dark:focus:bg-primary/50 cursor-pointer'>
+                  <Bell />
+                  Notifications
+                </DropdownMenuItem>
+              </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem className='dark:focus:bg-primary/50 cursor-pointer'>
               <LogoutButton className='flex flex-row w-full items-center gap-2'>
                 <LogOut />
                 Log out
@@ -96,22 +99,18 @@ export function HeaderActions() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Link
-                  href='/auth/login'
-                  className='flex items-center gap-2 w-full'>
+              <Link href='/auth/login'>
+                <DropdownMenuItem className='dark:focus:bg-primary/50 cursor-pointer'>
                   <LogIn />
                   Login
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link
-                  href='/auth/signup'
-                  className='flex items-center gap-2 w-full'>
+                </DropdownMenuItem>
+              </Link>
+              <Link href='/auth/signup'>
+                <DropdownMenuItem className='dark:focus:bg-primary/50 cursor-pointer'>
                   <UserRoundPlus />
                   Sign up
-                </Link>
-              </DropdownMenuItem>
+                </DropdownMenuItem>
+              </Link>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
