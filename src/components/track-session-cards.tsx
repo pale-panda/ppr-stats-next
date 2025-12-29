@@ -61,7 +61,7 @@ export function TrackSessionCards() {
               id={session.id}
               title={`${session.session_type} Session`}
               track={session.track ? session.track.name : 'Unknown Track'}
-              date={new Date(session.session_date).toLocaleDateString('en-US', {
+              date={new Date(session.session_date).toLocaleDateString('sv-SE', {
                 month: 'short',
                 day: 'numeric',
                 year: 'numeric',
