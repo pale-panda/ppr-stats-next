@@ -1,6 +1,14 @@
 import { BarChartBig, Gauge, Shield, Target } from 'lucide-react';
 
-export const featureItems = [
+export type FeatureItem = {
+  title: string;
+  description: string;
+  image: string;
+  keywords: string[];
+  icon: React.ElementType;
+};
+
+export const featureItems: FeatureItem[] = [
   {
     title: 'Quick Insights',
     description:
