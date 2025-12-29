@@ -71,7 +71,7 @@ export function SignupForm({
 
     try {
       const emailHash = sha256(values.email);
-      const avatarUrl = `https://www.gravatar.com/avatar/${emailHash}?d=initials&name=${encodeURIComponent(
+      const avatarUrl = `https://www.gravatar.com/avatar/${emailHash}?s=400&d=initials&name=${encodeURIComponent(
         values.firstName + ' ' + values.lastName
       )}`;
 

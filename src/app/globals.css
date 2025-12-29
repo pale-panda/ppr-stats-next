@@ -2,6 +2,7 @@
 @import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant light (&:is(.light *));
 
 /* Racing Dashboard Theme - Dark motorsport aesthetic */
 :root {
@@ -29,7 +30,6 @@
   --chart-3: oklch(0.55 0.2 250);
   --chart-4: oklch(0.75 0.15 85);
   --chart-5: oklch(0.6 0.2 300);
-  --radius: 0.5rem;
   --sidebar: oklch(0.14 0.01 260);
   --sidebar-foreground: oklch(0.95 0 0);
   --sidebar-primary: oklch(0.65 0.25 25);
@@ -38,6 +38,8 @@
   --sidebar-accent-foreground: oklch(0.95 0 0);
   --sidebar-border: oklch(0.28 0.01 260);
   --sidebar-ring: oklch(0.65 0.25 25);
+
+  --radius: 0.5rem;
 }
 
 .dark {
@@ -73,63 +75,20 @@
   --sidebar-accent-foreground: oklch(0.95 0 0);
   --sidebar-border: oklch(0.28 0.01 260);
   --sidebar-ring: oklch(0.65 0.25 25);
+
+  --radius: 0.5rem;
 }
 
 /* Light mode */
 .light {
-  --background: oklch(0.98 0.005 260);
-  --foreground: oklch(0.18 0.01 260);
-  --card: oklch(0.99 0.004 260);
-  --card-foreground: oklch(0.18 0.01 260);
-  --popover: oklch(0.99 0.004 260);
-  --popover-foreground: oklch(0.18 0.01 260);
-  /* Behåll din brandfärg (primary) */
-  --primary: oklch(64.022% 0.24527 24.891);
-  --primary-foreground: oklch(0.98 0 0);
-  /* Ljus sekundär yta + mörk text */
-  --secondary: oklch(0.94 0.01 260);
-  --secondary-foreground: oklch(0.22 0.01 260);
-  /* Muted för t.ex. badges, svagare paneler */
-  --muted: oklch(0.93 0.008 260);
-  --muted-foreground: oklch(0.5 0.01 260);
-  /* Accent kan vara samma som du har i dark */
-  --accent: oklch(0.65 0.25 25);
-  --accent-foreground: oklch(0.98 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.98 0 0);
-  /* Borders/inputs lite tydligare i light */
-  --border: oklch(0.88 0.01 260);
-  --input: oklch(0.9 0.01 260);
-  --ring: oklch(0.65 0.25 25);
-  /* Charts kan du ofta behålla rakt av */
-  --chart-1: oklch(0.65 0.22 15);
-  --chart-2: oklch(0.65 0.18 145);
-  --chart-3: oklch(0.55 0.2 250);
-  --chart-4: oklch(0.75 0.15 85);
-  --chart-5: oklch(0.6 0.2 300);
-  /* Sidebar i light: ljus yta, fortfarande kall ton */
-  --sidebar: oklch(0.96 0.008 260);
-  --sidebar-foreground: oklch(0.18 0.01 260);
-  --sidebar-primary: oklch(0.65 0.25 25);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.93 0.01 260);
-  --sidebar-accent-foreground: oklch(0.22 0.01 260);
-  --sidebar-border: oklch(0.88 0.01 260);
-  --sidebar-ring: oklch(0.65 0.25 25);
-}
-
-/* Soft Light – varm, mjuk och premiumkänsla */
-.soft {
   --background: oklch(0.975 0.008 85); /* varm ivory */
   --foreground: oklch(0.22 0.015 260); /* mjuk mörk blågrå */
   --card: oklch(0.985 0.006 85);
   --card-foreground: oklch(0.22 0.015 260);
   --popover: oklch(0.985 0.006 85);
   --popover-foreground: oklch(0.22 0.015 260);
-  /* Brand */
   --primary: oklch(64.022% 0.24527 24.891);
   --primary-foreground: oklch(0.98 0 0);
-  /* Varma sekundära ytor */
   --secondary: oklch(0.94 0.01 85);
   --secondary-foreground: oklch(0.28 0.015 260);
   --muted: oklch(0.93 0.01 85);
@@ -141,13 +100,11 @@
   --border: oklch(0.89 0.012 85);
   --input: oklch(0.91 0.012 85);
   --ring: oklch(0.65 0.25 25);
-  /* Charts – oförändrade (brand consistency) */
   --chart-1: oklch(0.65 0.22 15);
   --chart-2: oklch(0.65 0.18 145);
   --chart-3: oklch(0.55 0.2 250);
   --chart-4: oklch(0.75 0.15 85);
   --chart-5: oklch(0.6 0.2 300);
-  /* Sidebar */
   --sidebar: oklch(0.96 0.01 85);
   --sidebar-foreground: oklch(0.24 0.015 260);
   --sidebar-primary: oklch(0.65 0.25 25);
@@ -156,6 +113,8 @@
   --sidebar-accent-foreground: oklch(0.28 0.015 260);
   --sidebar-border: oklch(0.88 0.012 85);
   --sidebar-ring: oklch(0.65 0.25 25);
+
+  --radius: 0.5rem;
 }
 
 @theme inline {

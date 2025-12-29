@@ -1,13 +1,16 @@
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/state/store';
+import { useAuth } from '@/hooks/use-auth';
+import { cn } from '@/lib/utils';
+import React from 'react';
 
-export const CurrentUserAvatar = () => {
-  const userState = useSelector((state: RootState) => state.user);
+export const CurrentUserAvatar = ({
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => {
+  const { user } = useAuth();
 
-  const fullName: string = userState.user?.user_metadata.full_name || '';
+  const fullName: string = user?.user_metadata.full_name || '';
   const initials = fullName
     ?.split(' ')
     ?.map((word) => word[0])
@@ -15,32 +18,35 @@ export const CurrentUserAvatar = () => {
     ?.toUpperCase();
 
   return (
-    <Avatar>
-      {userState.user?.user_metadata.avatar_url && (
-        <AvatarImage
-          src={userState.user.user_metadata.avatar_url}
-          alt={initials}
-        />
+    <Avatar
+      className={cn(
+        'size-12 border border-border bg-muted hover:ring-1 hover:ring-ring/50 cursor-pointer',
+        props.className
+      )}>
+      {user?.user_metadata.avatar_url && (
+        <AvatarImage src={user.user_metadata.avatar_url} alt={initials} />
       )}
       <AvatarFallback>{initials}</AvatarFallback>
     </Avatar>
   );
 };
 
-export const CurrentUserAvatarWithName = () => {
-  const userState = useSelector((state: RootState) => state.user);
+export const CurrentUserAvatarWithName = ({
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => {
+  const { user, isAuthenticated } = useAuth();
 
-  if (!userState.isAuthenticated) return null;
+  if (!isAuthenticated) return null;
 
   return (
     <div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
-      <CurrentUserAvatar />
+      <CurrentUserAvatar {...props} />
       <div className='flex flex-col p-1'>
         <span className='font-medium text-foreground truncate w-40'>
-          {userState.user?.user_metadata.full_name}
+          {user?.user_metadata.full_name}
         </span>
         <span className='text-xs text-muted-foreground truncate w-40'>
-          {userState.user?.email}
+          {user?.email}
         </span>
       </div>
     </div>
