@@ -1,8 +1,6 @@
 'use client';
 
-import { cn } from '@/lib/utils';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { AppImage } from '@/components/app-image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -11,24 +9,27 @@ import {
   FieldGroup,
   FieldSeparator,
 } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
-import { AppImage } from '@/components/app-image';
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from '@/state/store';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Form,
+  FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormControl,
   FormMessage,
 } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
+import { setUser } from '@/state/reducers/user/user.reducer';
+import { AppDispatch } from '@/state/store';
+import { zodResolver } from '@hookform/resolvers/zod';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
 const logibFormSchema = z.object({
   email: z.string().trim().email('Enter a valid email address').max(320),
@@ -61,13 +62,17 @@ export function LoginForm({
     setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
       });
       if (error) throw error;
+      if(!user) throw new Error('No user data returned');
 
-      dispatch({ type: 'user/setUser', payload: data.user });
+      dispatch(setUser(user));
       toast.success('Login successful', {
         description: 'Welcome back! You have successfully logged in.',
       });
