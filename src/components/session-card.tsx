@@ -1,9 +1,9 @@
-import { Card, CardContent } from '@/components/ui/card';
+import { AppImage } from '@/components/app-image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Flag, ChevronRight } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { ChevronRight, Clock, Flag, MapPin } from 'lucide-react';
 import Link from 'next/link';
-import { AppImage } from '@/components/app-image';
 
 interface SessionCardProps {
   id: string;
@@ -99,7 +99,10 @@ export function SessionCard({
           </div>
         </div>
         <div className='flex gap-2'>
-          <Button variant='outline' className='flex-1 bg-transparent' asChild>
+          <Button
+            variant='outline'
+            className='flex-1 bg-transparent text-foreground'
+            asChild>
             <Link href={`sessions/${id}`}>View Results</Link>
           </Button>
           <Button className='flex-1 bg-primary hover:bg-primary/90' asChild>
