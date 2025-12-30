@@ -50,27 +50,29 @@ export function HeaderActions({ user }: { user: User }) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <Link href='/user/account'>
-                <DropdownMenuItem className='dark:focus:bg-primary/50 cursor-pointer'>
+              <DropdownMenuItem asChild>
+                <Link href='/user/account'>
                   <BadgeCheck />
                   Account
-                </DropdownMenuItem>
-              </Link>
-              <Link href='/user/settings'>
-                <DropdownMenuItem className='dark:focus:bg-primary/50 cursor-pointer'>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href='/user/settings'>
                   <Settings />
                   Settings
-                </DropdownMenuItem>
-              </Link>
-              <Link href='/user/notifications'>
-                <DropdownMenuItem className='dark:focus:bg-primary/50 cursor-pointer'>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href='/user/notifications'>
                   <Bell />
                   Notifications
-                </DropdownMenuItem>
-              </Link>
+                </Link>
+              </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className='dark:focus:bg-primary/50 cursor-pointer'>
+            <DropdownMenuItem
+              className='dark:focus:bg-primary/50 cursor-pointer'
+              asChild>
               <LogoutButton className='flex flex-row w-full items-center gap-2'>
                 <LogOut />
                 Log out
@@ -98,18 +100,22 @@ export function HeaderActions({ user }: { user: User }) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <Link href='/auth/login'>
-                <DropdownMenuItem className='dark:focus:bg-primary/50 cursor-pointer'>
+              <DropdownMenuItem
+                className='dark:focus:bg-primary/50 cursor-pointer'
+                asChild>
+                <Link href='/auth/login'>
                   <LogIn />
                   Login
-                </DropdownMenuItem>
-              </Link>
-              <Link href='/auth/signup'>
-                <DropdownMenuItem className='dark:focus:bg-primary/50 cursor-pointer'>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className='dark:focus:bg-primary/50 cursor-pointer'
+                asChild>
+                <Link href='/auth/signup'>
                   <UserRoundPlus />
                   Sign up
-                </DropdownMenuItem>
-              </Link>
+                </Link>
+              </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>

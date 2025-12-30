@@ -1,13 +1,13 @@
 'use client';
 
 import { HeaderActions } from '@/components/header-actions';
+import { Logotype } from '@/components/logotype';
 import { Navigation } from '@/components/navigation';
 import { NavigationMobile } from '@/components/navigation-mobile';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { navLinksProtected, navLinksPublic } from '@/lib/data/nav-links';
 import { Menu, X } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -24,21 +24,11 @@ export function Header() {
         <div className='relative flex items-center justify-between h-16'>
           <div className='flex items-center gap-6 h-16'>
             {/* Logo */}
-            <Link href='/' className='flex-none flex items-center gap-2'>
-              <div className='w-12 h-12 bg-primary rounded-sm flex items-center justify-center'>
-                <Image
-                  src='/ppr-logotype-dark.png'
-                  alt='Pale Panda Racing Logo'
-                  width={100}
-                  height={100}
-                />
-              </div>
-              <div className='flex flex-col leading-tight'>
-                <span className='font-bold text-md text-nowrap text-foreground'>
-                  PALE <span className='text-primary'>PANDA</span>
-                </span>
-                <span className='text-nowrap text-foreground'>Racing Team</span>
-              </div>
+            <Link
+              href='/'
+              className='flex items-center gap-3 no-underline rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
+              aria-label='Go to homepage'>
+              <Logotype />
             </Link>
 
             {/* Desktop Nav */}

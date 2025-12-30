@@ -1,11 +1,11 @@
 'use client';
 
-import { formatSessionDate, formatLapTime } from '@/lib/format-utils';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { ArrowLeft, Flag, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { formatLapTime, formatSessionDate } from '@/lib/format-utils';
 import { TrackSessionJoined } from '@/types';
+import { ArrowLeft, Flag, Zap } from 'lucide-react';
+import Link from 'next/link';
 
 interface DashboardHeaderProps {
   trackSession: TrackSessionJoined;
@@ -21,11 +21,11 @@ export function DashboardHeader({ trackSession }: DashboardHeaderProps) {
       <div className='container mx-auto px-4 py-4'>
         <div className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
           <div className='flex items-center gap-4'>
-            <Link href={`/sessions/${trackSession.id}`}>
-              <Button variant='ghost' size='icon'>
+            <Button variant='ghost' size='icon' asChild>
+              <Link href={`/sessions/${trackSession.id}`}>
                 <ArrowLeft className='w-5 h-5' />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <div>
               <div className='flex items-center gap-2'>
                 <h1 className='text-xl md:text-2xl font-bold text-foreground'>
