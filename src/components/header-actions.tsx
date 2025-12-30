@@ -16,7 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { RootState } from '@/state/store';
+import type { User } from '@/types';
 import {
   BadgeCheck,
   Bell,
@@ -27,27 +27,28 @@ import {
   UserRoundPlus,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useSelector } from 'react-redux';
 
-export function HeaderActions() {
-  const userState = useSelector((state: RootState) => state.user);
+export function HeaderActions({ user }: { user: User }) {
   return (
     <div className='flex items-center justify-end gap-4'>
       <ModeToggle className='cursor-pointer' />
-      {userState.isAuthenticated ? (
+      {user && user.isAuthenticated ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size='icon' variant='ghost' className='rounded-xl'>
-              <CurrentUserAvatar className='size-10 rounded-xl' />
+            <Button size='icon' variant='ghost' className='rounded-full'>
+              <CurrentUserAvatar user={user} className='size-10 rounded-full' />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className='w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg'
+            className='w-fit max-w-75 rounded-lg mx-6'
             side={'bottom'}
-            align='start'
-            sideOffset={4}>
+            align='center'
+            sideOffset={10}>
             <DropdownMenuLabel className='px-1 py-0 font-normal'>
-              <CurrentUserAvatarWithName className='size-14 rounded-xl hover:ring-0 cursor-default' />
+              <CurrentUserAvatarWithName
+                user={user}
+                className='size-14 rounded-xl hover:ring-0 cursor-default'
+              />
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>

@@ -1,22 +1,20 @@
 'use client';
 
 import { HeaderActions } from '@/components/header-actions';
+import { Navigation } from '@/components/navigation';
+import { NavigationMobile } from '@/components/navigation-mobile';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/use-auth';
 import { navLinksProtected, navLinksPublic } from '@/lib/data/nav-links';
-import { cn } from '@/lib/utils';
 import { Menu, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
 export function Header() {
-  const pathname = usePathname();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const auth = useAuth();
-  const navLinks = auth.isAuthenticated ? navLinksProtected : navLinksPublic;
+  const [isNavOpen, setIsNavOpen] = useState(false);
+  const user = useAuth();
+  const navLinks = user?.isAuthenticated ? navLinksProtected : navLinksPublic;
 
   return (
     <header
@@ -44,38 +42,20 @@ export function Header() {
             </Link>
 
             {/* Desktop Nav */}
-
-            <nav
-              role='navigation'
-              className='hidden md:flex items-center justify-between gap-0 md:gap-2 lg:gap-6'>
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    'flex flex-col group h-16 px-2 lg:px-4 py-5.5 text-sm font-medium hover:text-foreground transition-colors hover:bg-linear-to-b hover:from-transparent hover:to-muted/30',
-                    pathname === link.href
-                      ? 'bg-linear-to-b from-transparent to-muted/30 text-foreground transition-colors'
-                      : 'text-muted-foreground'
-                  )}
-                  aria-current={pathname === link.href ? 'page' : undefined}>
-                  {link.label}
-                  <Separator className='w-max mt-5 h-px opacity-0 transition-opacity group-hover:opacity-100 group-hover:bg-radial group-hover:from-primary/80 group-hover:to-transparent' />
-                </Link>
-              ))}
-            </nav>
+            <Navigation navLinks={navLinks} />
           </div>
+
           {/* Actions */}
           <div className='flex items-center gap-2'>
-            <HeaderActions />
+            <HeaderActions user={user} />
 
             {/* Mobile Menu Button */}
             <Button
               variant='ghost'
               size='icon'
               className='md:hidden'
-              onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              {isMenuOpen ? (
+              onClick={() => setIsNavOpen(!isNavOpen)}>
+              {isNavOpen ? (
                 <X className='w-5 h-5' />
               ) : (
                 <Menu className='w-5 h-5' />
@@ -85,36 +65,11 @@ export function Header() {
         </div>
 
         {/* Mobile Nav */}
-        {isMenuOpen && (
-          <nav
-            role='navigation'
-            className='md:hidden backdrop-blur-md flex items-center bg-background/70 rounded-b-md shadow-md'>
-            <div className='backdrop-blur-md bg-background/70 rounded-b-md grid grid-cols-2 gap-0 w-full'>
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    'group text-center block p-6 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors',
-                    pathname === link.href
-                      ? 'text-foreground'
-                      : 'text-muted-foreground'
-                  )}
-                  aria-current={pathname === link.href ? 'page' : undefined}
-                  onClick={() => setIsMenuOpen(false)}>
-                  {link.label}
-                  <Separator
-                    className={cn(
-                      'w-max mt-5 h-px opacity-0 transition-opacity group-hover:opacity-100 group-hover:bg-radial group-hover:from-primary/80 group-hover:to-transparent',
-                      pathname === link.href &&
-                        'opacity-100 bg-radial from-primary/80 to-transparent'
-                    )}
-                  />
-                </Link>
-              ))}
-            </div>
-          </nav>
-        )}
+        <NavigationMobile
+          navLinks={navLinks}
+          isNavOpen={isNavOpen}
+          setIsNavOpen={setIsNavOpen}
+        />
       </div>
     </header>
   );

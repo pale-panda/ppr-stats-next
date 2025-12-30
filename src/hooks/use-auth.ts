@@ -13,27 +13,27 @@ export const useAuth = () => {
 
     const fetchAuthStatus = async () => {
       const {
-        data: { session },
+        data: { user },
         error,
-      } = await supabase.auth.getSession();
+      } = await supabase.auth.getUser();
 
       if (error) {
         console.error(error);
       }
 
-      if (!session?.user) {
+      if (!user) {
         dispatch(clearUser());
         return;
       }
 
-      dispatch(setUser(session.user));
+      dispatch(setUser(user));
     };
 
     fetchAuthStatus();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        if (!session?.user) {
+        if (!session) {
           dispatch(clearUser());
           return;
         }
@@ -46,5 +46,5 @@ export const useAuth = () => {
     };
   }, [dispatch]);
 
-  return userState;
+  return userState.user;
 };
