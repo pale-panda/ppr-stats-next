@@ -12,7 +12,7 @@ export function FeaturesSection() {
   return (
     <div className='grid gap-6 md:grid-cols-3 md:gap-10 items-stretch'>
       <div className='md:col-span-2 flex flex-col gap-6'>
-        <div className='space-y-3'>
+        <div className='space-y-5'>
           <h2 className='flex flex-col md:block text-center text-2xl md:text-3xl font-bold text-foreground'>
             <span>Welcome to</span>{' '}
             <span className='mx-4 text-4xl'>
@@ -36,7 +36,7 @@ export function FeaturesSection() {
         />
       </div>
       {/* Right: text */}
-      <div className='flex flex-col justify-center'>
+      <div className='flex flex-col justify-center pt-6 md:pt-0'>
         <div className='space-y-6'>
           <h2 className='text-2xl md:text-3xl font-bold text-center'>
             App Features

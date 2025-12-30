@@ -121,4 +121,39 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Ta bort default focus-outline (men bara när vi ersätter den med :focus-visible) */
+  :where(
+      a,
+      button,
+      input,
+      select,
+      textarea,
+      [role='button'],
+      [tabindex]:not([tabindex='-1'])
+    ):focus {
+    outline: none;
+  }
+
+  /* Visa tydlig ring bara för keyboard/assistive */
+  :where(
+      a,
+      button,
+      input,
+      select,
+      textarea,
+      [role='button'],
+      [tabindex]:not([tabindex='-1'])
+    ):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+
+    /* Valfritt: extra glow/”ring” */
+    box-shadow: 0 0 0 4px color-mix(in oklch, var(--ring) 25%, transparent);
+  }
+
+  a:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
