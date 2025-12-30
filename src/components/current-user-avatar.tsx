@@ -23,11 +23,7 @@ export const CurrentUserAvatar = ({
     .toUpperCase();
 
   return (
-    <Avatar
-      className={cn(
-        'size-12 border border-border bg-muted hover:ring-1 hover:ring-ring/50 cursor-pointer',
-        className
-      )}>
+    <Avatar className={cn('size-12 rounded-md', className)}>
       {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={initials} />}
       <AvatarFallback>{initials}</AvatarFallback>
     </Avatar>

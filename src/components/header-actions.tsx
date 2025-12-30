@@ -34,10 +34,8 @@ export function HeaderActions({ user }: { user: User }) {
       <ModeToggle className='cursor-pointer' />
       {user && user.isAuthenticated ? (
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size='icon' variant='ghost' className='rounded-full'>
-              <CurrentUserAvatar user={user} className='size-10 rounded-full' />
-            </Button>
+          <DropdownMenuTrigger className='focus-visible:border-0 focus:border-0 rounded-full'>
+            <CurrentUserAvatar user={user} className='size-10 rounded-full' />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className='w-fit max-w-75 rounded-lg mx-6'
