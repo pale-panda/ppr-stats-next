@@ -1,8 +1,6 @@
-export interface FilterParams {
-  [key: string]: string | string[];
-}
+import type { SearchParams } from 'next/dist/server/request/search-params';
 
-export const createFilterParams = (filter: string): FilterParams => {
+export const createFilterParams = (filter: string): SearchParams => {
   if (!filter?.trim()) return {};
 
   return filter
@@ -29,11 +27,14 @@ export const createFilterParams = (filter: string): FilterParams => {
 
 export const filterByFilterParams = (
   data: Array<Record<string, unknown>>,
-  filterParams: FilterParams
+  filterParams: SearchParams
 ) => {
   if (Object.keys(filterParams).length === 0) return data;
+  if (Object.values(filterParams).every((v) => !v || v.length === 0))
+    return data;
   return data.filter((item) =>
     Object.entries(filterParams).every(([key, values]) => {
+      if (values && values.length === 0) return true;
       const itemValue = item[key];
 
       if (itemValue === undefined || itemValue === null) return false;

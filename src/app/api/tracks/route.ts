@@ -7,9 +7,7 @@ export async function GET(req: NextRequest) {
   const queryParams = searchParams.get('query') || undefined;
   const query = queryParams ? createFilterParams(queryParams) : undefined;
 
-  const data = await getTracks({
-    query,
-  });
+  const data = await getTracks(query);
 
   return NextResponse.json(data, {
     status: 200,

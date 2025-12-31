@@ -5,6 +5,7 @@ import { TrackSessionCards } from '@/components/track-session-cards';
 import { TrackSessionFilter } from '@/components/track-session-filter';
 import { createDashboardStats } from '@/lib/create-stats-items';
 import type { Metadata } from 'next';
+import type { SearchParams } from 'next/dist/server/request/search-params';
 import { Suspense } from 'react';
 
 export const metadata: Metadata = {
@@ -16,9 +17,7 @@ export const metadata: Metadata = {
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    [key: string]: string | string[];
-  }>;
+  searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
   const stats = createDashboardStats(params);

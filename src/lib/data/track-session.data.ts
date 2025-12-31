@@ -1,6 +1,5 @@
 'use server';
 import { DEFAULT_PAGE_SIZE } from '@/lib/data/constants';
-import { FilterParams } from '@/lib/filter-utils';
 import { createClient } from '@/lib/supabase/server';
 import {
   Laps,
@@ -13,6 +12,7 @@ import {
 import { DashboardStats } from '@/types/stats.type';
 import { cache } from 'react';
 import { getTracks } from './tracks.data';
+import type { SearchParams } from 'next/dist/server/request/search-params';
 
 export async function getSessionById(id: string): Promise<TrackSessions> {
   const supabase = await createClient();
@@ -288,10 +288,14 @@ export async function getTrackSessionsByTrackId(
 }
 
 export const getDashboardStats = cache(
-  async (query?: FilterParams): Promise<DashboardStats> => {
+  async (query?: SearchParams): Promise<DashboardStats> => {
     const supabase = await createClient();
 
-    const filteredTracks = await getTracks({ query });
+    if (query === undefined) {
+      query = {};
+    }
+
+    const filteredTracks = await getTracks(query);
     const trackIds = filteredTracks.map((t) => t.id).join(',') || '';
     // Get total sessions
     const { count: totalSessions } = await supabase

@@ -1,5 +1,7 @@
 import { getAppStats } from '@/lib/data/app.data';
 import { getDashboardStats } from '@/lib/data/track-session.data';
+import type {  } from '@/lib/filter-utils';
+import type { SearchParams } from 'next/dist/server/request/search-params';
 import { formatLapTime, formatSpeed } from '@/lib/format-utils';
 
 import { StatItem } from '@/types';
@@ -47,11 +49,9 @@ const createAppStats = async () => {
   return statsList;
 };
 
-const createDashboardStats = async (query?: {
-  [key: string]: string | string[];
-}) => {
-  const params = query ? query : {};
-  const data = await getDashboardStats(params);
+const createDashboardStats = async (query?: SearchParams) => {
+ 
+  const data = await getDashboardStats(query);
 
   const statsList: StatItem[] = [
     {
