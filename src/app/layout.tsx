@@ -1,12 +1,13 @@
-import type React from 'react';
+import { AnalyticsConsent } from '@/components/analytics-consent';
+import { CookieConsent } from '@/components/cookie-consent';
+import { Footer } from '@/components/footer';
+import { Header } from '@/components/header';
+import { ReduxWrapper } from '@/components/redux-wrapper';
+import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import { ThemeProvider } from '@/components/theme-provider';
-import { Analytics } from '@vercel/analytics/next';
-import { Footer } from '@/components/footer';
-import { ReduxWrapper } from '@/components/redux-wrapper';
-import { Header } from '@/components/header';
-import { Toaster } from '@/components/ui/sonner';
+import type React from 'react';
 import './globals.css';
 
 const _geist = Geist({
@@ -77,15 +78,16 @@ export default async function RootLayout({
           disableTransitionOnChange>
           <ReduxWrapper>
             <Header />
-            <Toaster  />
+            <Toaster />
             <main role='main' className='flex-1 w-full'>
               {children}
             </main>
+            <CookieConsent />
           </ReduxWrapper>
           <Footer />
         </ThemeProvider>
       </body>
-      <Analytics />
+      <AnalyticsConsent />
     </html>
   );
 }

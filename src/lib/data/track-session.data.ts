@@ -1,3 +1,4 @@
+'use server';
 import { DEFAULT_PAGE_SIZE } from '@/lib/data/constants';
 import { FilterParams } from '@/lib/filter-utils';
 import { createClient } from '@/lib/supabase/server';

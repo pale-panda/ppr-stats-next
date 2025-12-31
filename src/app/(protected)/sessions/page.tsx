@@ -21,7 +21,6 @@ export default async function HomePage({
   }>;
 }) {
   const params = await searchParams;
-
   const stats = createDashboardStats(params);
 
   return (
@@ -44,6 +43,7 @@ export default async function HomePage({
           </div>
           <TrackSessionFilter />
         </div>
+
         <TrackSessionCards />
       </section>
     </>
