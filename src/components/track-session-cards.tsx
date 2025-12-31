@@ -1,6 +1,7 @@
 'use client';
 import { PageSizeSelector } from '@/components/page-size-selector';
 import { SessionCard } from '@/components/session-card';
+import { TrackSessionCardSkeleton } from '@/components/skeletons';
 import { TrackSessionPagination } from '@/components/track-session-pagination';
 import { formatLapTime } from '@/lib/format-utils';
 import { useFetchTrackSessionsQuery } from '@/state/services/track-session';
@@ -28,8 +29,8 @@ export function TrackSessionCards() {
 
   if (isLoading) {
     return (
-      <div className='text-center py-12'>
-        <p className='text-muted-foreground'>Loading sessions...</p>
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+        <TrackSessionCardSkeleton />
       </div>
     );
   }

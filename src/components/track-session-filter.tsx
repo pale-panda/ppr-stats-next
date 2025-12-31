@@ -1,4 +1,5 @@
 'use client';
+import { TrackSessionFilterSkeleton } from '@/components/skeletons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -149,14 +150,6 @@ export function TrackSessionFilter() {
     navigateWithParams(params);
   }, [navigateWithParams, searchParams]);
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>Error loading filters</div>;
-  }
-
   type TrackFilterItem = {
     key: FilterKey;
     label: string;
@@ -222,6 +215,14 @@ export function TrackSessionFilter() {
       },
     ];
   };
+
+  if (isLoading) {
+    return <TrackSessionFilterSkeleton />;
+  }
+
+  if (error) {
+    return <div>Error loading filters</div>;
+  }
 
   const trackFilters = getTrackFilters();
 
