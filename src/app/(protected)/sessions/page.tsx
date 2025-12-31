@@ -1,8 +1,5 @@
 import { HeroSection } from '@/components/hero-section';
-import {
-  StatsBarSkeleton,
-  TrackSessionCardSkeleton,
-} from '@/components/skeletons';
+import { StatsBarSkeleton } from '@/components/skeletons';
 import { StatsBar } from '@/components/stats-bar';
 import { TrackSessionCards } from '@/components/track-session-cards';
 import { TrackSessionFilter } from '@/components/track-session-filter';
@@ -46,9 +43,8 @@ export default async function HomePage({
           </div>
           <TrackSessionFilter />
         </div>
-        <Suspense fallback={<TrackSessionCardSkeleton />}>
-          <TrackSessionCards />
-        </Suspense>
+
+        <TrackSessionCards />
       </section>
     </>
   );
