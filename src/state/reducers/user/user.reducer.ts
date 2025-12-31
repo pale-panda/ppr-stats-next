@@ -4,7 +4,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { User as UserData } from '@supabase/supabase-js';
 
 interface UserState {
-  user: User;
+  user: User | null;
 }
 
 const initialState: UserState = {

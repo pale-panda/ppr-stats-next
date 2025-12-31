@@ -28,7 +28,11 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-export function HeaderActions({ user }: { user: User }) {
+interface HeaderActionsProps {
+  user: User | null;
+}
+
+export function HeaderActions({ user }: HeaderActionsProps) {
   return (
     <div className='flex items-center justify-end gap-4'>
       <ModeToggle className='cursor-pointer' />

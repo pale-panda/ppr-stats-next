@@ -12,7 +12,7 @@ export const trackApi = createApi({
   }),
   endpoints: (builder) => ({
     fetchTracks: builder.query<Tracks, TrackQueryParams>({
-      query: ({ query }) => `?query=${query}`,
+      query: ({ query }) => (query ? `?query=${query}` : ''),
     }),
   }),
 });

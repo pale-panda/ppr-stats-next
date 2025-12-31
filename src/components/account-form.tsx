@@ -33,6 +33,20 @@ import { z } from 'zod';
 const accountFormSchema = z.object({
   first_name: z.string().trim().max(50, 'First name is too long').nullable(),
   last_name: z.string().trim().max(50, 'Last name is too long').nullable(),
+  avatar_file: z
+    .instanceof(File || null, { message: 'Avatar must be a file' })
+    .refine(
+      (file) => file.size <= 5 * 1024 * 1024, // 5MB
+      'Avatar file size must be less than 5MB'
+    )
+    .refine(
+      (file) =>
+        ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(
+          file.type
+        ),
+      'Unsupported file type'
+    )
+    .nullable(),
   avatar_url: z.string().max(2048, 'URL is too long').nullable(),
 });
 
@@ -62,8 +76,6 @@ export default function AccountForm({ user }: { user: User | null }) {
 
   const getProfile = useCallback(async () => {
     try {
-      setLoading(true);
-
       const { data, error, status } = await supabase
         .from('profiles')
         .select(`first_name, last_name, avatar_url`)
@@ -110,20 +122,26 @@ export default function AccountForm({ user }: { user: User | null }) {
     defaultValues: {
       first_name: firstName ?? '',
       last_name: lastName ?? '',
+      avatar_file: null,
       avatar_url: avatarUrl ?? '',
     },
     mode: 'onTouched',
   });
 
+  const deleteStoredAvatar = async (url: string) => {
+    const avatarPath = url.split('/avatars/')[1].split('?')[0];
+    const { error } = await supabase.storage
+      .from('avatars')
+      .remove([avatarPath]);
+    if (error) throw error;
+  };
+
   const handleDeleteAvatar = async () => {
     if (!user?.id || !avatarUrl) return;
     try {
       setLoading(true);
-      const avatarPath = avatarUrl.split('/avatars/')[1].split('?')[0];
-      const { error } = await supabase.storage
-        .from('avatars')
-        .remove([avatarPath]);
-      if (error) throw error;
+
+      await deleteStoredAvatar(avatarUrl);
 
       const { error: upsertError } = await supabase.from('profiles').upsert({
         id: user.id,
@@ -154,23 +172,28 @@ export default function AccountForm({ user }: { user: User | null }) {
     try {
       setLoading(true);
 
+      if (avatarPreviewUrl && avatarUrl) {
+        await deleteStoredAvatar(avatarUrl);
+      }
+
       let nextAvatarUrl = values.avatar_url || avatarUrl;
+      const nextAvatarFile = values.avatar_file || avatarFile;
       const nextFirstName = values.first_name || firstName;
       const nextLastName = values.last_name || lastName;
       const nextFullName =
         `${nextFirstName || ''} ${nextLastName || ''}`.trim() || null;
 
-      if (avatarFile && user?.id) {
+      if (nextAvatarFile && user?.id) {
         const fileExt =
-          avatarFile.name.split('.').pop()?.toLowerCase() || 'png';
+          nextAvatarFile.name.split('.').pop()?.toLowerCase() || 'png';
         const fileName = `${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${user.id}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('avatars')
-          .upload(filePath, avatarFile, {
+          .upload(filePath, nextAvatarFile, {
             upsert: true,
-            contentType: avatarFile.type || undefined,
+            contentType: nextAvatarFile.type || undefined,
           });
         if (uploadError) throw uploadError;
 
@@ -211,7 +234,6 @@ export default function AccountForm({ user }: { user: User | null }) {
       if (updatedUser) {
         dispatch(setUser(updatedUser));
       }
-      setAvatarFile(null);
 
       toast.success('Profile updated successfully');
       refresh();
@@ -237,54 +259,64 @@ export default function AccountForm({ user }: { user: User | null }) {
                   Enter your details below to update your account
                 </p>
               </div>
-              <FormItem>
-                <div className='flex items-center gap-4'>
-                  <div className='relative'>
-                    <Avatar className='size-24 rounded-xl border border-border bg-muted'>
-                      {(avatarPreviewUrl ?? avatarUrl) && (
-                        <AvatarImage
-                          src={avatarPreviewUrl ?? avatarUrl ?? undefined}
-                          alt={initials}
-                        />
-                      )}
-                      <AvatarFallback className='rounded-lg'>
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    {avatarUrl && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant='outline'
-                            size='icon'
-                            className='absolute -top-1.5 -left-1.5 border-0 rounded-full cursor-pointer size-4 text-foreground hover:text-foreground/80 bg-background/70 hover:bg-background'
-                            onClick={handleDeleteAvatar}>
-                            <XCircleIcon />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side='top'>
-                          Delete current avatar
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-                  </div>
-                  <FormItem>
-                    <FormLabel>Avatar</FormLabel>
-                    <FormControl>
-                      <Input
-                        type='file'
-                        accept='image/*'
-                        onChange={(e) => {
-                          const file = e.target.files?.[0] ?? null;
-                          setAvatarFile(file);
-                        }}
-                        disabled={loading}
-                        className='cursor-pointer'
-                      />
-                    </FormControl>
-                  </FormItem>
+
+              <div className='flex items-center gap-4'>
+                <div className='relative'>
+                  <Avatar className='size-24 rounded-xl border border-border bg-muted'>
+                    <AvatarImage
+                      src={avatarPreviewUrl ?? avatarUrl ?? undefined}
+                      alt={initials}
+                    />
+                    <AvatarFallback className='rounded-lg'>
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  {avatarUrl && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant='outline'
+                          size='icon'
+                          className='absolute -top-1.5 -left-1.5 border-0 rounded-full cursor-pointer size-4 text-foreground hover:text-foreground/80 bg-background/70 hover:bg-background'
+                          onClick={handleDeleteAvatar}>
+                          <XCircleIcon />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side='top'>
+                        Delete current avatar
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
                 </div>
-              </FormItem>
+
+                <FormField
+                  control={form.control}
+                  name='avatar_file'
+                  render={({ field: { ref, name, onBlur, onChange } }) => {
+                    return (
+                      <FormItem>
+                        <FormLabel>Avatar</FormLabel>
+                        <FormControl>
+                          <Input
+                            type='file'
+                            ref={ref}
+                            accept='image/*'
+                            name={name}
+                            onBlur={onBlur}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              setAvatarFile(file ? file : null);
+                              onChange(file ? file : null);
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+              </div>
+
               <FormField
                 control={form.control}
                 name='first_name'
@@ -303,6 +335,7 @@ export default function AccountForm({ user }: { user: User | null }) {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name='last_name'
@@ -340,6 +373,7 @@ export default function AccountForm({ user }: { user: User | null }) {
                   </FormItem>
                 )}
               />
+
               <Button
                 type='submit'
                 disabled={loading}

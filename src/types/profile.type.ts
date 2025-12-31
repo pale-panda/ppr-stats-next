@@ -25,7 +25,7 @@ export type User = {
   createdAt?: string;
   updatedAt?: string | null;
   isAuthenticated: boolean;
-} | null;
+};
 
 export type ProfileData = {
   id: string;
