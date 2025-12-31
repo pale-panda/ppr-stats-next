@@ -1,29 +1,33 @@
+import { normalizeUser } from '@/lib/userUtils';
+import type { User } from '@/types/profile.type';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { User } from '@supabase/supabase-js';
+import type { User as UserData } from '@supabase/supabase-js';
 
 interface UserState {
-  user?: User;
-  isAuthenticated: boolean;
+  user: User;
 }
 
 const initialState: UserState = {
-  isAuthenticated: false,
+  user: null,
 };
 
 const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    setUser: (state, action: PayloadAction<User>) => {
-      state.user = action.payload;
-      state.isAuthenticated = true;
+    setUser: (state, action: PayloadAction<UserData>) => {
+      if (!action.payload) {
+        state.user = { isAuthenticated: false };
+        return;
+      }
+      state.user = normalizeUser(action.payload);
     },
     clearUser: (state) => {
-      state.user = undefined;
-      state.isAuthenticated = false;
+      state.user = { isAuthenticated: false };
     },
-    updateUserProfile: (state, action: PayloadAction<User | undefined>) => {
-      state.user = action.payload;
+    updateUserProfile: (state, action: PayloadAction<UserData>) => {
+      const user = normalizeUser(action.payload);
+      state.user = { ...state.user, ...user } as User;
     },
   },
 });

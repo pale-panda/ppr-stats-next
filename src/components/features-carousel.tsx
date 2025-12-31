@@ -41,7 +41,7 @@ export function FeaturesCarousel({
   }, [api, current, setCurrent]);
 
   return (
-    <div>
+    <div className='py-4'>
       <Carousel
         setApi={setApi}
         opts={{ align: 'start', loop: false, slidesToScroll: 1 }}
@@ -94,8 +94,8 @@ export function FeaturesCarousel({
             </div>
           ))}
         </CarouselContent>
-        <CarouselPrevious className='absolute top-0' />
-        <CarouselNext className='absolute bottom-0' />
+        <CarouselPrevious className='absolute -top-5' />
+        <CarouselNext className='absolute -bottom-10' />
       </Carousel>
     </div>
   );

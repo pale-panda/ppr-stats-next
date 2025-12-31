@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AppImage } from '@/components/app-image';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   getTrackById,
   getTrackSessionsByTrackId,
@@ -18,18 +19,17 @@ import {
   formatSessionDate,
   formatTrackLength,
 } from '@/lib/format-utils';
+import { Lap } from '@/types';
 import {
+  ChevronLeft,
+  CornerDownRight,
   MapPin,
   Route,
-  CornerDownRight,
-  ChevronLeft,
   Trophy,
 } from 'lucide-react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Lap } from '@/types';
-import { AppImage } from '@/components/app-image';
-import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Track Details',
@@ -329,14 +329,15 @@ export default async function TrackDetailPage({
                               {formatLapTime(session.best_lap_time_seconds)}
                             </TableCell>
                             <TableCell className='text-right'>
-                              <Link href={`/session/${session.id}/dashboard`}>
-                                <Button
-                                  variant='ghost'
-                                  size='sm'
-                                  className='text-primary hover:text-primary'>
+                              <Button
+                                variant='ghost'
+                                size='sm'
+                                className='text-primary hover:text-primary'
+                                asChild>
+                                <Link href={`/session/${session.id}/dashboard`}>
                                   View
-                                </Button>
-                              </Link>
+                                </Link>
+                              </Button>
                             </TableCell>
                           </TableRow>
                         ))}

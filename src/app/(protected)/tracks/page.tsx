@@ -1,23 +1,23 @@
-import { Card } from '@/components/ui/card';
+import { AppImage } from '@/components/app-image';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
   getAllTracks,
   getTrackSessionsByTrackId,
 } from '@/lib/data/track-session.data';
 import { formatLapTime, formatSpeed } from '@/lib/format-utils';
+import { Laps } from '@/types';
 import {
+  Calendar,
+  CornerDownRight,
+  Flag,
+  Gauge,
   MapPin,
   Route,
-  CornerDownRight,
   Timer,
-  Gauge,
-  Flag,
-  Calendar,
 } from 'lucide-react';
-import Link from 'next/link';
-import { Laps } from '@/types';
-import { AppImage } from '@/components/app-image';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Tracks',
@@ -175,13 +175,13 @@ export default async function TracksPage() {
                             <span>{track.country}</span>
                           </div>
                         </div>
-                        <Link href={`/tracks/${track.id}`}>
-                          <Button
-                            variant='outline'
-                            className='border-primary text-primary hover:bg-primary hover:text-primary-foreground bg-transparent'>
-                            View Details
-                          </Button>
-                        </Link>
+
+                        <Button
+                          variant='outline'
+                          className='border-primary text-primary hover:bg-primary hover:text-primary-foreground bg-transparent'
+                          asChild>
+                          <Link href={`/tracks/${track.id}`}>View Details</Link>
+                        </Button>
                       </div>
 
                       {/* Track Specs */}

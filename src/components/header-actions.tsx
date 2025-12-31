@@ -16,7 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { RootState } from '@/state/store';
+import type { User } from '@/types';
 import {
   BadgeCheck,
   Bell,
@@ -27,51 +27,52 @@ import {
   UserRoundPlus,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useSelector } from 'react-redux';
 
-export function HeaderActions() {
-  const userState = useSelector((state: RootState) => state.user);
+export function HeaderActions({ user }: { user: User }) {
   return (
     <div className='flex items-center justify-end gap-4'>
       <ModeToggle className='cursor-pointer' />
-      {userState.isAuthenticated ? (
+      {user && user.isAuthenticated ? (
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size='icon' variant='ghost' className='rounded-xl'>
-              <CurrentUserAvatar className='size-10 rounded-xl' />
-            </Button>
+          <DropdownMenuTrigger className='focus-visible:border-0 focus:border-0 rounded-full'>
+            <CurrentUserAvatar user={user} className='size-10 rounded-full' />
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className='w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg'
+            className='w-fit max-w-75 rounded-lg mx-6'
             side={'bottom'}
-            align='start'
-            sideOffset={4}>
+            align='center'
+            sideOffset={10}>
             <DropdownMenuLabel className='px-1 py-0 font-normal'>
-              <CurrentUserAvatarWithName className='size-14 rounded-xl hover:ring-0 cursor-default' />
+              <CurrentUserAvatarWithName
+                user={user}
+                className='size-14 rounded-xl hover:ring-0 cursor-default'
+              />
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <Link href='/user/account'>
-                <DropdownMenuItem className='dark:focus:bg-primary/50 cursor-pointer'>
+              <DropdownMenuItem asChild>
+                <Link href='/user/account'>
                   <BadgeCheck />
                   Account
-                </DropdownMenuItem>
-              </Link>
-              <Link href='/user/settings'>
-                <DropdownMenuItem className='dark:focus:bg-primary/50 cursor-pointer'>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href='/user/settings'>
                   <Settings />
                   Settings
-                </DropdownMenuItem>
-              </Link>
-              <Link href='/user/notifications'>
-                <DropdownMenuItem className='dark:focus:bg-primary/50 cursor-pointer'>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href='/user/notifications'>
                   <Bell />
                   Notifications
-                </DropdownMenuItem>
-              </Link>
+                </Link>
+              </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className='dark:focus:bg-primary/50 cursor-pointer'>
+            <DropdownMenuItem
+              className='dark:focus:bg-primary/50 cursor-pointer'
+              asChild>
               <LogoutButton className='flex flex-row w-full items-center gap-2'>
                 <LogOut />
                 Log out
@@ -99,18 +100,22 @@ export function HeaderActions() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <Link href='/auth/login'>
-                <DropdownMenuItem className='dark:focus:bg-primary/50 cursor-pointer'>
+              <DropdownMenuItem
+                className='dark:focus:bg-primary/50 cursor-pointer'
+                asChild>
+                <Link href='/auth/login'>
                   <LogIn />
                   Login
-                </DropdownMenuItem>
-              </Link>
-              <Link href='/auth/signup'>
-                <DropdownMenuItem className='dark:focus:bg-primary/50 cursor-pointer'>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className='dark:focus:bg-primary/50 cursor-pointer'
+                asChild>
+                <Link href='/auth/signup'>
                   <UserRoundPlus />
                   Sign up
-                </DropdownMenuItem>
-              </Link>
+                </Link>
+              </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>

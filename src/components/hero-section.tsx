@@ -33,18 +33,18 @@ export function HeroSection() {
             help you find those extra tenths on the track.
           </p>
           <div className='flex flex-wrap gap-4'>
-            <Link href='/upload'>
-              <Button size='lg' className='bg-primary hover:bg-primary/90'>
+            <Button size='lg' asChild>
+              <Link href='/upload'>
                 <Upload className='w-5 h-5 mr-2' />
                 Upload New Session
-              </Button>
-            </Link>
-            <Link href='/analytics'>
-              <Button size='lg' variant='outline'>
+              </Link>
+            </Button>
+            <Button size='lg' variant='outline' asChild>
+              <Link href='/analytics'>
                 <BarChart3 className='w-5 h-5 mr-2' />
                 View Analytics
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
       </div>
