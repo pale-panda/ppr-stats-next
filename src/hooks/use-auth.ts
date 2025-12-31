@@ -7,9 +7,9 @@ import { useDispatch, useSelector } from 'react-redux';
 export const useAuth = () => {
   const dispatch = useDispatch<AppDispatch>();
   const userState = useSelector((state: RootState) => state.user);
-  const supabase = createClient();
 
   useEffect(() => {
+    const supabase = createClient();
     const fetchAuthStatus = async () => {
       const {
         data: { user },
@@ -39,7 +39,7 @@ export const useAuth = () => {
     return () => {
       authListener?.subscription?.unsubscribe();
     };
-  }, [dispatch, supabase.auth]);
+  }, [dispatch]);
 
   return userState.user;
 };
