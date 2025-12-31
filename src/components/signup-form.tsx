@@ -1,8 +1,6 @@
 'use client';
 
-import { cn } from '@/lib/utils';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { AppImage } from '@/components/app-image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -11,24 +9,26 @@ import {
   FieldGroup,
   FieldSeparator,
 } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import { createClient } from '@/lib/supabase/client';
-import Link from 'next/link';
-import { AppImage } from '@/components/app-image';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Form,
+  FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormControl,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form';
-import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
+import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { sha256 } from 'js-sha256';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
 const signUpFormSchema = z
   .object({
@@ -265,8 +265,9 @@ export function SignupForm({
         </CardContent>
       </Card>
       <FieldDescription className='px-6 text-center'>
-        By clicking continue, you agree to our <a href='#'>Terms of Service</a>{' '}
-        and <a href='#'>Privacy Policy</a>.
+        By clicking continue, you agree to our{' '}
+        <Link href='/legal/terms-of-service'>Terms of Service</Link> and{' '}
+        <Link href='/legal/privacy-policy'>Privacy Policy</Link>.
       </FieldDescription>
     </div>
   );

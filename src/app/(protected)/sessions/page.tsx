@@ -1,5 +1,8 @@
 import { HeroSection } from '@/components/hero-section';
-import { StatsBarSkeleton } from '@/components/skeletons';
+import {
+  StatsBarSkeleton,
+  TrackSessionCardSkeleton,
+} from '@/components/skeletons';
 import { StatsBar } from '@/components/stats-bar';
 import { TrackSessionCards } from '@/components/track-session-cards';
 import { TrackSessionFilter } from '@/components/track-session-filter';
@@ -21,7 +24,6 @@ export default async function HomePage({
   }>;
 }) {
   const params = await searchParams;
-
   const stats = createDashboardStats(params);
 
   return (
@@ -44,7 +46,9 @@ export default async function HomePage({
           </div>
           <TrackSessionFilter />
         </div>
-        <TrackSessionCards />
+        <Suspense fallback={<TrackSessionCardSkeleton />}>
+          <TrackSessionCards />
+        </Suspense>
       </section>
     </>
   );

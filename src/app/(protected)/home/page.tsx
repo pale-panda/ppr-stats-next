@@ -1,9 +1,11 @@
 import { HeroSection } from '@/components/hero-section';
+import { StatsBarSkeleton } from '@/components/skeletons';
 import { StatsBar } from '@/components/stats-bar';
 import { TrackSessionCards } from '@/components/track-session-cards';
 import { TrackSessionFilter } from '@/components/track-session-filter';
 import { createDashboardStats } from '@/lib/create-stats-items';
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'Home',
@@ -24,7 +26,9 @@ export default async function HomePage({
   return (
     <>
       <HeroSection />
-      <StatsBar statItems={stats} type='dashboard' />
+      <Suspense fallback={<StatsBarSkeleton />}>
+        <StatsBar statItems={stats} type='dashboard' />
+      </Suspense>
 
       {/* Sessions Section */}
       <section className='container mx-auto px-4 py-8'>

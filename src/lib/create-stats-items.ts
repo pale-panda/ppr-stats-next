@@ -50,7 +50,8 @@ const createAppStats = async () => {
 const createDashboardStats = async (query?: {
   [key: string]: string | string[];
 }) => {
-  const data = await getDashboardStats(query);
+  const params = query ? query : {};
+  const data = await getDashboardStats(params);
 
   const statsList: StatItem[] = [
     {
