@@ -1,7 +1,7 @@
+import type { ProfileApp } from './profile.type';
 import type { Database } from '@/types/supabase.type';
 import type { TrackApp } from '@/types/track.type';
 import type { LapApp } from '@/types/laps.type';
-import type { Profile } from '@/types/profile.type';
 import type { TelemetryApp } from '@/types/telemetry-app.type';
 
 export type Session = Database['public']['Tables']['sessions']['Row'];
@@ -14,7 +14,7 @@ export type SessionUpdate = Database['public']['Tables']['sessions']['Update'];
 export type SessionFull = Session & {
   // keep plural name `tracks` for backward compatibility with existing code
   tracks?: TrackApp | null;
-  profiles?: Profile | null;
+  profiles?: ProfileApp | null;
   telemetry_points?: TelemetryApp;
   laps?: LapApp[];
   // computed/aggregated metrics (may be absent)
@@ -46,7 +46,7 @@ export type SessionApp = Partial<Session> & {
 
   // relations
   tracks?: TrackApp | null;
-  profiles?: Profile | null;
+  profiles?: ProfileApp | null;
   telemetryPoints?: TelemetryApp;
   laps?: LapApp[];
 
@@ -69,7 +69,10 @@ export type SessionApp = Partial<Session> & {
 };
 
 // Example mapper stub — implement actual mapping logic in services/ or DAL
-export function mapSessionRowToApp(s: Session, extras?: Partial<SessionFull>): SessionApp {
+export function mapSessionRowToApp(
+  s: Session,
+  extras?: Partial<SessionFull>
+): SessionApp {
   return {
     id: s.id,
     bestLapTimeSeconds: s.best_lap_time_seconds ?? null,
