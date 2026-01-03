@@ -1,19 +1,11 @@
 import { getAppStats } from '@/lib/data/app.data';
-import { getDashboardStats } from '@/lib/data/track-session.data';
-import type {  } from '@/lib/filter-utils';
-import type { SearchParams } from 'next/dist/server/request/search-params';
-import { formatLapTime, formatSpeed } from '@/lib/format-utils';
 
 import { StatItem } from '@/types';
 import {
   ChartLine,
-  Clock,
-  Flag,
-  Gauge,
   MapPinned,
   UploadCloud,
   UserCheck2Icon,
-  Zap,
 } from 'lucide-react';
 
 const createAppStats = async () => {
@@ -49,39 +41,4 @@ const createAppStats = async () => {
   return statsList;
 };
 
-const createDashboardStats = async (query?: SearchParams) => {
- 
-  const data = await getDashboardStats(query);
-
-  const statsList: StatItem[] = [
-    {
-      label: 'Best Lap',
-      value: formatLapTime(data.bestLapTime.lapTimeSeconds),
-      sublabel: data.bestLapTime.trackName || '',
-      icon: Zap,
-    },
-    {
-      label: 'Top Speed',
-      value: formatSpeed(data.topSpeed.maxSpeedKmh, { showUnit: false }),
-      unit: 'km/h',
-      sublabel: data.topSpeed.trackName || '',
-      icon: Gauge,
-    },
-    {
-      label: 'Sessions',
-      value: data.totalSessions,
-      sublabel: 'At the selected tracks',
-      icon: Clock,
-    },
-    {
-      label: 'Total Laps',
-      value: data.totalLaps,
-      sublabel: 'At the selected tracks',
-      icon: Flag,
-    },
-  ];
-
-  return statsList;
-};
-
-export { createAppStats, createDashboardStats };
+export { createAppStats };

@@ -1,7 +1,7 @@
 export const TRACK_SESSION_LIMIT_CARDS = 24;
 export const TRACK_SESSION_LIMIT_TABLE = 100;
 
-export const DEFAULT_PAGE_SIZE = 12;
+export const DEFAULT_PAGE_LIMIT = 12;
 
 export const DASHBOARD_TOP_SESSIONS_LIMIT = 5;
 

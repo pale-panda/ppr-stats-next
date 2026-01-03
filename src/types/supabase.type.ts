@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
-  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -68,63 +63,63 @@ export type Database = {
       }
       laps: {
         Row: {
-          created_at: string | null
-          end_time: string | null
+          created_at: string
+          end_time: string
           id: string
           lap_number: number
-          lap_time_seconds: number | null
+          lap_time_seconds: number
           max_g_force_x: number | null
           max_g_force_z: number | null
-          max_lean_angle: number | null
-          max_speed_kmh: number | null
+          max_lean_angle: number
+          max_speed_kmh: number
           min_g_force_x: number | null
           min_g_force_z: number | null
           min_speed_kmh: number | null
-          sector_1: number | null
-          sector_2: number | null
-          sector_3: number | null
+          sector_1: number
+          sector_2: number
+          sector_3: number
           session_id: string | null
-          start_time: string | null
+          start_time: string
           track_id: string | null
         }
         Insert: {
-          created_at?: string | null
-          end_time?: string | null
+          created_at?: string
+          end_time: string
           id?: string
           lap_number: number
-          lap_time_seconds?: number | null
+          lap_time_seconds: number
           max_g_force_x?: number | null
           max_g_force_z?: number | null
-          max_lean_angle?: number | null
-          max_speed_kmh?: number | null
+          max_lean_angle: number
+          max_speed_kmh: number
           min_g_force_x?: number | null
           min_g_force_z?: number | null
           min_speed_kmh?: number | null
-          sector_1?: number | null
-          sector_2?: number | null
-          sector_3?: number | null
+          sector_1: number
+          sector_2: number
+          sector_3: number
           session_id?: string | null
-          start_time?: string | null
+          start_time: string
           track_id?: string | null
         }
         Update: {
-          created_at?: string | null
-          end_time?: string | null
+          created_at?: string
+          end_time?: string
           id?: string
           lap_number?: number
-          lap_time_seconds?: number | null
+          lap_time_seconds?: number
           max_g_force_x?: number | null
           max_g_force_z?: number | null
-          max_lean_angle?: number | null
-          max_speed_kmh?: number | null
+          max_lean_angle?: number
+          max_speed_kmh?: number
           min_g_force_x?: number | null
           min_g_force_z?: number | null
           min_speed_kmh?: number | null
-          sector_1?: number | null
-          sector_2?: number | null
-          sector_3?: number | null
+          sector_1?: number
+          sector_2?: number
+          sector_3?: number
           session_id?: string | null
-          start_time?: string | null
+          start_time?: string
           track_id?: string | null
         }
         Relationships: [
@@ -147,6 +142,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          email: string | null
           first_name: string | null
           id: string
           last_name: string | null
@@ -154,6 +150,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          email?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
@@ -161,6 +158,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          email?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
@@ -170,48 +168,48 @@ export type Database = {
       }
       sessions: {
         Row: {
-          best_lap_time_seconds: number | null
+          best_lap_time_seconds: number
           created_at: string | null
           data_source: string | null
-          duration_seconds: number | null
+          duration_seconds: number
           id: string
           session_date: string
           session_source: string | null
           session_type: string | null
-          total_laps: number | null
+          total_laps: number
           track_id: string | null
           updated_at: string | null
-          user_id: string | null
+          user_id: string
           vehicle: string | null
         }
         Insert: {
-          best_lap_time_seconds?: number | null
+          best_lap_time_seconds: number
           created_at?: string | null
           data_source?: string | null
-          duration_seconds?: number | null
+          duration_seconds: number
           id?: string
           session_date: string
           session_source?: string | null
           session_type?: string | null
-          total_laps?: number | null
+          total_laps?: number
           track_id?: string | null
           updated_at?: string | null
-          user_id?: string | null
+          user_id: string
           vehicle?: string | null
         }
         Update: {
-          best_lap_time_seconds?: number | null
+          best_lap_time_seconds?: number
           created_at?: string | null
           data_source?: string | null
-          duration_seconds?: number | null
+          duration_seconds?: number
           id?: string
           session_date?: string
           session_source?: string | null
           session_type?: string | null
-          total_laps?: number | null
+          total_laps?: number
           track_id?: string | null
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
           vehicle?: string | null
         }
         Relationships: [
@@ -303,7 +301,7 @@ export type Database = {
       tracks: {
         Row: {
           configuration: string | null
-          country: string | null
+          country: string
           created_at: string | null
           description: string | null
           gps_point: Json | null
@@ -311,12 +309,13 @@ export type Database = {
           image_url: string | null
           length_meters: number | null
           name: string
+          track_slug: string | null
           turns: number | null
           updated_at: string | null
         }
         Insert: {
           configuration?: string | null
-          country?: string | null
+          country: string
           created_at?: string | null
           description?: string | null
           gps_point?: Json | null
@@ -324,12 +323,13 @@ export type Database = {
           image_url?: string | null
           length_meters?: number | null
           name: string
+          track_slug?: string | null
           turns?: number | null
           updated_at?: string | null
         }
         Update: {
           configuration?: string | null
-          country?: string | null
+          country?: string
           created_at?: string | null
           description?: string | null
           gps_point?: Json | null
@@ -337,6 +337,7 @@ export type Database = {
           image_url?: string | null
           length_meters?: number | null
           name?: string
+          track_slug?: string | null
           turns?: number | null
           updated_at?: string | null
         }
@@ -483,3 +484,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

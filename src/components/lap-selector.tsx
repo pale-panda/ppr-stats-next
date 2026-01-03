@@ -1,6 +1,7 @@
 'use client';
 
 import { Card } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -9,13 +10,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { formatLapTime, formatSpeed } from '@/lib/format-utils';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { Lap } from '@/types';
+import { type SessionFull } from '@/types';
+import { Minus, TrendingDown, TrendingUp } from 'lucide-react';
 
 interface LapSelectorProps {
-  laps: Lap[];
+  laps: SessionFull['laps'];
   selectedLap: number;
   onSelectLap: (lap: number) => void;
   comparisonLap: number | null;
@@ -33,19 +33,32 @@ export function LapSelector({
   showComparison,
   onToggleComparison,
 }: LapSelectorProps) {
-  const currentLap = laps.sort((a, b) => a.lap_number - b.lap_number)[
+  const currentLap = laps.sort((a, b) => a.lapNumber - b.lapNumber)[
     selectedLap - 1
   ];
   const bestLap = laps.reduce(
-    (best, lap) => (lap.lap_time_seconds < best.lap_time_seconds ? lap : best),
+    (best, lap) =>
+      (lap.lapTimeSeconds ? lap.lapTimeSeconds : 0) <
+      (best.lapTimeSeconds ? best.lapTimeSeconds : 0)
+        ? lap
+        : best,
     laps[0]
   );
 
   const getSectorDelta = (
-    sector: number,
-    sectorKey: 'sector_1' | 'sector_2' | 'sector_3'
+    sector: number | null,
+    sectorKey: 'sector1' | 'sector2' | 'sector3'
   ) => {
-    const bestSector = Math.min(...laps.map((l) => l[sectorKey]));
+    if (sector == null)
+      return { delta: 0, color: 'text-foreground', icon: Minus };
+
+    const bestSector = Math.min(
+      ...laps.map((l) => l[sectorKey] ?? Number.POSITIVE_INFINITY)
+    );
+
+    if (!isFinite(bestSector))
+      return { delta: 0, color: 'text-foreground', icon: Minus };
+
     const delta = sector - bestSector;
     if (Math.abs(delta) < 0.01)
       return { delta: 0, color: 'text-foreground', icon: Minus };
@@ -69,14 +82,14 @@ export function LapSelector({
             <SelectContent>
               {laps.map((lap) => (
                 <SelectItem
-                  key={lap.lap_number}
-                  value={lap.lap_number.toString()}>
+                  key={lap.lapNumber}
+                  value={lap.lapNumber.toString()}>
                   <span className='flex items-center gap-2'>
-                    <span>Lap {lap.lap_number}</span>
+                    <span>Lap {lap.lapNumber}</span>
                     <span className='text-muted-foreground'>
-                      {formatLapTime(lap.lap_time_seconds)}
+                      {formatLapTime(lap.lapTimeSeconds)}
                     </span>
-                    {lap.lap_number === bestLap.lap_number && (
+                    {lap.lapNumber === bestLap.lapNumber && (
                       <span className='text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded'>
                         BEST
                       </span>
@@ -99,9 +112,9 @@ export function LapSelector({
               onToggleComparison(checked);
               if (checked && !comparisonLap) {
                 onSelectComparisonLap(
-                  bestLap.lap_number !== selectedLap
-                    ? bestLap.lap_number
-                    : laps[0].lap_number
+                  bestLap.lapNumber !== selectedLap
+                    ? bestLap.lapNumber
+                    : laps[0].lapNumber
                 );
               }
             }}
@@ -121,17 +134,17 @@ export function LapSelector({
               </SelectTrigger>
               <SelectContent>
                 {laps
-                  .filter((l) => l.lap_number !== selectedLap)
+                  .filter((l) => l.lapNumber !== selectedLap)
                   .map((lap) => (
                     <SelectItem
-                      key={lap.lap_number}
-                      value={lap.lap_number.toString()}>
+                      key={lap.lapNumber}
+                      value={lap.lapNumber.toString()}>
                       <span className='flex items-center gap-2'>
-                        <span>Lap {lap.lap_number}</span>
+                        <span>Lap {lap.lapNumber}</span>
                         <span className='text-muted-foreground'>
-                          {formatLapTime(lap.lap_time_seconds)}
+                          {formatLapTime(lap.lapTimeSeconds)}
                         </span>
-                        {lap.lap_number === bestLap.lap_number && (
+                        {lap.lapNumber === bestLap.lapNumber && (
                           <span className='text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded'>
                             BEST
                           </span>
@@ -149,29 +162,41 @@ export function LapSelector({
         <div className='space-y-3 pt-4 border-t border-border'>
           <div className='text-center'>
             <div className='text-xs text-muted-foreground uppercase tracking-wider'>
-              Lap {currentLap.lap_number} Time
+              Lap {currentLap.lapNumber} Time
             </div>
             <div className='text-2xl font-mono font-bold text-primary mt-1'>
-              {formatLapTime(currentLap.lap_time_seconds)}
+              {formatLapTime(currentLap.lapTimeSeconds)}
             </div>
           </div>
 
           <div className='grid grid-cols-2 gap-3'>
             <StatItem
               label='Max Cornering G'
-              value={currentLap.max_g_force_z.toFixed(2)}
+              value={
+                currentLap.maxGForceZ != null
+                  ? currentLap.maxGForceZ.toFixed(2)
+                  : '—'
+              }
             />
             <StatItem
               label='Max Acceleration G'
-              value={currentLap.max_g_force_x.toFixed(2)}
+              value={
+                currentLap.maxGForceX != null
+                  ? currentLap.maxGForceX.toFixed(2)
+                  : '—'
+              }
             />
             <StatItem
               label='Max Braking G'
-              value={currentLap.min_g_force_x.toFixed(2)}
+              value={
+                currentLap.minGForceX != null
+                  ? currentLap.minGForceX.toFixed(2)
+                  : '—'
+              }
             />
             <StatItem
               label='Max Speed'
-              value={formatSpeed(currentLap.max_speed_kmh)}
+              value={formatSpeed(currentLap.maxSpeedKmh)}
             />
           </div>
 
@@ -179,7 +204,7 @@ export function LapSelector({
             <div className='text-xs text-muted-foreground uppercase tracking-wider'>
               Sector Times
             </div>
-            {(['sector_1', 'sector_2', 'sector_3'] as const).map(
+            {(['sector1', 'sector2', 'sector3'] as const).map(
               (sectorKey, index) => {
                 const {
                   delta,

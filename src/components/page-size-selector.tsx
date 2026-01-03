@@ -5,12 +5,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import type { MetaOptions } from '@/db/types/db.types';
 import { cn } from '@/lib/utils';
-import { PaginationMeta } from '@/types';
 import { useRouter, type ReadonlyURLSearchParams } from 'next/navigation';
 
 interface PageSizeSelectorProps {
-  meta: PaginationMeta;
+  meta: MetaOptions;
   searchParams: ReadonlyURLSearchParams;
   className?: string;
 }
@@ -21,19 +21,20 @@ export function PageSizeSelector({
   className,
 }: PageSizeSelectorProps) {
   const { replace } = useRouter();
-  const currentSize = searchParams.get('size')
-    ? Number(searchParams.get('size'))
-    : meta.size;
-  const sizes = [6, 12, 24, 36, 48, 60, 84, 108];
+  const currentSize = searchParams.get('limit')
+    ? Number(searchParams.get('limit'))
+    : meta.limit;
 
-  function handleSizeChange(newSize: number) {
+  const limits = [6, 12, 24, 36, 48, 60, 84, 108];
+
+  function handleSizeChange(newLimit: number) {
     const params = new URLSearchParams(searchParams.toString());
-    params.delete('size');
+    params.delete('limit');
     params.delete('page');
 
     params.sort();
     const qs = params.toString();
-    replace(qs ? `?${qs}&size=${newSize}` : `?size=${newSize}`);
+    replace(qs ? `?${qs}&limit=${newLimit}` : `?limit=${newLimit}`);
   }
 
   return (
@@ -50,12 +51,12 @@ export function PageSizeSelector({
           <SelectValue placeholder={currentSize.toString()} />
         </SelectTrigger>
         <SelectContent side='top'>
-          {sizes.map((pageSize) => (
+          {limits.map((limit) => (
             <SelectItem
-              key={pageSize}
-              value={`${pageSize}`}
-              disabled={pageSize > meta.totalCount}>
-              {pageSize}
+              key={limit}
+              value={`${limit}`}
+              disabled={limit > meta.count}>
+              {limit}
             </SelectItem>
           ))}
         </SelectContent>

@@ -7,11 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "prisma:deploy": "npx prisma migrate deploy",
-    "prisma:generate": "npx prisma generate",
-    "prisma:studio": "npx prisma studio",
-    "prisma:migrate": "npx prisma migrate dev",
-    "postinstall": "npx prisma generate",
+    "supabase:types": "npx supabase gen types --local --lang=typescript > src/types/supabase.type.ts",
     "prepare": "husky"
   },
   "dependencies": {

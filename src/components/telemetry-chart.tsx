@@ -13,29 +13,32 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { formatLapTime, formatTime } from '@/lib/format-utils';
-import { Laps, Telemetry } from '@/types';
-//import { useFetchLapTelemetryQuery } from '@/state/services/track-session';
+import type { Lap } from '@/types/laps.type';
+import type {
+  TelemetryApp,
+  TelemetryPointApp,
+} from '@/types/telemetry-app.type';
 
 interface TelemetryChartProps {
-  //sessionId: string;
   selectedLap: number;
-  laps: Laps;
-  telemetry?: Telemetry;
+  laps: Lap[];
+  telemetry?: TelemetryApp | TelemetryPointApp[];
 }
 
 export function TelemetryChart({
-  //sessionId,
   selectedLap,
   laps,
   telemetry,
 }: TelemetryChartProps) {
-  const lap = laps.find((lap) => lap.lap_number === selectedLap);
+  const lap = laps.find((lap) => lap.lapNumber === selectedLap);
 
   const downsampledTelemetry = useMemo(() => {
     if (!telemetry) {
-      return [] as Telemetry;
+      return [] as TelemetryApp[];
     }
-    let telemetryFiltered = telemetry;
+    let telemetryFiltered = telemetry.filter(
+      (point) => point.lapNumber === selectedLap
+    ) as TelemetryApp[];
 
     const maxRows = 200;
     const step = Math.ceil(telemetryFiltered.length / maxRows);
@@ -44,17 +47,25 @@ export function TelemetryChart({
       (_, index) => index % step === 0
     );
 
-    const formatedTelemetry = telemetryFiltered.map((dataPoint) => ({
-      ...dataPoint,
-      timestamp: formatTime(
-        (new Date(dataPoint.timestamp).getTime() -
+    const formatedTelemetry = telemetryFiltered.map((dataPoint) => {
+      const ts = dataPoint.timestamp;
+      const timestamp = formatTime(
+        (new Date(ts).getTime() -
           new Date(telemetryFiltered[0]?.timestamp).getTime()) /
           1000
-      ),
-    }));
+      );
+      // support both camelCase (app) and snake_case (db) shapes
+      return {
+        ...dataPoint,
+        timestamp,
+        speedKmh: dataPoint.speedKmh,
+        gForceX: dataPoint.gForceX,
+        leanAngle: dataPoint.leanAngle,
+      };
+    });
 
     return formatedTelemetry;
-  }, [telemetry]);
+  }, [selectedLap, telemetry]);
 
   if (!lap || !telemetry) {
     return (
@@ -74,7 +85,7 @@ export function TelemetryChart({
             Telemetry Data
           </div>
           <div className='text-lg font-semibold text-foreground'>
-            Lap {selectedLap} - {formatLapTime(lap.lap_time_seconds)}
+            Lap {selectedLap} - {formatLapTime(lap.lapTimeSeconds)}
           </div>
         </div>
         <div className='flex items-center gap-6 text-xs'>
@@ -149,7 +160,7 @@ export function TelemetryChart({
             <Line
               yAxisId='speed'
               type='monotone'
-              dataKey='speed_kmh'
+              dataKey='speedKmh'
               stroke='#ef4444'
               dot={false}
               strokeWidth={2}
@@ -158,7 +169,7 @@ export function TelemetryChart({
             <Line
               yAxisId='g-force'
               type='monotone'
-              dataKey='g_force_x'
+              dataKey='gForceX'
               stroke='#22c55e'
               dot={false}
               strokeWidth={2}
@@ -167,7 +178,7 @@ export function TelemetryChart({
             <Line
               yAxisId='g-force'
               type='monotone'
-              dataKey='lean_angle'
+              dataKey='leanAngle'
               stroke='#3b82f6'
               dot={false}
               strokeWidth={2}

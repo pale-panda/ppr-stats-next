@@ -2,11 +2,11 @@ import { FeaturesSection } from '@/components/features-section';
 import { HeroSection } from '@/components/hero-section';
 import { StatsBarSkeleton } from '@/components/skeletons';
 import { StatsBar } from '@/components/stats-bar';
-import { createAppStats } from '@/lib/create-stats-items';
+import { getAppStats } from '@/services/app-stats.service';
 import { Suspense } from 'react';
 
 export default function HomePage() {
-  const stats = createAppStats();
+  const stats = getAppStats({});
 
   return (
     <>

@@ -1,13 +1,13 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { TrackSessionJoined } from '@/types';
 import { formatLeanAngle } from '@/lib/format-utils';
+import { type SessionFull } from '@/types';
 
 interface TelemetryPanelProps {
-  trackSession: TrackSessionJoined;
+  trackSession: SessionFull;
 }
 
 export function TelemetryPanel({ trackSession }: TelemetryPanelProps) {

@@ -7,9 +7,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { PAGINATION_MAX_PAGES } from '@/lib/data/constants';
+import type { MetaOptions } from '@/db/types/db.types';
 import { cn } from '@/lib/utils';
-import { PaginationMeta } from '@/types';
 import { useRouter, type ReadonlyURLSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -19,20 +18,23 @@ interface PageItemsProps {
   newParams: (page: number) => string;
 }
 
-function getVisiblePages(meta: PaginationMeta) {
-  const maxPagesToShow = Math.min(PAGINATION_MAX_PAGES, meta.totalPages);
+function getVisiblePages(meta: MetaOptions) {
+  const maxPagesToShow = Math.min(
+    meta.limit,
+    Math.ceil(meta.count / meta.limit)
+  );
   const pages: number[] = [];
 
-  if (meta.totalPages <= maxPagesToShow) {
-    for (let page = 1; page <= meta.totalPages; page++) {
+  if (Math.ceil(meta.count / meta.limit) <= maxPagesToShow) {
+    for (let page = 1; page <= Math.ceil(meta.count / meta.limit); page++) {
       pages.push(page);
     }
     return pages;
   }
 
   const halfWindow = Math.floor(maxPagesToShow / 2);
-  let startPage = meta.currentPage - halfWindow;
-  let endPage = meta.currentPage + halfWindow;
+  let startPage = meta.page - halfWindow;
+  let endPage = meta.page + halfWindow;
 
   if (maxPagesToShow % 2 === 0) {
     startPage += 1;
@@ -43,9 +45,9 @@ function getVisiblePages(meta: PaginationMeta) {
     endPage = maxPagesToShow;
   }
 
-  if (endPage > meta.totalPages) {
-    endPage = meta.totalPages;
-    startPage = meta.totalPages - maxPagesToShow + 1;
+  if (endPage > Math.ceil(meta.count / meta.limit)) {
+    endPage = Math.ceil(meta.count / meta.limit);
+    startPage = Math.ceil(meta.count / meta.limit) - maxPagesToShow + 1;
   }
 
   for (let page = startPage; page <= endPage; page++) {
@@ -68,7 +70,7 @@ function PageItems({ pages, currentPage, newParams }: PageItemsProps) {
 }
 
 interface PaginationLinkProps {
-  meta: PaginationMeta;
+  meta: MetaOptions;
   searchParams: ReadonlyURLSearchParams;
   className?: string;
 }
@@ -82,19 +84,21 @@ export function TrackSessionPagination({
   const firstVisiblePage = visiblePages[0];
   const lastVisiblePage = visiblePages[visiblePages.length - 1];
   const hasHiddenLeadingPages = firstVisiblePage > 1;
-  const hasHiddenTrailingPages = lastVisiblePage < meta.totalPages;
+  const hasHiddenTrailingPages =
+    lastVisiblePage < Math.ceil(meta.count / meta.limit);
   const shouldShowLeadingEllipsis = firstVisiblePage > 2;
-  const shouldShowTrailingEllipsis = lastVisiblePage < meta.totalPages - 1;
+  const shouldShowTrailingEllipsis =
+    lastVisiblePage < Math.ceil(meta.count / meta.limit) - 1;
   const { replace } = useRouter();
 
   useEffect(() => {
-    if (meta.currentPage > meta.totalPages) {
+    if (meta.page > Math.ceil(meta.count / meta.limit)) {
       const params = new URLSearchParams(searchParams.toString());
       params.delete('page');
       params.sort();
       replace(`?${params.toString()}`);
     }
-  }, [meta.currentPage, meta.totalPages, replace, searchParams]);
+  }, [meta.page, meta.count, meta.limit, replace, searchParams]);
 
   const newParams = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -106,14 +110,12 @@ export function TrackSessionPagination({
 
   return (
     <div className={cn('flex grow justify-center md:flex-1', className)}>
-      {meta && meta.totalPages > 1 && (
+      {meta && Math.ceil(meta.count / meta.limit) > 1 && (
         <Pagination className='w-auto'>
           <PaginationContent>
-            {meta.currentPage !== 1 && (
-              <PaginationItem value={meta.currentPage - 1}>
-                <PaginationPrevious
-                  href={`?${newParams(meta.currentPage - 1)}`}
-                />
+            {meta.page !== 1 && (
+              <PaginationItem value={meta.page - 1}>
+                <PaginationPrevious href={`?${newParams(meta.page - 1)}`} />
               </PaginationItem>
             )}
             {hasHiddenLeadingPages && (
@@ -130,7 +132,7 @@ export function TrackSessionPagination({
             )}
             <PageItems
               pages={visiblePages}
-              currentPage={meta.currentPage}
+              currentPage={meta.page}
               newParams={newParams}
             />
             {hasHiddenTrailingPages && (
@@ -140,16 +142,17 @@ export function TrackSessionPagination({
                     <PaginationEllipsis />
                   </PaginationItem>
                 )}
-                <PaginationItem value={meta.totalPages}>
-                  <PaginationLink href={`?${newParams(meta.totalPages)}`}>
-                    {meta.totalPages}
+                <PaginationItem value={Math.ceil(meta.count / meta.limit)}>
+                  <PaginationLink
+                    href={`?${newParams(Math.ceil(meta.count / meta.limit))}`}>
+                    {Math.ceil(meta.count / meta.limit)}
                   </PaginationLink>
                 </PaginationItem>
               </>
             )}
-            {meta.currentPage < meta.totalPages && (
-              <PaginationItem value={meta.currentPage + 1}>
-                <PaginationNext href={`?${newParams(meta.currentPage + 1)}`} />
+            {meta.page < Math.ceil(meta.count / meta.limit) && (
+              <PaginationItem value={meta.page + 1}>
+                <PaginationNext href={`?${newParams(meta.page + 1)}`} />
               </PaginationItem>
             )}
           </PaginationContent>

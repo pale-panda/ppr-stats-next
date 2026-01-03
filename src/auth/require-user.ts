@@ -1,6 +1,5 @@
-import 'server-only';
-
 import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 import { cache } from 'react';
 
 export const requireUser = cache(async () => {
@@ -9,6 +8,7 @@ export const requireUser = cache(async () => {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
+    redirect('/auth/login');
   }
   return user;
 });

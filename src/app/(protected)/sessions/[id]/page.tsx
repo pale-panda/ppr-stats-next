@@ -1,31 +1,15 @@
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { AppImage as Image } from '@/components/app-image';
+import TrackSessionDetails from '@/components/track-session-details';
+import TrackSessionHero from '@/components/track-session-hero';
+import TrackSessionLapTimesTable from '@/components/track-session-laptimes-table';
+import TrackSessionStats from '@/components/track-session-stats';
+import TrackSessionTopSection from '@/components/track-session-top-section';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import {
-  ArrowLeft,
-  Clock,
-  Flag,
-  MapPin,
-  Gauge,
-  Thermometer,
-  Cloud,
-  TrendingUp,
-  BarChart3,
-} from 'lucide-react';
-import {
-  formatLapTime,
-  formatSessionDate,
-  formatDuration,
-  formatSpeed,
-  formatLeanAngle,
-  formatTrackLength,
-} from '@/lib/format-utils';
-import { getTrackSessionWithStats } from '@/lib/data/track-session.data';
+import { getSessionByIdFull } from '@/services/sessions.service';
+import { ArrowLeft, BarChart3 } from 'lucide-react';
 import type { Metadata } from 'next';
+import Link from 'next/link';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'Session Details',
@@ -40,28 +24,21 @@ interface SessionPageProps {
 
 export default async function SessionPage({ params }: SessionPageProps) {
   const { id } = await params;
-  const session = await getTrackSessionWithStats(id);
-  const { track, laps } = session;
-
-  if (!session || !track || !laps) {
-    notFound();
-  }
+  const session = getSessionByIdFull(id);
 
   return (
     <>
       {/* Hero Section */}
       <div className='relative h-64 md:h-80 overflow-hidden'>
-        <Image
-          src={
-            track.image_url
-              ? process.env.NEXT_PUBLIC_STORAGE_SUPABASE_URL! + track.image_url
-              : '/placeholder.svg'
-          }
-          alt={track.name || 'Track'}
-          className='w-full h-full object-cover'
-          width={1200}
-          height={400}
-        />
+        <Suspense
+          fallback={
+            <h1>
+              {/* TODO: Create and replace with skeleton! */}
+              Loading...
+            </h1>
+          }>
+          <TrackSessionHero session={session} />
+        </Suspense>
         <div className='absolute inset-0 bg-linear-to-t from-background via-background/60 to-transparent' />
         <div className='absolute inset-0 flex items-end'>
           <div className='container mx-auto px-4 pb-6'>
@@ -72,23 +49,15 @@ export default async function SessionPage({ params }: SessionPageProps) {
               Back to Sessions
             </Link>
             <div className='flex flex-col md:flex-row md:items-end md:justify-between gap-4'>
-              <div>
-                <Badge className='bg-primary text-primary-foreground'>
-                  {session.session_type}
-                </Badge>
-                <h1 className='text-3xl md:text-4xl font-bold text-foreground mt-2 text-balance'>
-                  {track.name || 'Unknown Track'}
-                </h1>
-                <div className='flex items-center gap-2 text-muted-foreground mt-2'>
-                  <MapPin className='w-4 h-4' />
-                  <span>
-                    {track.name}
-                    {track.country && `, ${track.country}`}
-                  </span>
-                  <span className='text-border'>•</span>
-                  <span>{formatSessionDate(session.session_date)}</span>
-                </div>
-              </div>
+              <Suspense
+                fallback={
+                  <h1>
+                    {/* TODO: Create and replace with skeleton! */}
+                    Loading...
+                  </h1>
+                }>
+                <TrackSessionTopSection session={session} />
+              </Suspense>
               <Button className='bg-primary hover:bg-primary/90 w-fit' asChild>
                 <Link href={`${id}/dashboard`}>
                   <BarChart3 className='w-4 h-4 mr-2' />
@@ -103,80 +72,16 @@ export default async function SessionPage({ params }: SessionPageProps) {
       <div className='container mx-auto px-4 py-8'>
         {/* Stats Grid */}
         <div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8'>
-          <Card className='bg-card border-border/50'>
-            <CardContent className='p-4'>
-              <div className='flex items-center gap-2 text-muted-foreground mb-1'>
-                <Clock className='w-4 h-4' />
-                <span className='text-xs uppercase tracking-wider'>
-                  Duration
-                </span>
-              </div>
-              <p className='text-xl font-mono font-bold text-foreground'>
-                {formatDuration(session.duration_seconds)}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className='bg-card border-border/50'>
-            <CardContent className='p-4'>
-              <div className='flex items-center gap-2 text-muted-foreground mb-1'>
-                <Flag className='w-4 h-4' />
-                <span className='text-xs uppercase tracking-wider'>Laps</span>
-              </div>
-              <p className='text-xl font-mono font-bold text-foreground'>
-                {session.total_laps}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className='bg-card border-border/50'>
-            <CardContent className='p-4'>
-              <div className='flex items-center gap-2 text-muted-foreground mb-1'>
-                <TrendingUp className='w-4 h-4' />
-                <span className='text-xs uppercase tracking-wider'>
-                  Best Lap
-                </span>
-              </div>
-              <p className='text-xl font-mono font-bold text-primary'>
-                {formatLapTime(session.best_lap_time_seconds)}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className='bg-card border-border/50'>
-            <CardContent className='p-4'>
-              <div className='flex items-center gap-2 text-muted-foreground mb-1'>
-                <Gauge className='w-4 h-4' />
-                <span className='text-xs uppercase tracking-wider'>
-                  Top Speed
-                </span>
-              </div>
-              <p className='text-xl font-mono font-bold text-foreground'>
-                {formatSpeed(session.max_speed)}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className='bg-card border-border/50'>
-            <CardContent className='p-4'>
-              <div className='flex items-center gap-2 text-muted-foreground mb-1'>
-                <Cloud className='w-4 h-4' />
-                <span className='text-xs uppercase tracking-wider'>
-                  Weather
-                </span>
-              </div>
-              <p className='text-xl font-mono font-bold text-foreground'>N/A</p>
-            </CardContent>
-          </Card>
-          <Card className='bg-card border-border/50'>
-            <CardContent className='p-4'>
-              <div className='flex items-center gap-2 text-muted-foreground mb-1'>
-                <Thermometer className='w-4 h-4' />
-                <span className='text-xs uppercase tracking-wider'>
-                  Track Temp
-                </span>
-              </div>
-              <p className='text-xl font-mono font-bold text-foreground'>N/A</p>
-            </CardContent>
-          </Card>
+          <Suspense
+            fallback={
+              <h1>
+                {/* TODO: Create and replace with skeleton! */}
+                Loading...
+              </h1>
+            }>
+            <TrackSessionStats session={session} />
+          </Suspense>
         </div>
-
         <div className='grid lg:grid-cols-3 gap-6'>
           {/* Lap Times Table */}
           <Card className='lg:col-span-2 bg-card border-border/50'>
@@ -184,62 +89,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
               <CardTitle className='text-foreground'>Lap Times</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className='overflow-x-auto'>
-                <table className='w-full'>
-                  <thead>
-                    <tr className='border-b border-border'>
-                      <th className='text-left py-3 px-2 text-xs uppercase tracking-wider text-muted-foreground'>
-                        Lap
-                      </th>
-                      <th className='text-left py-3 px-2 text-xs uppercase tracking-wider text-muted-foreground'>
-                        Time
-                      </th>
-                      <th className='text-left py-3 px-2 text-xs uppercase tracking-wider text-muted-foreground'>
-                        Max Speed
-                      </th>
-                      <th className='text-left py-3 px-2 text-xs uppercase tracking-wider text-muted-foreground'>
-                        Lean Angle
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {laps.map((lap) => {
-                      const isFastest =
-                        lap.lap_time_seconds === session.best_lap_time_seconds;
-                      return (
-                        <tr
-                          key={lap.id}
-                          className={`border-b border-border/50 ${
-                            isFastest ? 'bg-primary/10' : ''
-                          }`}>
-                          <td className='py-3 px-2 font-mono text-foreground'>
-                            {lap.lap_number}
-                          </td>
-                          <td
-                            className={`py-3 px-2 font-mono font-medium ${
-                              isFastest ? 'text-primary' : 'text-foreground'
-                            }`}>
-                            {formatLapTime(lap.lap_time_seconds)}
-                            {isFastest && (
-                              <Badge
-                                variant='outline'
-                                className='ml-2 text-primary border-primary'>
-                                Fastest
-                              </Badge>
-                            )}
-                          </td>
-                          <td className='py-3 px-2 font-mono text-muted-foreground'>
-                            {formatSpeed(lap.max_speed_kmh)}
-                          </td>
-                          <td className='py-3 px-2 font-mono text-muted-foreground'>
-                            {formatLeanAngle(lap.max_lean_angle)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <TrackSessionLapTimesTable session={session} />
             </CardContent>
           </Card>
 
@@ -249,40 +99,15 @@ export default async function SessionPage({ params }: SessionPageProps) {
               <CardTitle className='text-foreground'>Session Details</CardTitle>
             </CardHeader>
             <CardContent className='space-y-4'>
-              <div className='flex justify-between items-center'>
-                <span className='text-muted-foreground'>Avg Speed</span>
-                <span className='font-mono text-foreground'>
-                  {formatSpeed(session.avg_speed)}
-                </span>
-              </div>
-              <Separator className='bg-border/50' />
-              <div className='flex justify-between items-center'>
-                <span className='text-muted-foreground'>Data Source</span>
-                <span className='font-mono text-foreground'>
-                  {session.data_source || 'N/A'}
-                </span>
-              </div>
-              <Separator className='bg-border/50' />
-              <div className='flex justify-between items-center'>
-                <span className='text-muted-foreground'>Track Length</span>
-                <span className='font-mono text-foreground'>
-                  {formatTrackLength(track.length_meters)}
-                </span>
-              </div>
-              <Separator className='bg-border/50' />
-              <div className='flex justify-between items-center'>
-                <span className='text-muted-foreground'>Turns</span>
-                <span className='font-mono text-foreground'>
-                  {track.turns || 'N/A'}
-                </span>
-              </div>
-              <Separator className='bg-border/50' />
-              <div className='flex justify-between items-center'>
-                <span className='text-muted-foreground'>Max Lean Angle</span>
-                <span className='font-mono text-foreground'>
-                  {formatLeanAngle(session.max_lean_angle)}
-                </span>
-              </div>
+              <Suspense
+                fallback={
+                  <h1>
+                    {/* TODO: Create and replace with skeleton! */}
+                    Loading...
+                  </h1>
+                }>
+                <TrackSessionDetails session={session} />
+              </Suspense>
             </CardContent>
           </Card>
         </div>

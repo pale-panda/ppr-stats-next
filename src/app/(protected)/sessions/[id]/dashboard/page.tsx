@@ -1,11 +1,12 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TelemetryPanel } from '@/components/telemetry-panel';
 import { DashboardAnalysis } from '@/components/dashboard-analysis';
 import { DashboardHeader } from '@/components/dashboard-header';
 import { DashboardOverview } from '@/components/dashboard-overview';
-import { getTrackSessionWithStats } from '@/lib/data/track-session.data';
-import { notFound } from 'next/navigation';
+import { TelemetryPanel } from '@/components/telemetry-panel';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getSessionByIdFull } from '@/services/sessions.service';
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -19,7 +20,7 @@ interface DashboardPageProps {
 
 export default async function DashboardPage({ params }: DashboardPageProps) {
   const { id } = await params;
-  const trackSession = await getTrackSessionWithStats(id);
+  const trackSession = getSessionByIdFull(id);
 
   if (!trackSession) {
     notFound();
@@ -28,8 +29,10 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
   return (
     <>
       {/* Dashboard Header */}
-      <DashboardHeader trackSession={trackSession} />
-
+      <Suspense
+        fallback={<div>{/** TODO: Implement skeleton! */}Loading...</div>}>
+        <DashboardHeader trackSession={trackSession} />
+      </Suspense>
       <div className='container mx-auto px-4 py-6'>
         <Tabs defaultValue='overview' className='space-y-6'>
           <TabsList className='bg-card border border-border'>
@@ -39,15 +42,30 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
           </TabsList>
 
           <TabsContent value='overview' className='space-y-6'>
-            <DashboardOverview trackSession={trackSession} />
+            <Suspense
+              fallback={
+                <div>{/** TODO: Implement skeleton! */}Loading...</div>
+              }>
+              <DashboardOverview trackSession={trackSession} />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value='telemetry'>
-            <TelemetryPanel trackSession={trackSession} />
+            <Suspense
+              fallback={
+                <div>{/** TODO: Implement skeleton! */}Loading...</div>
+              }>
+              <TelemetryPanel trackSession={trackSession} />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value='analysis'>
-            <DashboardAnalysis trackSession={trackSession} />
+            <Suspense
+              fallback={
+                <div>{/** TODO: Implement skeleton! */}Loading...</div>
+              }>
+              <DashboardAnalysis trackSession={trackSession} />
+            </Suspense>
           </TabsContent>
         </Tabs>
       </div>

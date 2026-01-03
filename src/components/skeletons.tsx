@@ -27,47 +27,51 @@ export function StatsBarSkeleton() {
 }
 
 export function TrackSessionCardSkeleton() {
-  return [...Array(3)].map((_, index) => (
-    <Card
-      className='group pt-0 overflow-hidden border-border/50 bg-card hover:border-primary/50 transition-all duration-300'
-      key={index}>
-      <div className='relative aspect-video overflow-hidden'>
-        <Skeleton className='w-full h-full object-cover' />
-        <div className='absolute inset-0 bg-linear-to-t from-background/90 via-background/20 to-transparent' />
+  return (
+    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+      {[...Array(3)].map((_, index) => (
+        <Card
+          className='group pt-0 overflow-hidden border-border/50 bg-card hover:border-primary/50 transition-all duration-300'
+          key={index}>
+          <div className='relative aspect-video overflow-hidden'>
+            <Skeleton className='w-full h-full object-cover' />
+            <div className='absolute inset-0 bg-linear-to-t from-background/90 via-background/20 to-transparent' />
 
-        <div className='absolute bottom-4 left-4 right-4'>
-          <Skeleton className='h-4 rounded w-1/3 mb-2' />
-          <Skeleton className='h-6 rounded w-2/3' />
-        </div>
-      </div>
-
-      <CardContent className='p-4'>
-        <div className='flex items-center gap-2 text-muted-foreground mb-4'>
-          <Skeleton className='w-4 h-4 rounded' />
-          <Skeleton className='h-4 rounded w-1/4' />
-        </div>
-        <div className='grid grid-cols-3 gap-4 mb-4'>
-          <div>
-            <Skeleton className='h-3 rounded w-1/2 mb-2' />
-            <Skeleton className='h-5 rounded w-3/4' />
-          </div>
-          <div>
-            <Skeleton className='h-3 rounded w-1/2 mb-2' />
-            <Skeleton className='h-5 rounded w-3/4' />
+            <div className='absolute bottom-4 left-4 right-4'>
+              <Skeleton className='h-4 rounded w-1/3 mb-2' />
+              <Skeleton className='h-6 rounded w-2/3' />
+            </div>
           </div>
 
-          <div>
-            <Skeleton className='h-3 rounded w-1/2 mb-2' />
-            <Skeleton className='h-5 rounded w-3/4' />
-          </div>
-        </div>
-        <div className='flex gap-2'>
-          <Skeleton className='h-10 rounded w-1/2' />
-          <Skeleton className='h-10 rounded w-1/2' />
-        </div>
-      </CardContent>
-    </Card>
-  ));
+          <CardContent className='p-4'>
+            <div className='flex items-center gap-2 text-muted-foreground mb-4'>
+              <Skeleton className='w-4 h-4 rounded' />
+              <Skeleton className='h-4 rounded w-1/4' />
+            </div>
+            <div className='grid grid-cols-3 gap-4 mb-4'>
+              <div>
+                <Skeleton className='h-3 rounded w-1/2 mb-2' />
+                <Skeleton className='h-5 rounded w-3/4' />
+              </div>
+              <div>
+                <Skeleton className='h-3 rounded w-1/2 mb-2' />
+                <Skeleton className='h-5 rounded w-3/4' />
+              </div>
+
+              <div>
+                <Skeleton className='h-3 rounded w-1/2 mb-2' />
+                <Skeleton className='h-5 rounded w-3/4' />
+              </div>
+            </div>
+            <div className='flex gap-2'>
+              <Skeleton className='h-10 rounded w-1/2' />
+              <Skeleton className='h-10 rounded w-1/2' />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
 }
 
 export function TrackSessionFilterSkeleton() {

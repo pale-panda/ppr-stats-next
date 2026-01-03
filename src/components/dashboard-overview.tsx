@@ -1,9 +1,9 @@
 'use client';
 
-import { Progress } from '@/components/ui/progress';
-import { Flag, Gauge, Zap, Activity, Wind, Bike } from 'lucide-react';
 import { LapTimeChart } from '@/components/lap-time-chart';
 import { SpeedChart } from '@/components/speed-chart';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import {
   formatGForce,
   formatLapTime,
@@ -11,17 +11,23 @@ import {
   formatSpeed,
   formatTrackLength,
 } from '@/lib/format-utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrackSessionJoined } from '@/types';
+import { type SessionFull } from '@/types';
+import { Activity, Bike, Flag, Gauge, Wind, Zap } from 'lucide-react';
+import { use } from 'react';
 
 interface DashboardOverviewProps {
-  trackSession: TrackSessionJoined;
+  trackSession: SessionFull;
 }
 
-export function DashboardOverview({ trackSession }: DashboardOverviewProps) {
-  if (!trackSession) {
+export function DashboardOverview({
+  trackSession,
+}: Promise<DashboardOverviewProps>) {
+  const session = use(trackSession);
+  if (!session) {
     return <div>Session not found.</div>;
   }
+
+  const { tracks, laps } = session;
 
   return (
     <>
@@ -35,7 +41,7 @@ export function DashboardOverview({ trackSession }: DashboardOverviewProps) {
                   Top Speed
                 </p>
                 <p className='text-2xl font-mono font-bold text-foreground mt-1'>
-                  {formatSpeed(trackSession.max_speed)}
+                  {formatSpeed(session.maxSpeed)}
                 </p>
               </div>
               <div className='w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center'>
@@ -52,7 +58,7 @@ export function DashboardOverview({ trackSession }: DashboardOverviewProps) {
                   Avg Speed
                 </p>
                 <p className='text-2xl font-mono font-bold text-foreground mt-1'>
-                  {formatSpeed(trackSession.avg_speed)}
+                  {formatSpeed(session.avgSpeed)}
                 </p>
               </div>
               <div className='w-10 h-10 rounded-lg bg-chart-2/10 flex items-center justify-center'>
@@ -69,7 +75,7 @@ export function DashboardOverview({ trackSession }: DashboardOverviewProps) {
                   Total Laps
                 </p>
                 <p className='text-2xl font-mono font-bold text-foreground mt-1'>
-                  {trackSession.total_laps}
+                  {session.totalLaps}
                 </p>
               </div>
               <div className='w-10 h-10 rounded-lg bg-chart-4/10 flex items-center justify-center'>
@@ -86,7 +92,7 @@ export function DashboardOverview({ trackSession }: DashboardOverviewProps) {
                   Best Lap
                 </p>
                 <p className='text-2xl font-mono font-bold text-primary mt-1'>
-                  {formatLapTime(trackSession.best_lap_time_seconds)}
+                  {formatLapTime(session.bestLapTimeSeconds)}
                 </p>
               </div>
               <div className='w-10 h-10 rounded-lg bg-chart-3/10 flex items-center justify-center'>
@@ -100,12 +106,12 @@ export function DashboardOverview({ trackSession }: DashboardOverviewProps) {
       {/* Charts Row */}
       <div className='grid lg:grid-cols-2 gap-6'>
         <LapTimeChart
-          sessionId={trackSession.id}
-          bestLap={formatLapTime(trackSession.best_lap_time_seconds)}
+          sessionId={session.id}
+          bestLap={formatLapTime(session.bestLapTimeSeconds)}
         />
         <SpeedChart
-          sessionId={trackSession.id}
-          topSpeed={formatSpeed(trackSession.max_speed)}
+          sessionId={session.id}
+          topSpeed={formatSpeed(session.maxSpeed)}
         />
       </div>
 
@@ -122,27 +128,25 @@ export function DashboardOverview({ trackSession }: DashboardOverviewProps) {
             <div className='flex justify-between'>
               <span className='text-muted-foreground'>Track</span>
               <span className='text-foreground font-medium'>
-                {trackSession.track ? trackSession.track.name : 'N/A'}
+                {tracks ? tracks.name : 'N/A'}
               </span>
             </div>
             <div className='flex justify-between'>
               <span className='text-muted-foreground'>Country</span>
               <span className='text-foreground font-mono'>
-                {trackSession.track ? trackSession.track.country : 'N/A'}
+                {tracks ? tracks.country : 'N/A'}
               </span>
             </div>
             <div className='flex justify-between'>
               <span className='text-muted-foreground'>Length</span>
               <span className='text-foreground font-mono'>
-                {formatTrackLength(
-                  trackSession.track ? trackSession.track.length_meters : 0
-                )}
+                {formatTrackLength(tracks ? tracks.lengthMeters : 0)}
               </span>
             </div>
             <div className='flex justify-between'>
               <span className='text-muted-foreground'>Data Source</span>
               <span className='text-foreground font-mono'>
-                {trackSession.data_source}
+                {session.dataSource}
               </span>
             </div>
           </CardContent>
@@ -161,13 +165,14 @@ export function DashboardOverview({ trackSession }: DashboardOverviewProps) {
               <div className='flex justify-between text-sm mb-2'>
                 <span className='text-muted-foreground'>Max Lean Angle</span>
                 <span className='text-foreground font-mono'>
-                  {formatLeanAngle(trackSession.max_lean_angle)}
+                  {formatLeanAngle(session.maxLeanAngle)}
                 </span>
               </div>
               <Progress
                 value={
-                  trackSession.laps && trackSession.laps.length > 0
-                    ? (trackSession.max_lean_angle / 65) * 100
+                  laps && laps.length > 0
+                    ? ((session.maxLeanAngle ? session.maxLeanAngle : 0) / 65) *
+                      100
                     : 0
                 }
                 className='h-2'
@@ -179,13 +184,13 @@ export function DashboardOverview({ trackSession }: DashboardOverviewProps) {
                   Max G-Force (Lateral)
                 </span>
                 <span className='text-foreground font-mono'>
-                  {formatGForce(trackSession.max_g_force_x)}
+                  {formatGForce(session.maxGForceX)}
                 </span>
               </div>
               <Progress
                 value={
-                  trackSession.laps && trackSession.laps.length > 0
-                    ? (trackSession.max_g_force_x / 2) * 100
+                  laps && laps.length > 0
+                    ? ((session.maxGForceX ? session.maxGForceX : 0) / 2) * 100
                     : 0
                 }
                 className='h-2'
@@ -197,13 +202,13 @@ export function DashboardOverview({ trackSession }: DashboardOverviewProps) {
                   Max G-Force (Vertical)
                 </span>
                 <span className='text-foreground font-mono'>
-                  {formatGForce(trackSession.max_g_force_z)}
+                  {formatGForce(session.maxGForceZ)}
                 </span>
               </div>
               <Progress
                 value={
-                  trackSession.laps && trackSession.laps.length > 0
-                    ? (trackSession.max_g_force_z / 3) * 100
+                  laps && laps.length > 0
+                    ? ((session.maxGForceZ ? session.maxGForceZ : 0) / 3) * 100
                     : 0
                 }
                 className='h-2'

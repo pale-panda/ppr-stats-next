@@ -1,27 +1,34 @@
 import { HeroSection } from '@/components/hero-section';
-import { StatsBarSkeleton } from '@/components/skeletons';
+import {
+  StatsBarSkeleton,
+  TrackSessionCardSkeleton,
+  TrackSessionFilterSkeleton,
+} from '@/components/skeletons';
 import { StatsBar } from '@/components/stats-bar';
 import { TrackSessionCards } from '@/components/track-session-cards';
 import { TrackSessionFilter } from '@/components/track-session-filter';
-import { createDashboardStats } from '@/lib/create-stats-items';
+import { getDashboardStats } from '@/services/dashboard-stats.service';
+import { getSessionsFull } from '@/services/sessions.service';
+import { getTracks } from '@/services/tracks.service';
 import type { Metadata } from 'next';
+import type { SearchParams } from 'next/dist/server/request/search-params';
 import { Suspense } from 'react';
 
 export const metadata: Metadata = {
-  title: 'Sessions',
-  description: 'View your Pale Panda Racing Team sessions',
-  keywords: ['Pale Panda Racing Team', 'Sessions', 'Stats'],
+  title: 'Home',
+  description: 'Welcome to your Pale Panda Racing Team dashboard',
+  keywords: ['Pale Panda Racing Team', 'Home', 'Dashboard'],
 };
 
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    [key: string]: string | string[];
-  }>;
+  searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const stats = createDashboardStats(params);
+  const stats = getDashboardStats(params);
+  const sessions = getSessionsFull(params);
+  const tracks = getTracks({});
 
   return (
     <>
@@ -41,10 +48,13 @@ export default async function HomePage({
               Select a session to view detailed analytics
             </p>
           </div>
-          <TrackSessionFilter />
+          <Suspense fallback={<TrackSessionFilterSkeleton />}>
+            <TrackSessionFilter tracks={tracks} />
+          </Suspense>
         </div>
-
-        <TrackSessionCards />
+        <Suspense fallback={<TrackSessionCardSkeleton />}>
+          <TrackSessionCards sessions={sessions} />
+        </Suspense>
       </section>
     </>
   );

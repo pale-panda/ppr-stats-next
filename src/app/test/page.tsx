@@ -1,4 +1,4 @@
-import { requireUser } from '@/lib/data/require-user';
+import { requireUser } from '@/auth/require-user';
 
 export default function TestPage() {
   requireUser();

@@ -11,9 +11,9 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  getTrackById,
-  getTrackSessionsByTrackId,
-} from '@/lib/data/track-session.data';
+  getTrackById
+} from '@/services/tracks.service';
+import { getSessionByTrackId } from '@/services/sessions.service'
 import {
   formatLapTime,
   formatSessionDate,
@@ -46,7 +46,7 @@ export default async function TrackDetailPage({
   const { id } = await params;
   const [track, sessions] = await Promise.all([
     getTrackById(id),
-    getTrackSessionsByTrackId(id),
+    getSessionByTrackId(id),
   ]);
 
   if (!track) {
@@ -83,12 +83,14 @@ export default async function TrackDetailPage({
         sessionDate: session?.session_date || '',
       };
     })
-    .sort((a, b) => a.lap_time_seconds - b.lap_time_seconds)
+    .sort(
+      (a, b) =>
+        (a.lap_time_seconds ? a.lap_time_seconds : +0) -
+        (b.lap_time_seconds ? b.lap_time_seconds : +0)
+    )
     .slice(0, 10);
 
-  const imageUrl =
-    `${process.env.NEXT_PUBLIC_STORAGE_SUPABASE_URL}${track.image_url}` ||
-    '/placeholder.svg';
+  const imageUrl = track.image_url || '/placeholder.svg';
 
   return (
     <>

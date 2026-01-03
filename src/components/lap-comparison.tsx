@@ -14,12 +14,12 @@ import {
 import { formatLapTime } from '@/lib/format-utils';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { formatSpeed } from '@/lib/format-utils';
-import { Laps } from '@/types';
+import type { Lap } from '@/types/laps.type';
 
 interface LapComparisonProps {
   lap1: number;
   lap2: number;
-  laps: Laps;
+  laps: Lap[];
 }
 
 export function LapComparison({ lap1, lap2, laps }: LapComparisonProps) {
@@ -28,16 +28,16 @@ export function LapComparison({ lap1, lap2, laps }: LapComparisonProps) {
 
   const telemetry1 = [
     {
-      time: lap1Data.lap_time_seconds,
-      speed: lap1Data.max_speed_kmh,
-      accBrkG: lap1Data.max_g_force_x,
+      time: lap1Data.lapTimeSeconds,
+      speed: lap1Data.maxSpeedKmh,
+      accBrkG: lap1Data.maxGForceX,
     },
   ];
   const telemetry2 = [
     {
-      time: lap2Data.lap_time_seconds,
-      speed: lap2Data.max_speed_kmh,
-      accBrkG: lap2Data.max_g_force_x,
+      time: lap2Data.lapTimeSeconds,
+      speed: lap2Data.maxSpeedKmh,
+      accBrkG: lap2Data.maxGForceX,
     },
   ];
 
@@ -71,36 +71,36 @@ export function LapComparison({ lap1, lap2, laps }: LapComparisonProps) {
   const comparisons = [
     {
       label: 'Lap Time',
-      val1: lap1Data.lap_time_seconds,
-      val2: lap2Data.lap_time_seconds,
+      val1: lap1Data.lapTimeSeconds,
+      val2: lap2Data.lapTimeSeconds,
       format: formatLapTime,
       inverse: true,
     },
     {
       label: 'Sector 1',
-      val1: lap1Data.sector_1,
-      val2: lap2Data.sector_1,
+      val1: lap1Data.sector1,
+      val2: lap2Data.sector1,
       format: formatLapTime,
       inverse: true,
     },
     {
       label: 'Sector 2',
-      val1: lap1Data.sector_2,
-      val2: lap2Data.sector_2,
+      val1: lap1Data.sector2,
+      val2: lap2Data.sector2,
       format: formatLapTime,
       inverse: true,
     },
     {
       label: 'Sector 3',
-      val1: lap1Data.sector_3,
-      val2: lap2Data.sector_3,
+      val1: lap1Data.sector3,
+      val2: lap2Data.sector3,
       format: formatLapTime,
       inverse: true,
     },
     {
       label: 'Max Speed',
-      val1: lap1Data.max_speed_kmh,
-      val2: lap2Data.max_speed_kmh,
+      val1: lap1Data.maxSpeedKmh,
+      val2: lap2Data.maxSpeedKmh,
       format: (v: number) => formatSpeed(v),
       inverse: false,
     },
@@ -122,13 +122,13 @@ export function LapComparison({ lap1, lap2, laps }: LapComparisonProps) {
             <div className='flex items-center gap-2'>
               <div className='w-3 h-0.5 bg-red-500'></div>
               <span className='text-muted-foreground'>
-                Lap {lap1} ({formatLapTime(lap1Data.lap_time_seconds)})
+                Lap {lap1} ({formatLapTime(lap1Data.lapTimeSeconds)})
               </span>
             </div>
             <div className='flex items-center gap-2'>
               <div className='w-3 h-0.5 bg-blue-500'></div>
               <span className='text-muted-foreground'>
-                Lap {lap2} ({formatLapTime(lap2Data.lap_time_seconds)})
+                Lap {lap2} ({formatLapTime(lap2Data.lapTimeSeconds)})
               </span>
             </div>
           </div>

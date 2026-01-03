@@ -2,11 +2,11 @@ import { AppImage } from '@/components/app-image';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
-  getAllTracks,
-  getTrackSessionsByTrackId,
-} from '@/lib/data/track-session.data';
+  getAllTracks
+} from '@/services/tracks.service';
+import { getSessionByTrackId } from '@/services/sessions.service'
 import { formatLapTime, formatSpeed } from '@/lib/format-utils';
-import { Laps } from '@/types';
+import { Lap } from '@/types';
 import {
   Calendar,
   CornerDownRight,
@@ -17,6 +17,7 @@ import {
   Timer,
 } from 'lucide-react';
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -31,12 +32,16 @@ export default async function TracksPage() {
 
   const tracksWithStats = await Promise.all(
     tracks.map(async (track) => {
-      const sessions = await getTrackSessionsByTrackId(track.id);
+      const sessions = await getSessionByTrackId(track.id);
       const totalLaps = sessions.reduce((sum, s) => sum + s.total_laps, 0);
-      const allLaps = sessions.flatMap((s) => s.laps) as Laps;
+      const allLaps = sessions.flatMap((s) => s.laps) as Lap[];
       const bestLapTime =
         allLaps.length > 0
-          ? Math.min(...allLaps.map((l) => l.lap_time_seconds))
+          ? Math.min(
+              ...allLaps.map((l) =>
+                l.lap_time_seconds ? l.lap_time_seconds : 0
+              )
+            )
           : null;
       const avgTopSpeed =
         allLaps.length > 0
@@ -49,21 +54,19 @@ export default async function TracksPage() {
       return {
         ...track,
         ImageComponent: (
-          <AppImage
-            src={
-              `${process.env.NEXT_PUBLIC_STORAGE_SUPABASE_URL}${track.image_url}` ||
-              '/placeholder.svg'
-            }
+          <Image
+            src={track.image_url || '/placeholder.svg'}
             className='absolute inset-0 w-full h-full object-cover 100vh'
             alt={track.name}
             width={400}
             height={300}
+            unoptimized
           />
         ),
         stats: {
           totalSessions: sessions.length,
           totalLaps,
-          bestLapTime,
+          bestLapTime: bestLapTime !== null ? formatLapTime(bestLapTime) : 'N/A',
           avgTopSpeed,
         },
       };

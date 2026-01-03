@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { getTelemetry } from '@/lib/data/telemetry.data';
+import { getTelemetryBySessionIdAndLapNumber } from '@/services/telemetry.service';
 
 export async function GET(
   req: NextRequest,
@@ -23,7 +23,11 @@ export async function GET(
       return NextResponse.json([]);
     }
 
-    const telemetry = await getTelemetry(sessionId, Number(lapNumber));
+    const telemetry = await getTelemetryBySessionIdAndLapNumber(
+      sessionId,
+      Number(lapNumber)
+    );
+
     return NextResponse.json(telemetry);
   } catch (error) {
     console.error('Error fetching telemetry data', error);
