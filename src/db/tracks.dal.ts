@@ -31,6 +31,7 @@ export const TracksDAL = {
 
     const { data, error } = await q;
     if (error) throw error;
+    const count = await this.countTracks(db, { ...filters } as SearchParams);
 
     return {
       data: data ?? [],
@@ -39,7 +40,7 @@ export const TracksDAL = {
         limit: options.limit,
         sort: options.sort,
         dir: options.dir,
-        count: data?.length ?? 0,
+        count,
         filters,
       },
     };

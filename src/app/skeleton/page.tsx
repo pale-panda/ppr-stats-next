@@ -1,43 +1,11 @@
-import {
-  StatsBarSkeleton,
-  TrackCardSkeleton,
-  TrackSessionFilterSkeleton,
-} from '@/components/skeletons';
-import { StatsBar } from '@/components/stats-bar';
-import { TrackCards } from '@/components/track-cards';
-import { TrackSessionFilter } from '@/components/track-session-filter';
-import {
-  getTrackDashboardStats,
-  getTracks,
-  getTracksWithStats,
-} from '@/services/tracks.service';
-import type { SearchParams } from '@/types';
-import type { Metadata } from 'next';
-import Image from 'next/image';
-import { Suspense } from 'react';
+import { AppImage } from '@/components/app-image';
+import { TrackCardSkeleton } from '@/components/skeletons';
 
-export const metadata: Metadata = {
-  title: 'Tracks',
-  description:
-    "Explore circuit information and your personal statistics for each track you've raced on with the Pale Panda Racing Team",
-  keywords: ['Pale Panda Racing Team', 'Tracks', 'Stats'],
-};
-
-export default async function TracksPage({
-  searchParams,
-}: {
-  searchParams: Promise<SearchParams>;
-}) {
-  const params = await searchParams;
-  const tracks = getTracks({});
-  const tracksWithStats = getTracksWithStats(params);
-  const stats = getTrackDashboardStats({});
-
+export default function Page() {
   return (
     <>
-      {/* Hero Section */}
       <section className='relative h-64 md:h-80'>
-        <Image
+        <AppImage
           src='/spa-francorchamps-race-track-aerial-view.jpg'
           alt='Track Hero Image'
           width={1200}
@@ -60,12 +28,6 @@ export default async function TracksPage({
           </div>
         </div>
       </section>
-
-      {/* Track Stats Overview */}
-      <Suspense fallback={<StatsBarSkeleton />}>
-        <StatsBar statItems={stats} type='dashboard' />
-      </Suspense>
-      {/**
       <section className=' py-8 border-b border-border bg-card/50'>
         <div className='container mx-auto px-4'>
           <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
@@ -88,22 +50,8 @@ export default async function TracksPage({
           </div>
         </div>
       </section>
-      */}
-
-      {/* Tracks Grid */}
-      <section className='container mx-auto px-4 py-8'>
-        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-8'>
-          <p className='text-muted-foreground mt-1'>
-            Select a track to view detailed analytics
-          </p>
-          <Suspense fallback={<TrackSessionFilterSkeleton />}>
-            <TrackSessionFilter tracks={tracks} />
-          </Suspense>
-        </div>
-
-        <Suspense fallback={<TrackCardSkeleton />}>
-          <TrackCards trackCardsData={tracksWithStats} />
-        </Suspense>
+      <section className='py-6'>
+        <TrackCardSkeleton />
       </section>
     </>
   );

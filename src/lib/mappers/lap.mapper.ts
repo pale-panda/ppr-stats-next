@@ -4,23 +4,26 @@ import type { Database } from '@/types/supabase.type';
 type LapRow = Database['public']['Tables']['laps']['Row'];
 
 export function mapLapRowToApp(r: LapRow): LapApp {
+  const sectors = r.sectors ?? [];
+  const s1 = typeof sectors[0] === 'number' ? sectors[0] : 0;
+  const s2 = typeof sectors[1] === 'number' ? sectors[1] : 0;
+  const s3 = typeof sectors[2] === 'number' ? sectors[2] : 0;
+
   return {
     id: r.id,
     lapNumber: r.lap_number,
-    lapTimeSeconds: r.lap_time_seconds ?? null,
-    maxLeanAngle: r.max_lean_angle ?? null,
-    maxSpeedKmh: r.max_speed_kmh ?? null,
-    maxGForceX: r.max_g_force_x ?? null,
-    maxGForceZ: r.max_g_force_z ?? null,
-    minGForceX: r.min_g_force_x ?? null,
-    minGForceZ: r.min_g_force_z ?? null,
-    startTime: r.start_time ?? null,
-    endTime: r.end_time ?? null,
-    sector1: r.sector_1 ?? null,
-    sector2: r.sector_2 ?? null,
-    sector3: r.sector_3 ?? null,
-    trackId: r.track_id ?? null,
-    sessionId: r.session_id ?? null,
+    lapTimeSeconds: r.lap_time_seconds,
+    maxLeanAngle: r.max_lean_angle,
+    maxSpeedKmh: r.max_speed_kmh,
+    maxGForceX: r.max_g_force_x,
+    maxGForceZ: r.max_g_force_z,
+    minGForceX: r.min_g_force_x,
+    minGForceZ: r.min_g_force_z,
+    startTime: r.start_time,
+    endTime: r.end_time,
+    sectors: [s1, s2, s3],
+    trackId: r.track_id,
+    sessionId: r.session_id,
   };
 }
 

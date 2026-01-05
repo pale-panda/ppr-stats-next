@@ -1,7 +1,15 @@
-import { type NextRequest, NextResponse } from 'next/server';
+import { calculateLapData, parseRaceBoxCSV } from '@/lib/csv-parser';
 import { createClient } from '@/lib/supabase/server';
-import { parseRaceBoxCSV, calculateLapData } from '@/lib/csv-parser';
+import { type NextRequest, NextResponse } from 'next/server';
 import path from 'path';
+
+function toTrackSlug(name: string) {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -68,9 +76,10 @@ export async function POST(request: NextRequest) {
         .from('tracks')
         .insert({
           name: header.track,
-          location: 'Unknown',
+          country: 'Unknown',
           length_meters: 0,
           turns: 0,
+          track_slug: toTrackSlug(header.track),
         })
         .select('id')
         .single();
@@ -99,6 +108,23 @@ export async function POST(request: NextRequest) {
     // Find best lap time
     const bestLap = header.bestLapTime;
 
+    // Calculate theoretical best lap time
+    const theoreticalBestLapTimeSeconds =
+      header.lapSummaries.map((l) => l.sectorTimes).length === 0
+        ? 0
+        : (() => {
+            const bestSector1 = Math.min(
+              ...header.lapSummaries.map((l) => l.sectorTimes[0] || Infinity)
+            );
+            const bestSector2 = Math.min(
+              ...header.lapSummaries.map((l) => l.sectorTimes[1] || Infinity)
+            );
+            const bestSector3 = Math.min(
+              ...header.lapSummaries.map((l) => l.sectorTimes[2] || Infinity)
+            );
+            return bestSector1 + bestSector2 + bestSector3;
+          })();
+
     const { data: newSession, error: sessionError } = await supabase
       .from('sessions')
       .insert({
@@ -106,6 +132,7 @@ export async function POST(request: NextRequest) {
         session_date: sessionDate.toISOString(),
         total_laps: laps.length,
         best_lap_time_seconds: bestLap,
+        theoretical_best_lap_time_seconds: theoreticalBestLapTimeSeconds,
         session_type: header.sessionType,
         data_source: header.dataSource || 'RaceBox',
         vehicle: 'Unknown',
@@ -138,6 +165,7 @@ export async function POST(request: NextRequest) {
 
     const lapsToInsert = laps.map((lap) => ({
       session_id: sessionId,
+      track_id: trackId,
       lap_number: lap.lapNumber,
       lap_time_seconds:
         header.lapSummaries[lap.lapNumber - 1]?.lapTimeSeconds || 0,
@@ -151,9 +179,11 @@ export async function POST(request: NextRequest) {
 
       start_time: new Date(lap.startTime).toISOString(),
       end_time: new Date(lap.endTime).toISOString(),
-      sector_1: header.lapSummaries[lap.lapNumber - 1]?.sectorTimes[0] || null,
-      sector_2: header.lapSummaries[lap.lapNumber - 1]?.sectorTimes[1] || null,
-      sector_3: header.lapSummaries[lap.lapNumber - 1]?.sectorTimes[2] || null,
+      sectors: [
+        header.lapSummaries[lap.lapNumber - 1]?.sectorTimes[0] || 0,
+        header.lapSummaries[lap.lapNumber - 1]?.sectorTimes[1] || 0,
+        header.lapSummaries[lap.lapNumber - 1]?.sectorTimes[2] || 0,
+      ],
     }));
 
     const { data: insertedLaps, error: lapsError } = await supabase

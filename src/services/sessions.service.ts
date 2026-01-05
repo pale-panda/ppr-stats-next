@@ -117,16 +117,27 @@ export const getSessionByIdFull = cache(async (id: string) => {
 
   const calculateTheoreticalBest = () => {
     if (!session) return 0;
-    const sector1Best = Math.min(
-      ...laps.map((lap) => lap.sector_1).filter((time) => time !== null)
+    if (!laps.length) return 0;
+
+    const sector1Times = laps
+      .map((lap) => lap.sectors?.[0])
+      .filter((time): time is number => typeof time === 'number' && time > 0);
+    const sector2Times = laps
+      .map((lap) => lap.sectors?.[1])
+      .filter((time): time is number => typeof time === 'number' && time > 0);
+    const sector3Times = laps
+      .map((lap) => lap.sectors?.[2])
+      .filter((time): time is number => typeof time === 'number' && time > 0);
+
+    if (!sector1Times.length || !sector2Times.length || !sector3Times.length) {
+      return 0;
+    }
+
+    return (
+      Math.min(...sector1Times) +
+      Math.min(...sector2Times) +
+      Math.min(...sector3Times)
     );
-    const sector2Best = Math.min(
-      ...laps.map((lap) => lap.sector_2).filter((time) => time !== null)
-    );
-    const sector3Best = Math.min(
-      ...laps.map((lap) => lap.sector_3).filter((time) => time !== null)
-    );
-    return (sector1Best || 0) + (sector2Best || 0) + (sector3Best || 0);
   };
 
   if (!session) return null;

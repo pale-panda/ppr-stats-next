@@ -36,9 +36,6 @@ export function mapTrackRowToApp(r: TrackRow): TrackApp {
   };
 }
 
-export function mapTrackRowsToApp(
-  rows: TrackRow[] | undefined
-): TrackApp[] | undefined {
-  if (!rows) return undefined;
+export function mapTrackRowsToApp(rows: TrackRow[]): TrackApp[] {
   return rows.map(mapTrackRowToApp);
 }

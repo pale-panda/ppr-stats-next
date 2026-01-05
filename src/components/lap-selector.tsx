@@ -45,21 +45,23 @@ export function LapSelector({
     laps[0]
   );
 
-  const getSectorDelta = (
-    sector: number | null,
-    sectorKey: 'sector1' | 'sector2' | 'sector3'
-  ) => {
+  const getSectorDelta = (sector: number | null, sectorIndex: 0 | 1 | 2) => {
     if (sector == null)
       return { delta: 0, color: 'text-foreground', icon: Minus };
 
     const bestSector = Math.min(
-      ...laps.map((l) => l[sectorKey] ?? Number.POSITIVE_INFINITY)
+      ...laps.map((l) =>
+        l.sectors[sectorIndex] > 0
+          ? l.sectors[sectorIndex]
+          : Number.POSITIVE_INFINITY
+      )
     );
 
     if (!isFinite(bestSector))
       return { delta: 0, color: 'text-foreground', icon: Minus };
 
     const delta = sector - bestSector;
+
     if (Math.abs(delta) < 0.01)
       return { delta: 0, color: 'text-foreground', icon: Minus };
     if (delta < 0) return { delta, color: 'text-green-500', icon: TrendingUp };
@@ -172,27 +174,15 @@ export function LapSelector({
           <div className='grid grid-cols-2 gap-3'>
             <StatItem
               label='Max Cornering G'
-              value={
-                currentLap.maxGForceZ != null
-                  ? currentLap.maxGForceZ.toFixed(2)
-                  : '—'
-              }
+              value={currentLap.maxGForceZ.toFixed(2) || '—'}
             />
             <StatItem
               label='Max Acceleration G'
-              value={
-                currentLap.maxGForceX != null
-                  ? currentLap.maxGForceX.toFixed(2)
-                  : '—'
-              }
+              value={currentLap.maxGForceX.toFixed(2) || '—'}
             />
             <StatItem
               label='Max Braking G'
-              value={
-                currentLap.minGForceX != null
-                  ? currentLap.minGForceX.toFixed(2)
-                  : '—'
-              }
+              value={currentLap.minGForceX.toFixed(2) || '—'}
             />
             <StatItem
               label='Max Speed'
@@ -204,37 +194,37 @@ export function LapSelector({
             <div className='text-xs text-muted-foreground uppercase tracking-wider'>
               Sector Times
             </div>
-            {(['sector1', 'sector2', 'sector3'] as const).map(
-              (sectorKey, index) => {
-                const {
-                  delta,
-                  color,
-                  icon: Icon,
-                } = getSectorDelta(currentLap[sectorKey] ?? null, sectorKey);
-                return (
-                  <div
-                    key={sectorKey}
-                    className='flex items-center justify-between'>
-                    <span className='text-sm text-muted-foreground'>
-                      Sector {index + 1}
+            {([0, 1, 2] as const).map((sectorIndex) => {
+              const sectorTime =
+                currentLap.sectors[sectorIndex] > 0
+                  ? currentLap.sectors[sectorIndex]
+                  : null;
+              const {
+                delta,
+                color,
+                icon: Icon,
+              } = getSectorDelta(sectorTime, sectorIndex);
+              return (
+                <div key={sectorIndex} className='grid grid-cols-3 space-y-1'>
+                  <span className='text-sm text-muted-foreground'>
+                    Sector {sectorIndex + 1}
+                  </span>
+                  <div className='flex items-center gap-2'>
+                    <span className='font-mono text-sm font-medium'>
+                      {formatLapTime(sectorTime)}
                     </span>
-                    <div className='flex items-center gap-2'>
-                      <span className='font-mono text-sm font-medium'>
-                        {formatLapTime(currentLap[sectorKey] ?? null)}
+                    {delta !== 0 && (
+                      <span
+                        className={`flex items-center gap-0.5 text-xs ${color}`}>
+                        <Icon className='w-3 h-3' />
+                        {delta > 0 ? '+' : ''}
+                        {delta.toFixed(2)}
                       </span>
-                      {delta !== 0 && (
-                        <span
-                          className={`flex items-center gap-0.5 text-xs ${color}`}>
-                          <Icon className='w-3 h-3' />
-                          {delta > 0 ? '+' : ''}
-                          {delta.toFixed(2)}
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
-                );
-              }
-            )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
