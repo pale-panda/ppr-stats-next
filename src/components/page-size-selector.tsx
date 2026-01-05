@@ -5,12 +5,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { MetaOptions } from '@/db/types/db.types';
+import type { QueryOptions } from '@/db/types/db.types';
 import { cn } from '@/lib/utils';
 import { useRouter, type ReadonlyURLSearchParams } from 'next/navigation';
 
 interface PageSizeSelectorProps {
-  meta: MetaOptions;
+  meta: QueryOptions;
   searchParams: ReadonlyURLSearchParams;
   className?: string;
 }

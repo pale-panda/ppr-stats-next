@@ -29,12 +29,8 @@ export type TrackApp = {
   country: string;
   lengthMeters?: number | null;
   turns?: number | null;
-  imageUrl?: string | null;
+  imageUrl: string | null;
   configuration?: string | null;
   description?: string | null;
   gpsPoint?: LatLngLiteral | null;
-  // Backwards-compatible snake_case aliases
-  length_meters?: number | null;
-  image_url?: string | null;
-  gps_point?: LatLngLiteral | null;
 };

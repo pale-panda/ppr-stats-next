@@ -30,3 +30,5 @@ export type MetaData = {
   filters: QueryFilters;
   meta: MetaOptions;
 };
+
+export type QueryOptions = MetaOptions & { filter?: QueryFilters };

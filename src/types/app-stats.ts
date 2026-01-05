@@ -17,7 +17,8 @@ export type AppStatsFilters = {
 };
 
 export type AppStatsApp = {
+  totalSessions: number;
   totalUsers: number;
   totalTracks: number;
   totalLaps: number;
-}
+};

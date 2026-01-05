@@ -6,7 +6,7 @@ import { getAppStats } from '@/services/app-stats.service';
 import { Suspense } from 'react';
 
 export default function HomePage() {
-  const stats = getAppStats({});
+  const stats = getAppStats();
 
   return (
     <>

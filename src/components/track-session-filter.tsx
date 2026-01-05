@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { MetaOptions } from '@/db/types/db.types';
 import { cn } from '@/lib/utils';
-import type { Track } from '@/types';
+import type { TrackApp } from '@/types';
 import { type DropdownMenuCheckboxItemProps } from '@radix-ui/react-dropdown-menu';
 import { BadgeCheck, ChevronRight, Filter } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -37,7 +37,7 @@ function serializeSelected(params: URLSearchParams) {
 }
 
 interface TrackSessionFilterProps {
-  tracks: Promise<{ data: Track[] | null; meta: MetaOptions }>;
+  tracks: Promise<{ data?: TrackApp[]; meta: MetaOptions }>;
 }
 
 export function TrackSessionFilter({ tracks }: TrackSessionFilterProps) {

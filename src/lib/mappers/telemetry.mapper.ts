@@ -1,5 +1,5 @@
 import type { Database } from '@/types/supabase.type';
-import type { TelemetryPointApp } from '@/types/telemetry-app.type';
+import type { TelemetryPointApp } from '@/types/telemetry.type';
 
 type TelemetryRow = Database['public']['Tables']['telemetry_points']['Row'];
 
@@ -35,12 +35,7 @@ export function mapTelemetryRowToApp(r: TelemetryRow): TelemetryPointApp {
           return null;
         }
       }
-      if (
-        typeof gp === 'object' &&
-        typeof gp.lat === 'number' &&
-        typeof gp.lng === 'number'
-      )
-        return gp;
+      if (typeof gp === 'object') return gp;
       return null;
     })(),
     sessionId: r.session_id ?? null,

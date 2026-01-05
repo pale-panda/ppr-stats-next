@@ -1,4 +1,4 @@
-import type { TelemetryApp } from '@/types/telemetry-app.type';
+import type { TelemetryPointApp } from '@/types/telemetry.type';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 type LapTelemetryParams = {
@@ -13,7 +13,7 @@ export const trackSessionApi = createApi({
     baseUrl: '/api/sessions',
   }),
   endpoints: (builder) => ({
-    fetchLapTelemetry: builder.query<TelemetryApp, LapTelemetryParams>({
+    fetchLapTelemetry: builder.query<TelemetryPointApp[], LapTelemetryParams>({
       query: ({ sessionId, lapNumber, isComparison }) =>
         `/${sessionId}/laps/${lapNumber}${
           isComparison ? '?comparison=true' : ''

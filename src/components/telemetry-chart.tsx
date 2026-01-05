@@ -1,28 +1,25 @@
 'use client';
 
-import { useMemo } from 'react';
 import { Card } from '@/components/ui/card';
+import { formatLapTime, formatTime } from '@/lib/format-utils';
+import type { LapApp } from '@/types/laps.type';
+import type { TelemetryPointApp } from '@/types/telemetry.type';
+import { useMemo } from 'react';
 import {
-  LineChart,
+  CartesianGrid,
   Line,
+  LineChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
 } from 'recharts';
-import { formatLapTime, formatTime } from '@/lib/format-utils';
-import type { Lap } from '@/types/laps.type';
-import type {
-  TelemetryApp,
-  TelemetryPointApp,
-} from '@/types/telemetry-app.type';
 
 interface TelemetryChartProps {
   selectedLap: number;
-  laps: Lap[];
-  telemetry?: TelemetryApp | TelemetryPointApp[];
+  laps: LapApp[];
+  telemetry?: TelemetryPointApp[];
 }
 
 export function TelemetryChart({
@@ -34,12 +31,11 @@ export function TelemetryChart({
 
   const downsampledTelemetry = useMemo(() => {
     if (!telemetry) {
-      return [] as TelemetryApp[];
+      return [] as TelemetryPointApp[];
     }
     let telemetryFiltered = telemetry.filter(
       (point) => point.lapNumber === selectedLap
-    ) as TelemetryApp[];
-
+    ) as TelemetryPointApp[];
     const maxRows = 200;
     const step = Math.ceil(telemetryFiltered.length / maxRows);
 

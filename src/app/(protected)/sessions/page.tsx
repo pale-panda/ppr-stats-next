@@ -8,10 +8,10 @@ import { StatsBar } from '@/components/stats-bar';
 import { TrackSessionCards } from '@/components/track-session-cards';
 import { TrackSessionFilter } from '@/components/track-session-filter';
 import { getDashboardStats } from '@/services/dashboard-stats.service';
-import { getSessionsFull } from '@/services/sessions.service';
+import { getSessions } from '@/services/sessions.service';
 import { getTracks } from '@/services/tracks.service';
+import type { SearchParams } from '@/types';
 import type { Metadata } from 'next';
-import type { SearchParams } from 'next/dist/server/request/search-params';
 import { Suspense } from 'react';
 
 export const metadata: Metadata = {
@@ -27,7 +27,7 @@ export default async function HomePage({
 }) {
   const params = await searchParams;
   const stats = getDashboardStats(params);
-  const sessions = getSessionsFull(params);
+  const sessions = getSessions(params);
   const tracks = getTracks({});
 
   return (

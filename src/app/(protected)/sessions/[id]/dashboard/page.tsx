@@ -5,7 +5,6 @@ import { TelemetryPanel } from '@/components/telemetry-panel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getSessionByIdFull } from '@/services/sessions.service';
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 
 export const metadata: Metadata = {
@@ -21,10 +20,6 @@ interface DashboardPageProps {
 export default async function DashboardPage({ params }: DashboardPageProps) {
   const { id } = await params;
   const trackSession = getSessionByIdFull(id);
-
-  if (!trackSession) {
-    notFound();
-  }
 
   return (
     <>

@@ -1,5 +1,5 @@
-import type { Database } from '@/types/supabase.type';
 import type { LapApp } from '@/types/laps.type';
+import type { Database } from '@/types/supabase.type';
 
 type LapRow = Database['public']['Tables']['laps']['Row'];
 
@@ -24,7 +24,7 @@ export function mapLapRowToApp(r: LapRow): LapApp {
   };
 }
 
-export function mapLapRowsToApp(rows: LapRow[] | undefined): LapApp[] | undefined {
-  if (!rows) return undefined;
+export function mapLapRowsToApp(rows: LapRow[] | undefined): LapApp[] {
+  if (!rows) return [];
   return rows.map(mapLapRowToApp);
 }

@@ -4,17 +4,20 @@ import {
   formatSpeed,
   formatTrackLength,
 } from '@/lib/format-utils';
-import type { SessionFull } from '@/types';
+import type { SessionAppFull } from '@/types';
 import { use } from 'react';
 
 export default function TrackSessionDetails({
   session,
 }: {
-  session: Promise<SessionFull>;
+  session: Promise<SessionAppFull | null>;
 }) {
   const data = use(session);
-  const track = data.tracks!;
-  const laps = data.laps!;
+  if (!data) {
+    return null;
+  }
+  const track = data.tracks;
+  const laps = data.laps;
 
   return (
     <>
@@ -23,7 +26,7 @@ export default function TrackSessionDetails({
         <span className='font-mono text-foreground'>
           {formatSpeed(
             laps
-              .map((lap) => (lap.max_speed_kmh ? lap.max_speed_kmh : 0))
+              .map((lap) => lap.maxSpeedKmh ?? 0)
               .reduce((a, b) => b && a! + b, 0) / laps.length
           )}
         </span>
@@ -32,14 +35,14 @@ export default function TrackSessionDetails({
       <div className='flex justify-between items-center'>
         <span className='text-muted-foreground'>Data Source</span>
         <span className='font-mono text-foreground'>
-          {data.data_source || 'N/A'}
+          {data.dataSource || 'N/A'}
         </span>
       </div>
       <Separator className='bg-border/50' />
       <div className='flex justify-between items-center'>
         <span className='text-muted-foreground'>Track Length</span>
         <span className='font-mono text-foreground'>
-          {formatTrackLength(track.length_meters)}
+          {formatTrackLength(track.lengthMeters ?? 0)}
         </span>
       </div>
       <Separator className='bg-border/50' />
@@ -55,7 +58,7 @@ export default function TrackSessionDetails({
         <span className='font-mono text-foreground'>
           {formatLeanAngle(
             laps
-              .map((lap) => (lap.max_lean_angle ? lap.max_lean_angle : 0))
+              .map((lap) => lap.maxLeanAngle ?? 0)
               .reduce((a, b) => (b !== null ? a! + b : a), 0) / laps.length
           )}
         </span>

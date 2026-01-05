@@ -3,18 +3,16 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatLapTime, formatSessionDate } from '@/lib/format-utils';
-import { type SessionFull } from '@/types';
+import { type SessionAppFull } from '@/types';
 import { ArrowLeft, Flag, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { use } from 'react';
 
 interface DashboardHeaderProps {
-  trackSession: SessionFull;
+  trackSession: Promise<SessionAppFull | null>;
 }
 
-export function DashboardHeader({
-  trackSession,
-}: Promise<DashboardHeaderProps>) {
+export function DashboardHeader({ trackSession }: DashboardHeaderProps) {
   const session = use(trackSession);
 
   if (!session || !session.tracks) {

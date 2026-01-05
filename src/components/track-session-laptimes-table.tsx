@@ -4,15 +4,18 @@ import {
   formatLeanAngle,
   formatSpeed,
 } from '@/lib/format-utils';
-import type { SessionFull } from '@/types/sessions.type';
+import type { SessionAppFull } from '@/types/sessions.type';
 import { use } from 'react';
 
 export default function TrackSessionLapTimesTable({
   session,
 }: {
-  session: Promise<SessionFull>;
+  session: Promise<SessionAppFull | null>;
 }) {
   const data = use(session);
+  if (!data) {
+    return null;
+  }
   const laps = data.laps || [];
 
   laps.sort((a, b) => a.lapNumber - b.lapNumber);

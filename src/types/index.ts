@@ -3,8 +3,7 @@ export * from './laps.type';
 export * from './profile.type';
 export * from './sessions.type';
 export * from './stats.type';
-export * from './telemetry-app.type';
-export * from './track-session.type';
+export * from './telemetry.type';
 export * from './track.type';
 
 export type LatLngLiteral = {

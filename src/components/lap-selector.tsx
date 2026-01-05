@@ -11,11 +11,11 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { formatLapTime, formatSpeed } from '@/lib/format-utils';
-import { type SessionFull } from '@/types';
+import { type SessionAppFull } from '@/types';
 import { Minus, TrendingDown, TrendingUp } from 'lucide-react';
 
 interface LapSelectorProps {
-  laps: SessionFull['laps'];
+  laps: SessionAppFull['laps'];
   selectedLap: number;
   onSelectLap: (lap: number) => void;
   comparisonLap: number | null;
@@ -210,7 +210,7 @@ export function LapSelector({
                   delta,
                   color,
                   icon: Icon,
-                } = getSectorDelta(currentLap[sectorKey], sectorKey);
+                } = getSectorDelta(currentLap[sectorKey] ?? null, sectorKey);
                 return (
                   <div
                     key={sectorKey}
@@ -220,7 +220,7 @@ export function LapSelector({
                     </span>
                     <div className='flex items-center gap-2'>
                       <span className='font-mono text-sm font-medium'>
-                        {formatLapTime(currentLap[sectorKey])}
+                        {formatLapTime(currentLap[sectorKey] ?? null)}
                       </span>
                       {delta !== 0 && (
                         <span

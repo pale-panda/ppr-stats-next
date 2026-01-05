@@ -19,14 +19,26 @@ export function mapTrackRowToApp(r: TrackRow): TrackApp {
       if (typeof gp === 'string') {
         try {
           const parsed = JSON.parse(gp);
-          if (parsed && typeof parsed.lat === 'number' && typeof parsed.lng === 'number') return parsed;
+          if (
+            parsed &&
+            typeof parsed.lat === 'number' &&
+            typeof parsed.lng === 'number'
+          )
+            return parsed;
         } catch (e) {
-          throw e
+          throw e;
           return null;
         }
       }
-      if (typeof gp === 'object' && typeof gp.lat === 'number' && typeof gp.lng === 'number') return gp;
+      if (typeof gp === 'object') return gp;
       return null;
     })(),
   };
+}
+
+export function mapTrackRowsToApp(
+  rows: TrackRow[] | undefined
+): TrackApp[] | undefined {
+  if (!rows) return undefined;
+  return rows.map(mapTrackRowToApp);
 }

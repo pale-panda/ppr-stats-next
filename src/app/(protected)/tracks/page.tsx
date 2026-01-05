@@ -1,12 +1,10 @@
 import { AppImage } from '@/components/app-image';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import {
-  getAllTracks
-} from '@/services/tracks.service';
-import { getSessionByTrackId } from '@/services/sessions.service'
 import { formatLapTime, formatSpeed } from '@/lib/format-utils';
-import { Lap } from '@/types';
+import { getSessionsByTrackId } from '@/services/sessions.service';
+import { getTracks } from '@/services/tracks.service';
+import { type LapApp, type TrackApp } from '@/types';
 import {
   Calendar,
   CornerDownRight,
@@ -28,25 +26,31 @@ export const metadata: Metadata = {
 };
 
 export default async function TracksPage() {
-  const tracks = await getAllTracks();
+  const { data: tracks } = await getTracks({});
+
+  if (!tracks) {
+    return (
+      <div className='container mx-auto px-4 py-12 text-center'>
+        <p>No tracks available.</p>
+      </div>
+    );
+  }
 
   const tracksWithStats = await Promise.all(
-    tracks.map(async (track) => {
-      const sessions = await getSessionByTrackId(track.id);
-      const totalLaps = sessions.reduce((sum, s) => sum + s.total_laps, 0);
-      const allLaps = sessions.flatMap((s) => s.laps) as Lap[];
+    tracks.map(async (track: TrackApp) => {
+      const sessions = await getSessionsByTrackId(track.id);
+      const totalLaps = sessions.reduce((sum, s) => sum + s.totalLaps, 0);
+      const allLaps = sessions.flatMap((s) => s.laps) as LapApp[];
       const bestLapTime =
         allLaps.length > 0
           ? Math.min(
-              ...allLaps.map((l) =>
-                l.lap_time_seconds ? l.lap_time_seconds : 0
-              )
+              ...allLaps.map((l) => (l.lapTimeSeconds ? l.lapTimeSeconds : 0))
             )
           : null;
       const avgTopSpeed =
         allLaps.length > 0
           ? Math.round(
-              allLaps.reduce((sum, l) => sum + (l.max_speed_kmh || 0), 0) /
+              allLaps.reduce((sum, l) => sum + (l.maxSpeedKmh || 0), 0) /
                 allLaps.length
             )
           : null;
@@ -55,7 +59,7 @@ export default async function TracksPage() {
         ...track,
         ImageComponent: (
           <Image
-            src={track.image_url || '/placeholder.svg'}
+            src={track.imageUrl || '/placeholder.svg'}
             className='absolute inset-0 w-full h-full object-cover 100vh'
             alt={track.name}
             width={400}
@@ -66,7 +70,7 @@ export default async function TracksPage() {
         stats: {
           totalSessions: sessions.length,
           totalLaps,
-          bestLapTime: bestLapTime !== null ? formatLapTime(bestLapTime) : 'N/A',
+          bestLapTime,
           avgTopSpeed,
         },
       };
@@ -83,7 +87,7 @@ export default async function TracksPage() {
     0
   );
   const combinedLength = Math.round(
-    tracks.reduce((sum, t) => sum + (t.length_meters || 0), 0) / 1000
+    tracks.reduce((sum, t) => sum + (t.lengthMeters || 0), 0) / 1000
   );
 
   return (
@@ -196,10 +200,8 @@ export default async function TracksPage() {
                               Length
                             </p>
                             <p className='text-sm font-semibold text-foreground'>
-                              {track?.length_meters
-                                ? `${(track.length_meters / 1000).toFixed(
-                                    2
-                                  )} km`
+                              {track?.lengthMeters
+                                ? `${(track.lengthMeters / 1000).toFixed(2)} km`
                                 : 'N/A'}
                             </p>
                           </div>

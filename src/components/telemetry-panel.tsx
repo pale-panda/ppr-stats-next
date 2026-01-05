@@ -3,14 +3,20 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { formatLeanAngle } from '@/lib/format-utils';
-import { type SessionFull } from '@/types';
+import { formatLeanAngle, formatSpeed } from '@/lib/format-utils';
+import type { SessionAppFull } from '@/types';
+import { use } from 'react';
 
 interface TelemetryPanelProps {
-  trackSession: SessionFull;
+  trackSession: Promise<SessionAppFull | null>;
 }
 
 export function TelemetryPanel({ trackSession }: TelemetryPanelProps) {
+  const session = use(trackSession);
+  if (!session) {
+    return <div>Session not found.</div>;
+  }
+
   return (
     <div className='grid gap-6'>
       <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
@@ -42,7 +48,7 @@ export function TelemetryPanel({ trackSession }: TelemetryPanelProps) {
               Lean Angle
             </p>
             <p className='text-3xl font-mono font-bold text-chart-2'>
-              {formatLeanAngle(trackSession.max_lean_angle)}
+              {formatLeanAngle(session.maxLeanAngle ?? 0)}
             </p>
             <p className='text-xs text-muted-foreground mt-1'>right</p>
             <Progress value={87} className='h-1 mt-2' />
@@ -54,7 +60,7 @@ export function TelemetryPanel({ trackSession }: TelemetryPanelProps) {
               Speed
             </p>
             <p className='text-3xl font-mono font-bold text-primary'>
-              {trackSession.max_speed}
+              {formatSpeed(session.maxSpeed ?? 0)}
             </p>
             <p className='text-xs text-muted-foreground mt-1'>km/h</p>
             <Progress value={87} className='h-1 mt-2' />

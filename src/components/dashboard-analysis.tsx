@@ -6,17 +6,15 @@ import { SessionKPIs } from '@/components/session-kpis';
 import { TelemetryChart } from '@/components/telemetry-chart';
 import TrackMap from '@/components/track-map';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { type LatLngLiteral, type SessionFull } from '@/types';
-import { useMemo, useState, use } from 'react';
 import { useFetchLapTelemetryQuery } from '@/state/services/track-session';
+import { type LatLngLiteral, type SessionAppFull } from '@/types';
+import { use, useMemo, useState } from 'react';
 
 interface DashboardAnalysisProps {
-  trackSession: SessionFull;
+  trackSession: Promise<SessionAppFull | null>;
 }
 
-export function DashboardAnalysis({
-  trackSession,
-}: Promise<DashboardAnalysisProps>) {
+export function DashboardAnalysis({ trackSession }: DashboardAnalysisProps) {
   const [selectedLap, setSelectedLap] = useState<number>(1);
   const [comparisonLap, setComparisonLap] = useState<number | null>(null);
   const [showComparison, setShowComparison] = useState(false);
@@ -28,7 +26,7 @@ export function DashboardAnalysis({
     isLoading,
     error,
   } = useFetchLapTelemetryQuery({
-    sessionId: session.id,
+    sessionId: session ? session.id : '',
     lapNumber: selectedLap,
   });
 
@@ -37,19 +35,19 @@ export function DashboardAnalysis({
     isLoading: comparisonLoading,
     error: comparisonError,
   } = useFetchLapTelemetryQuery({
-    sessionId: session.id,
+    sessionId: session ? session.id : '',
     lapNumber: comparisonLap,
   });
 
   const center = useMemo<LatLngLiteral>(() => {
-    const gp = session.tracks?.gpsPoint as LatLngLiteral | null;
+    const gp = session?.tracks?.gpsPoint as LatLngLiteral | null;
     if (!gp) return { lat: 0, lng: 0 };
     // handle objects and valueOf() shapes, and common key names
     const value = gp as LatLngLiteral;
     const lat = Number(value?.lat ?? 0);
     const lng = Number(value?.lng ?? 0);
     return { lat, lng };
-  }, [session.tracks?.gpsPoint]);
+  }, [session?.tracks?.gpsPoint]);
 
   const handleSelectComparisonLap = (lap: number) => {
     setComparisonLap(lap);
@@ -87,10 +85,8 @@ export function DashboardAnalysis({
 
           <div className='lg:col-span-9'>
             <TrackMap
-              sessionId={id}
-              telemetry={telemetryData}
-              telemetryComparison={telemetryComparisonData}
-              selectedLap={selectedLap}
+              telemetry={telemetryData ?? []}
+              telemetryComparison={telemetryComparisonData ?? []}
               comparisonLap={comparisonLap}
               showComparison={showComparison}
               center={center}

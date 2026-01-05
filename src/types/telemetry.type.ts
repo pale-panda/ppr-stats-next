@@ -1,8 +1,23 @@
-// Backwards-compatible aliases for legacy telemetry types.
-// Prefer importing `TelemetryApp` / `TelemetryPointApp` from
-// `./telemetry-app.type` instead.
+import { LatLngLiteral } from '@/types';
+import { ID, ISODateString } from '@/types/common-types';
 
-import type { TelemetryPointApp, TelemetryApp } from './telemetry-app.type';
+// App-level telemetry point type (camelCase) — preferred for UI and business logic
+export type TelemetryPointApp = {
+  id?: ID<'telemetry'>;
+  lapId?: ID<'lap'> | null;
+  lapNumber: number | null;
+  recordNumber: number;
+  timestamp: ISODateString;
+  speedKmh: number | null;
+  gForceX: number | null;
+  gForceZ: number | null;
+  leanAngle: number | null;
+  gyroX: number | null;
+  gyroY: number | null;
+  gyroZ: number | null;
+  altitude?: number | null;
+  gpsPoint?: LatLngLiteral | null;
+  sessionId?: ID<'session'> | null;
+};
 
-export type TelemetryPoint = TelemetryPointApp;
-export type Telemetry = TelemetryApp;
+export type TelemetryApp = Array<TelemetryPointApp>;

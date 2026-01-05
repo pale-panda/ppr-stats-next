@@ -1,17 +1,20 @@
 import { Badge } from '@/components/ui/badge';
 import { formatSessionDate } from '@/lib/format-utils';
-import type { SessionFull } from '@/types/sessions.type';
+import type { SessionAppFull } from '@/types/sessions.type';
 import { MapPin } from 'lucide-react';
 import { use } from 'react';
 
 interface TrackSessionTopSectionProps {
-  session: Promise<SessionFull>;
+  session: Promise<SessionAppFull | null>;
 }
 
 export default function TrackSessionTopSection({
   session,
 }: TrackSessionTopSectionProps) {
   const data = use(session);
+  if (!data) {
+    return null;
+  }
   const track = data.tracks;
 
   return (

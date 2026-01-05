@@ -1,25 +1,24 @@
 'use client';
 
 import { Card } from '@/components/ui/card';
+import { formatLapTime, formatSpeed } from '@/lib/format-utils';
+import type { LapApp } from '@/types';
+import { Minus, TrendingDown, TrendingUp } from 'lucide-react';
 import {
-  LineChart,
+  CartesianGrid,
   Line,
+  LineChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
 } from 'recharts';
-import { formatLapTime } from '@/lib/format-utils';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { formatSpeed } from '@/lib/format-utils';
-import type { Lap } from '@/types/laps.type';
 
 interface LapComparisonProps {
   lap1: number;
   lap2: number;
-  laps: Lap[];
+  laps: LapApp[];
 }
 
 export function LapComparison({ lap1, lap2, laps }: LapComparisonProps) {
@@ -71,36 +70,36 @@ export function LapComparison({ lap1, lap2, laps }: LapComparisonProps) {
   const comparisons = [
     {
       label: 'Lap Time',
-      val1: lap1Data.lapTimeSeconds,
-      val2: lap2Data.lapTimeSeconds,
+      val1: lap1Data.lapTimeSeconds ?? 0,
+      val2: lap2Data.lapTimeSeconds ?? 0,
       format: formatLapTime,
       inverse: true,
     },
     {
       label: 'Sector 1',
-      val1: lap1Data.sector1,
-      val2: lap2Data.sector1,
+      val1: lap1Data.sector1 ?? 0,
+      val2: lap2Data.sector1 ?? 0,
       format: formatLapTime,
       inverse: true,
     },
     {
       label: 'Sector 2',
-      val1: lap1Data.sector2,
-      val2: lap2Data.sector2,
+      val1: lap1Data.sector2 ?? 0,
+      val2: lap2Data.sector2 ?? 0,
       format: formatLapTime,
       inverse: true,
     },
     {
       label: 'Sector 3',
-      val1: lap1Data.sector3,
-      val2: lap2Data.sector3,
+      val1: lap1Data.sector3 ?? 0,
+      val2: lap2Data.sector3 ?? 0,
       format: formatLapTime,
       inverse: true,
     },
     {
       label: 'Max Speed',
-      val1: lap1Data.maxSpeedKmh,
-      val2: lap2Data.maxSpeedKmh,
+      val1: lap1Data.maxSpeedKmh ?? 0,
+      val2: lap2Data.maxSpeedKmh ?? 0,
       format: (v: number) => formatSpeed(v),
       inverse: false,
     },

@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, memo } from 'react';
 import '@/components/track-map.css';
-import { APIProvider, useMap, Map } from '@vis.gl/react-google-maps';
 import { LatLngLiteral } from '@/types';
-import type { TelemetryApp } from '@/types/telemetry-app.type';
+import type { TelemetryPointApp } from '@/types/telemetry.type';
+import { APIProvider, Map, useMap } from '@vis.gl/react-google-maps';
+import { memo, useEffect, useMemo } from 'react';
 
 interface TrackMapProps {
-  telemetry: TelemetryApp[] | [];
-  telemetryComparison: TelemetryApp[] | [];
+  telemetry: TelemetryPointApp[] | [];
+  telemetryComparison: TelemetryPointApp[] | [];
   comparisonLap: number | null;
   showComparison: boolean;
   center: LatLngLiteral;
@@ -25,7 +25,6 @@ export type MapConfig = {
   label: string;
   mapId?: string;
   mapTypeId?: string;
-  comparisonLoading;
   styles?: google.maps.MapTypeStyle[];
 };
 

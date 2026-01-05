@@ -1,6 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { formatDuration, formatLapTime, formatSpeed } from '@/lib/format-utils';
-import type { SessionFull } from '@/types/sessions.type';
+import type { SessionAppFull } from '@/types/sessions.type';
 import {
   Clock,
   Cloud,
@@ -12,11 +12,15 @@ import {
 import { use } from 'react';
 
 interface TrackSessionStatsProps {
-  session: Promise<SessionFull>;
+  session: Promise<SessionAppFull | null>;
 }
 
 export default function TrackSessionStats({ session }: TrackSessionStatsProps) {
   const data = use(session);
+
+  if (!data) {
+    return null;
+  }
 
   const { laps } = data;
 
@@ -29,7 +33,7 @@ export default function TrackSessionStats({ session }: TrackSessionStatsProps) {
             <span className='text-xs uppercase tracking-wider'>Duration</span>
           </div>
           <p className='text-xl font-mono font-bold text-foreground'>
-            {formatDuration(data.durationSeconds)}
+            {formatDuration(data.durationSeconds ?? 0)}
           </p>
         </CardContent>
       </Card>

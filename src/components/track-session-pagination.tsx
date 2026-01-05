@@ -7,7 +7,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import type { MetaOptions } from '@/db/types/db.types';
+import type { MetaOptions, QueryOptions } from '@/db/types/db.types';
 import { cn } from '@/lib/utils';
 import { useRouter, type ReadonlyURLSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
@@ -70,7 +70,7 @@ function PageItems({ pages, currentPage, newParams }: PageItemsProps) {
 }
 
 interface PaginationLinkProps {
-  meta: MetaOptions;
+  meta: QueryOptions;
   searchParams: ReadonlyURLSearchParams;
   className?: string;
 }

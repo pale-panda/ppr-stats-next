@@ -11,17 +11,15 @@ import {
   formatSpeed,
   formatTrackLength,
 } from '@/lib/format-utils';
-import { type SessionFull } from '@/types';
+import type { SessionAppFull } from '@/types';
 import { Activity, Bike, Flag, Gauge, Wind, Zap } from 'lucide-react';
 import { use } from 'react';
 
 interface DashboardOverviewProps {
-  trackSession: SessionFull;
+  trackSession: Promise<SessionAppFull | null>;
 }
 
-export function DashboardOverview({
-  trackSession,
-}: Promise<DashboardOverviewProps>) {
+export function DashboardOverview({ trackSession }: DashboardOverviewProps) {
   const session = use(trackSession);
   if (!session) {
     return <div>Session not found.</div>;
@@ -41,7 +39,7 @@ export function DashboardOverview({
                   Top Speed
                 </p>
                 <p className='text-2xl font-mono font-bold text-foreground mt-1'>
-                  {formatSpeed(session.maxSpeed)}
+                  {formatSpeed(session.maxSpeed ?? 0)}
                 </p>
               </div>
               <div className='w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center'>
@@ -58,7 +56,7 @@ export function DashboardOverview({
                   Avg Speed
                 </p>
                 <p className='text-2xl font-mono font-bold text-foreground mt-1'>
-                  {formatSpeed(session.avgSpeed)}
+                  {formatSpeed(session.avgSpeed ?? 0)}
                 </p>
               </div>
               <div className='w-10 h-10 rounded-lg bg-chart-2/10 flex items-center justify-center'>
@@ -111,7 +109,7 @@ export function DashboardOverview({
         />
         <SpeedChart
           sessionId={session.id}
-          topSpeed={formatSpeed(session.maxSpeed)}
+          topSpeed={formatSpeed(session.maxSpeed ?? 0)}
         />
       </div>
 
@@ -140,7 +138,7 @@ export function DashboardOverview({
             <div className='flex justify-between'>
               <span className='text-muted-foreground'>Length</span>
               <span className='text-foreground font-mono'>
-                {formatTrackLength(tracks ? tracks.lengthMeters : 0)}
+                {formatTrackLength(tracks.lengthMeters ?? 0)}
               </span>
             </div>
             <div className='flex justify-between'>
@@ -165,14 +163,13 @@ export function DashboardOverview({
               <div className='flex justify-between text-sm mb-2'>
                 <span className='text-muted-foreground'>Max Lean Angle</span>
                 <span className='text-foreground font-mono'>
-                  {formatLeanAngle(session.maxLeanAngle)}
+                  {formatLeanAngle(session.maxLeanAngle ?? 0)}
                 </span>
               </div>
               <Progress
                 value={
                   laps && laps.length > 0
-                    ? ((session.maxLeanAngle ? session.maxLeanAngle : 0) / 65) *
-                      100
+                    ? ((session.maxLeanAngle ?? 0) / 65) * 100
                     : 0
                 }
                 className='h-2'
@@ -184,13 +181,13 @@ export function DashboardOverview({
                   Max G-Force (Lateral)
                 </span>
                 <span className='text-foreground font-mono'>
-                  {formatGForce(session.maxGForceX)}
+                  {formatGForce(session.maxGForceX ?? 0)}
                 </span>
               </div>
               <Progress
                 value={
                   laps && laps.length > 0
-                    ? ((session.maxGForceX ? session.maxGForceX : 0) / 2) * 100
+                    ? ((session.maxGForceX ?? 0) / 2) * 100
                     : 0
                 }
                 className='h-2'
@@ -202,13 +199,13 @@ export function DashboardOverview({
                   Max G-Force (Vertical)
                 </span>
                 <span className='text-foreground font-mono'>
-                  {formatGForce(session.maxGForceZ)}
+                  {formatGForce(session.maxGForceZ ?? 0)}
                 </span>
               </div>
               <Progress
                 value={
                   laps && laps.length > 0
-                    ? ((session.maxGForceZ ? session.maxGForceZ : 0) / 3) * 100
+                    ? ((session.maxGForceZ ?? 0) / 3) * 100
                     : 0
                 }
                 className='h-2'

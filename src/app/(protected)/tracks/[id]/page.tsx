@@ -1,4 +1,3 @@
-import { AppImage } from '@/components/app-image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -11,15 +10,13 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  getTrackById
-} from '@/services/tracks.service';
-import { getSessionByTrackId } from '@/services/sessions.service'
-import {
   formatLapTime,
   formatSessionDate,
   formatTrackLength,
 } from '@/lib/format-utils';
-import { Lap } from '@/types';
+import { getSessionsByTrackId } from '@/services/sessions.service';
+import { getTrackById } from '@/services/tracks.service';
+import { type LapApp } from '@/types';
 import {
   ChevronLeft,
   CornerDownRight,
@@ -28,6 +25,7 @@ import {
   Trophy,
 } from 'lucide-react';
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -46,7 +44,7 @@ export default async function TrackDetailPage({
   const { id } = await params;
   const [track, sessions] = await Promise.all([
     getTrackById(id),
-    getSessionByTrackId(id),
+    getSessionsByTrackId(id),
   ]);
 
   if (!track) {
@@ -57,18 +55,18 @@ export default async function TrackDetailPage({
     throw new Error('Failed to fetch sessions for this track');
   }
 
-  const totalLaps = sessions.reduce((sum, s) => sum + s.total_laps, 0);
+  const totalLaps = sessions.reduce((sum, s) => sum + s.totalLaps, 0);
   const allLaps = sessions
     .flatMap((s) => s.laps)
-    .filter((l): l is Lap => l != null);
+    .filter((l): l is LapApp => l != null) as LapApp[];
   const lapTimes = allLaps
-    .map((l) => l.lap_time_seconds)
+    .map((l) => l.lapTimeSeconds)
     .filter((t): t is number => typeof t === 'number');
   const bestLapTime = Math.min(...lapTimes);
   const avgTopSpeed =
     allLaps.length > 0
       ? Math.round(
-          allLaps.reduce((sum, l) => sum + (l.max_speed_kmh || 0), 0) /
+          allLaps.reduce((sum, l) => sum + (l.maxSpeedKmh || 0), 0) /
             allLaps.length
         )
       : 0;
@@ -76,31 +74,32 @@ export default async function TrackDetailPage({
   // Get top 10 laps sorted by time
   const topLaps = allLaps
     .map((lap) => {
-      const session = sessions.find((s) => s.id === lap.session_id);
+      const session = sessions.find((s) => s.id === lap.sessionId);
       return {
         ...lap,
-        sessionTitle: session ? `${session.session_type} Session` : 'Unknown',
-        sessionDate: session?.session_date || '',
+        sessionTitle: session ? `${session.sessionType} Session` : 'Unknown',
+        sessionDate: session?.sessionDate || '',
       };
     })
     .sort(
       (a, b) =>
-        (a.lap_time_seconds ? a.lap_time_seconds : +0) -
-        (b.lap_time_seconds ? b.lap_time_seconds : +0)
+        (a.lapTimeSeconds ? a.lapTimeSeconds : +0) -
+        (b.lapTimeSeconds ? b.lapTimeSeconds : +0)
     )
     .slice(0, 10);
 
-  const imageUrl = track.image_url || '/placeholder.svg';
+  const imageUrl = track.imageUrl || '/placeholder.svg';
 
   return (
     <>
       {/* Hero Section */}
       <section className='relative h-64 md:h-80'>
-        <AppImage
+        <Image
           src={imageUrl}
           alt={track.name}
           fill
           className='absolute inset-0 w-full h-full object-fill'
+          unoptimized
         />
 
         <div className='absolute inset-0 bg-linear-to-t from-background via-background/60 to-transparent' />
@@ -131,7 +130,7 @@ export default async function TrackDetailPage({
           <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
             <div className='text-center'>
               <p className='text-2xl font-bold text-foreground'>
-                {formatTrackLength(track.length_meters)}
+                {formatTrackLength(track.lengthMeters ?? null)}
               </p>
               <p className='text-xs text-muted-foreground'>Length</p>
             </div>
@@ -235,8 +234,8 @@ export default async function TrackDetailPage({
                           Circuit Length
                         </p>
                         <p className='text-lg font-semibold text-foreground'>
-                          {track?.length_meters
-                            ? `${(track.length_meters / 1000).toFixed(2)} km`
+                          {track?.lengthMeters
+                            ? `${(track.lengthMeters / 1000).toFixed(2)} km`
                             : 'N/A'}
                         </p>
                       </div>
@@ -317,18 +316,18 @@ export default async function TrackDetailPage({
                             <TableCell>
                               <div className='flex items-center gap-2'>
                                 <span className='font-medium text-foreground'>
-                                  {session.session_type} Session
+                                  {session.sessionType} Session
                                 </span>
                               </div>
                             </TableCell>
                             <TableCell className='text-muted-foreground'>
-                              {formatSessionDate(session.session_date)}
+                              {formatSessionDate(session.sessionDate)}
                             </TableCell>
                             <TableCell className='text-right text-foreground'>
-                              {session.total_laps}
+                              {session.totalLaps}
                             </TableCell>
                             <TableCell className='text-right font-mono text-primary'>
-                              {formatLapTime(session.best_lap_time_seconds)}
+                              {formatLapTime(session.bestLapTimeSeconds)}
                             </TableCell>
                             <TableCell className='text-right'>
                               <Button
@@ -396,11 +395,11 @@ export default async function TrackDetailPage({
                           const gap =
                             index === 0
                               ? 0
-                              : lap.lap_time_seconds! -
-                                topLaps[0].lap_time_seconds!;
+                              : lap.lapTimeSeconds! -
+                                topLaps[0].lapTimeSeconds!;
                           return (
                             <TableRow
-                              key={`${lap.session_id}-${lap.lap_number}`}
+                              key={`${lap.sessionId}-${lap.lapNumber}`}
                               className='border-border'>
                               <TableCell>
                                 {index === 0 ? (
@@ -419,16 +418,16 @@ export default async function TrackDetailPage({
                                     ? 'text-primary'
                                     : 'text-foreground'
                                 }`}>
-                                {formatLapTime(lap.lap_time_seconds)}
+                                {formatLapTime(lap.lapTimeSeconds)}
                               </TableCell>
                               <TableCell className='text-muted-foreground'>
                                 {lap.sessionTitle}
                               </TableCell>
                               <TableCell className='text-right text-foreground'>
-                                Lap {lap.lap_number}
+                                Lap {lap.lapNumber}
                               </TableCell>
                               <TableCell className='text-right text-foreground'>
-                                {Math.round(lap.max_speed_kmh || 0)} km/h
+                                {Math.round(lap.maxSpeedKmh || 0)} km/h
                               </TableCell>
                               <TableCell className='text-right text-muted-foreground'>
                                 {index === 0 ? '--' : `+${gap.toFixed(3)}s`}

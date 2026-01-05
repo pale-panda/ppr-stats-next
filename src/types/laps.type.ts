@@ -33,20 +33,4 @@ export type LapApp = {
   sector3?: number | null;
   trackId?: string | null;
   sessionId?: string | null;
-  // Backwards-compatible snake_case aliases
-  lap_number?: number;
-  lap_time_seconds?: number | null;
-  max_lean_angle?: number | null;
-  max_speed_kmh?: number | null;
-  max_g_force_x?: number | null;
-  max_g_force_z?: number | null;
-  min_g_force_x?: number | null;
-  min_g_force_z?: number | null;
-  start_time?: string | null;
-  end_time?: string | null;
-  sector_1?: number | null;
-  sector_2?: number | null;
-  sector_3?: number | null;
-  track_id?: string | null;
-  session_id?: string | null;
 };

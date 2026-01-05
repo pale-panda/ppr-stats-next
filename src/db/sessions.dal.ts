@@ -16,7 +16,7 @@ export const SessionsDAL = {
 
     const trackIds = await TracksDAL.getTrackIDByFilters(db, searchParams);
 
-    let q = db.from('sessions').select('*');
+    let q = db.from('sessions').select(`*, tracks(name, country, image_url)`);
     q = applyInFilters(q, [
       { column: 'track_id', values: filters.track_id || trackIds },
       { column: 'user_id', values: filters.user_id },
@@ -59,7 +59,13 @@ export const SessionsDAL = {
   async getSessionById(db: DB, id: string) {
     const { data, error } = await db
       .from('sessions')
-      .select('*')
+      .select(
+        `*,
+        telemetry_points(*),
+        tracks(*),
+        profiles(*),
+        laps(*)`
+      )
       .eq('id', id)
       .single();
     if (error) throw error;
@@ -69,7 +75,13 @@ export const SessionsDAL = {
   async getSessionsByUserId(db: DB, userId: string) {
     const { data, error } = await db
       .from('sessions')
-      .select('*')
+      .select(
+        `*,
+        telemetry_points(*),
+        tracks(*),
+        profiles(*),
+        laps(*)`
+      )
       .eq('user_id', userId);
     if (error) throw error;
     return data ?? [];
@@ -78,7 +90,13 @@ export const SessionsDAL = {
   async getSessionsByTrackId(db: DB, trackId: string) {
     const { data, error } = await db
       .from('sessions')
-      .select('*')
+      .select(
+        `*,
+        telemetry_points(*),
+        tracks(*),
+        profiles(*),
+        laps(*)`
+      )
       .eq('track_id', trackId);
     if (error) throw error;
     return data ?? [];
@@ -94,11 +112,13 @@ export const SessionsDAL = {
 
     const trackIds = await TracksDAL.getTrackIDByFilters(db, searchParams);
 
-    let q = db
-      .from('sessions')
-      .select(
-        `*, tracks(id, name, country, length_meters, turns, image_url), profiles(id, first_name, last_name), laps(lap_number, lap_time_seconds, max_lean_angle, max_speed_kmh, max_g_force_x, max_g_force_z, min_g_force_x, min_g_force_z, start_time, end_time, sector_1, sector_2, sector_3)`
-      );
+    let q = db.from('sessions').select(
+      `*,
+        telemetry_points(*),
+        tracks(*),
+        profiles(*),
+        laps(*)`
+    );
     q = applyInFilters(q, [
       {
         column: 'track_id',
@@ -145,7 +165,11 @@ export const SessionsDAL = {
     const { data, error } = await db
       .from('sessions')
       .select(
-        `*, telemetry_points(speed_kmh, lean_angle, g_force_x, g_force_z, timestamp, lap_number), tracks(id, name, country, length_meters, turns, image_url, gps_point), profiles(id, first_name, last_name), laps(lap_number, lap_time_seconds, max_lean_angle, max_speed_kmh, max_g_force_x, max_g_force_z, min_g_force_x, min_g_force_z, start_time, end_time, sector_1, sector_2, sector_3)`
+        `*,
+        telemetry_points(*),
+        tracks(*),
+        profiles(*),
+        laps(*)`
       )
       .eq('id', id)
       .single();

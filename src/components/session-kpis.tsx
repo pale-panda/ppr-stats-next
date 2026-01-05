@@ -6,10 +6,10 @@ import {
   formatLapTime,
   formatMinMaxSpeed,
 } from '@/lib/format-utils';
-import { type SessionFull } from '@/types';
+import { type SessionAppFull } from '@/types';
 import { Bike, Clock, Flag, Gauge, Target } from 'lucide-react';
 
-export function SessionKPIs({ ...stats }: SessionFull) {
+export function SessionKPIs({ ...stats }: SessionAppFull) {
   const kpis = [
     {
       label: 'Vehicle',
@@ -18,7 +18,7 @@ export function SessionKPIs({ ...stats }: SessionFull) {
     },
     {
       label: 'Duration',
-      value: formatDuration(stats.durationDeconds),
+      value: formatDuration(stats.durationSeconds ?? 0),
       icon: Clock,
     },
     {
@@ -28,12 +28,12 @@ export function SessionKPIs({ ...stats }: SessionFull) {
     },
     {
       label: 'Theoretical Best Lap',
-      value: formatLapTime(stats.theoreticalBest),
+      value: formatLapTime(stats.theoreticalBest ?? 0),
       icon: Target,
     },
     {
       label: 'Max/Min Speed',
-      value: formatMinMaxSpeed(stats.minSpeed, stats.maxSpeed),
+      value: formatMinMaxSpeed(stats.minSpeed ?? 0, stats.maxSpeed ?? 0),
       icon: Gauge,
     },
   ];

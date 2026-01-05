@@ -46,4 +46,4 @@ export type ProfileApp = {
   firstName: string;
   lastName: string;
   email: string;
-}
+};

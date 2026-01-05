@@ -177,7 +177,7 @@ export type Database = {
           session_source: string | null
           session_type: string | null
           total_laps: number
-          track_id: string | null
+          track_id: string
           updated_at: string | null
           user_id: string
           vehicle: string | null
@@ -192,7 +192,7 @@ export type Database = {
           session_source?: string | null
           session_type?: string | null
           total_laps?: number
-          track_id?: string | null
+          track_id: string
           updated_at?: string | null
           user_id: string
           vehicle?: string | null
@@ -207,7 +207,7 @@ export type Database = {
           session_source?: string | null
           session_type?: string | null
           total_laps?: number
-          track_id?: string | null
+          track_id?: string
           updated_at?: string | null
           user_id?: string
           vehicle?: string | null
