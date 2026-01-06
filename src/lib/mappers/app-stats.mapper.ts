@@ -1,4 +1,4 @@
-import type { AppStats } from '@/types/app-stats';
+import type { AppStats } from '@/types/stats.type';
 import type { Database } from '@/types/supabase.type';
 
 type AppStatsRow = Database['public']['Tables']['app_stats']['Row'];
