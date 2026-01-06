@@ -3,7 +3,7 @@ import { PageSizeSelector } from '@/components/page-size-selector';
 import { SessionCard } from '@/components/session-card';
 import { TrackSessionPagination } from '@/components/track-session-pagination';
 import type { QueryOptions } from '@/db/types/db.types';
-import { formatLapTime } from '@/lib/format-utils';
+import { formatLapTime, formatSessionDate } from '@/lib/format-utils';
 import type { Session } from '@/types';
 import { useSearchParams } from 'next/navigation';
 import { use } from 'react';
@@ -39,11 +39,7 @@ export function TrackSessionCards({ sessions }: TrackSessionCardsProps) {
               id={session.id}
               title={`${session.tracks?.name}`}
               track={session.tracks ? session.tracks.name : 'Unknown Track'}
-              date={new Date(session.sessionDate).toLocaleDateString('sv-SE', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              })}
+              date={formatSessionDate(session.sessionDate)}
               laps={session.totalLaps || 0}
               bestLap={formatLapTime(session.bestLapTimeSeconds)}
               status='completed'

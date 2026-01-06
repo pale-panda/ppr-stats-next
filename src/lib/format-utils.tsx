@@ -14,7 +14,7 @@ export function formatLapTime(seconds: number | null): string {
 
 export function formatSessionDate(dateString: string): string {
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('sv-SE', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
