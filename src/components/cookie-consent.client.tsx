@@ -25,7 +25,7 @@ function writeConsentToBrowser(value: ConsentValue) {
 
   // Also set a simple cookie so future server-side usage is possible.
   // Keep it simple: no personal data, just a consent flag.
-  const maxAgeDays = 180;
+  const maxAgeDays = 7;
   document.cookie = `${CONSENT_KEY}=${value}; Path=/; Max-Age=${
     maxAgeDays * 24 * 60 * 60
   }; SameSite=Lax`;

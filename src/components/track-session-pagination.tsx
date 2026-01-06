@@ -9,6 +9,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import type { MetaOptions, QueryOptions } from '@/db/types/db.types';
+import { DEFAULT_PAGINATION_VISIBLE_PAGES } from '@/lib/data/constants';
 import { cn } from '@/lib/utils';
 import { type ReadonlyURLSearchParams } from 'next/navigation';
 
@@ -20,7 +21,7 @@ interface PageItemsProps {
 
 function getVisiblePages(meta: MetaOptions) {
   const maxPagesToShow = Math.min(
-    meta.limit,
+    DEFAULT_PAGINATION_VISIBLE_PAGES,
     Math.ceil(meta.count / meta.limit)
   );
   const pages: number[] = [];
@@ -120,9 +121,11 @@ export function TrackSessionPagination({
                   </PaginationLink>
                 </PaginationItem>
                 {shouldShowLeadingEllipsis && (
-                  <PaginationItem>
+                  <PaginationLink
+                    href={newParams(firstVisiblePage - 1)}
+                    scroll={false}>
                     <PaginationEllipsis />
-                  </PaginationItem>
+                  </PaginationLink>
                 )}
               </>
             )}
@@ -135,7 +138,11 @@ export function TrackSessionPagination({
               <>
                 {shouldShowTrailingEllipsis && (
                   <PaginationItem>
-                    <PaginationEllipsis />
+                    <PaginationLink
+                      href={newParams(lastVisiblePage + 1)}
+                      scroll={false}>
+                      <PaginationEllipsis />
+                    </PaginationLink>
                   </PaginationItem>
                 )}
                 <PaginationItem value={Math.ceil(meta.count / meta.limit)}>
