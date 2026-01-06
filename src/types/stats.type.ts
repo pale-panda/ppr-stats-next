@@ -44,6 +44,12 @@ export type AppStats = {
   totalUsers: number;
 };
 
+export type AppStatsFilters = {
+  created_at?: string[];
+  from?: string;
+  to?: string;
+};
+
 export type StatsType =
   | 'dashboard'
   | 'user'

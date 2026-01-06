@@ -6,7 +6,7 @@ import {
   mapTrackRowToApp,
 } from '@/lib/mappers/track.mapper';
 import { createClient } from '@/lib/supabase/server';
-import { getSessionsByTrackId } from '@/services/sessions.service';
+import { getSessionsFull } from '@/services/sessions.service';
 import type { Lap, SearchParams, StatItem, Track } from '@/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { Clock, Flag, Gauge, Zap } from 'lucide-react';
@@ -36,11 +36,16 @@ export const getTracksWithStats = cache(async (searchParams: SearchParams) => {
 
   const tracks = mapTrackRowsToApp(res.data);
 
+  const { data: sessions } = await getSessionsFull({
+    ...searchParams,
+    track_id: tracks.flatMap((t) => t.id),
+  });
+
   const tracksWithStats = await Promise.all(
     tracks.map(async (track: Track) => {
-      const sessions = await getSessionsByTrackId(track.id);
-      const totalLaps = sessions.reduce((sum, s) => sum + s.totalLaps, 0);
-      const allLaps = sessions.flatMap((s) => s.laps) as Lap[];
+      const trackSessions = sessions.filter((s) => s.trackId === track.id);
+      const totalLaps = trackSessions.reduce((sum, s) => sum + s.totalLaps, 0);
+      const allLaps = trackSessions.flatMap((s) => s.laps) as Lap[];
       const bestLapTime =
         allLaps.length > 0
           ? Math.min(

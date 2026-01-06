@@ -2,7 +2,7 @@ import 'server-only';
 
 import { TracksDAL } from '@/db/tracks.dal';
 import { applyInFilters, normalizeQuery } from '@/db/utils/helpers';
-import type { SearchParams, SessionInsert } from '@/types';
+import type { SearchParams } from '@/types';
 import type { Database } from '@/types/supabase.type';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -103,12 +103,12 @@ export const SessionsDAL = {
   },
 
   async listSessionsFull(db: DB, searchParams: SearchParams) {
-    searchParams.sort = searchParams.sort ?? 'session_date';
-    searchParams.dir = searchParams.dir ?? 'desc';
-
     const { filters, options } = normalizeQuery(searchParams);
     const offset = (options.page - 1) * options.limit;
     const to = offset + options.limit - 1;
+
+    options.sort = 'session_date';
+    options.dir = 'desc';
 
     const trackIds = await TracksDAL.getTrackIDByFilters(db, searchParams);
 
@@ -139,8 +139,8 @@ export const SessionsDAL = {
     }
 
     q = q
-      .order(options.sort || 'session_date', {
-        ascending: options.dir === 'asc',
+      .order(options.sort, {
+        ascending: options.dir !== 'desc',
       })
       .range(offset, to);
 
@@ -209,7 +209,10 @@ export const SessionsDAL = {
     return count ?? 0;
   },
 
-  async createSession(db: DB, sessionData: SessionInsert) {
+  async createSession(
+    db: DB,
+    sessionData: Database['public']['Tables']['sessions']['Insert']
+  ) {
     const { data, error } = await db
       .from('sessions')
       .insert(sessionData)

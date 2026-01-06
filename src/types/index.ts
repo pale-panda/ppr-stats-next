@@ -1,4 +1,3 @@
-export * from './app-stats';
 export * from './laps.type';
 export * from './profile.type';
 export * from './sessions.type';
