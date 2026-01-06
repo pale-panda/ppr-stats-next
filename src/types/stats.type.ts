@@ -12,14 +12,6 @@ export type UserStats = {
   topSpeed: number | null;
 };
 
-export type TrackStats = {
-  trackId: string;
-  trackName: string;
-  totalLaps: number;
-  bestLapTime: number | null;
-  topSpeed: number | null;
-};
-
 export type SessionStats = {
   sessionId: string;
   totalLaps: number;

@@ -107,8 +107,8 @@ export const SessionsDAL = {
     const offset = (options.page - 1) * options.limit;
     const to = offset + options.limit - 1;
 
-    options.sort = 'session_date';
-    options.dir = 'desc';
+    options.sort = options.sort ?? 'session_date';
+    options.dir = options.dir ?? 'desc';
 
     const trackIds = await TracksDAL.getTrackIDByFilters(db, searchParams);
 

@@ -7,7 +7,11 @@ import {
 } from '@/components/ui/select';
 import type { QueryOptions } from '@/db/types/db.types';
 import { cn } from '@/lib/utils';
-import { useRouter, type ReadonlyURLSearchParams } from 'next/navigation';
+import {
+  usePathname,
+  useRouter,
+  type ReadonlyURLSearchParams,
+} from 'next/navigation';
 
 interface PageSizeSelectorProps {
   meta: QueryOptions;
@@ -21,7 +25,8 @@ export function PageSizeSelector({
   className,
 }: PageSizeSelectorProps) {
   const { replace } = useRouter();
-  const currentSize = searchParams.get('limit')
+  const pathname = usePathname();
+  const currentLimit = searchParams.get('limit')
     ? Number(searchParams.get('limit'))
     : meta.limit;
 
@@ -31,10 +36,12 @@ export function PageSizeSelector({
     const params = new URLSearchParams(searchParams.toString());
     params.delete('limit');
     params.delete('page');
-
+    params.set('limit', newLimit.toString());
     params.sort();
     const qs = params.toString();
-    replace(qs ? `?${qs}&limit=${newLimit}` : `?limit=${newLimit}`);
+    replace(`${pathname}?${qs}`, {
+      scroll: false,
+    });
   }
 
   return (
@@ -45,20 +52,19 @@ export function PageSizeSelector({
       )}>
       <p className='text-sm font-medium text-nowrap'>Items per page</p>
       <Select
-        value={currentSize.toString()}
+        value={currentLimit.toString()}
         onValueChange={(value) => handleSizeChange(Number(value))}>
         <SelectTrigger>
-          <SelectValue placeholder={currentSize.toString()} />
+          <SelectValue placeholder={currentLimit.toString()} />
         </SelectTrigger>
         <SelectContent side='top'>
-          {limits.map((limit) => (
-            <SelectItem
-              key={limit}
-              value={`${limit}`}
-              disabled={limit > meta.count}>
-              {limit}
-            </SelectItem>
-          ))}
+          {limits.map((limit) => {
+            return limit <= meta.count || limit === currentLimit ? (
+              <SelectItem key={limit} value={`${limit}`}>
+                {limit}
+              </SelectItem>
+            ) : null;
+          })}
         </SelectContent>
       </Select>
     </div>

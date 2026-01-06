@@ -1,11 +1,12 @@
 'use client';
+
 import { PageSizeSelector } from '@/components/page-size-selector';
 import { TrackSessionPagination } from '@/components/track-session-pagination';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import type { QueryOptions } from '@/db/types/db.types';
+import type { MetaOptions } from '@/db/types/db.types';
 import { formatLapTime, formatSpeed } from '@/lib/format-utils';
-import type { Track } from '@/types';
+import type { TrackStats } from '@/types';
 import {
   Calendar,
   ChevronRight,
@@ -21,27 +22,17 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { use } from 'react';
 
-interface TrackCardProps {
-  trackCardsData: Promise<{
-    data: (Track & {
-      stats: {
-        totalSessions: number;
-        totalLaps: number;
-        bestLapTime: number | null;
-        avgTopSpeed: number | null;
-      };
-    })[];
-    meta: QueryOptions;
-  }>;
-}
-
-export function TrackCards({ ...props }: TrackCardProps) {
+export function TrackStatsCards({
+  trackStats,
+}: {
+  trackStats: Promise<{ data?: TrackStats[]; meta: MetaOptions }>;
+}) {
+  const { data, meta } = use(trackStats);
   const searchParams = useSearchParams();
-  const { data: tracksWithStats, meta } = use(props.trackCardsData);
 
   return (
     <div className='container mx-auto'>
-      {tracksWithStats.length === 0 ? (
+      {!data || data.length === 0 ? (
         <div className='text-center py-12'>
           <p className='text-muted-foreground'>
             No tracks found. Upload sessions to see tracks!
@@ -49,7 +40,7 @@ export function TrackCards({ ...props }: TrackCardProps) {
         </div>
       ) : (
         <div className='grid gap-6'>
-          {tracksWithStats.map((track) => (
+          {data.map((track) => (
             <Card
               key={track.id}
               className='overflow-hidden bg-card border-border py-0 hover:border-primary/50 transition-colors'>

@@ -1,13 +1,15 @@
 'use server';
 
+import { LapsDAL } from '@/db/laps.dal';
+import { SessionsDAL } from '@/db/sessions.dal';
 import { TracksDAL } from '@/db/tracks.dal';
 import {
   mapTrackRowsToApp,
   mapTrackRowToApp,
+  mapTrackStatsRowsToApp,
 } from '@/lib/mappers/track.mapper';
 import { createClient } from '@/lib/supabase/server';
-import { getSessionsFull } from '@/services/sessions.service';
-import type { Lap, SearchParams, StatItem, Track } from '@/types';
+import type { SearchParams, StatItem } from '@/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { Clock, Flag, Gauge, Zap } from 'lucide-react';
 import { cache } from 'react';
@@ -28,67 +30,24 @@ export const getTrackById = cache(async (id: string) => {
 
 export const getTracksWithStats = cache(async (searchParams: SearchParams) => {
   const db: SupabaseClient = await createClient();
-  const res = await TracksDAL.listTracks(db, searchParams);
+  const res = await TracksDAL.getTracksWithStats(db, searchParams);
 
-  if (res.data.length === 0) {
-    return { data: [], meta: res.meta };
-  }
-
-  const tracks = mapTrackRowsToApp(res.data);
-
-  const { data: sessions } = await getSessionsFull({
-    ...searchParams,
-    track_id: tracks.flatMap((t) => t.id),
-  });
-
-  const tracksWithStats = await Promise.all(
-    tracks.map(async (track: Track) => {
-      const trackSessions = sessions.filter((s) => s.trackId === track.id);
-      const totalLaps = trackSessions.reduce((sum, s) => sum + s.totalLaps, 0);
-      const allLaps = trackSessions.flatMap((s) => s.laps) as Lap[];
-      const bestLapTime =
-        allLaps.length > 0
-          ? Math.min(
-              ...allLaps.map((l) => (l.lapTimeSeconds ? l.lapTimeSeconds : 0))
-            )
-          : null;
-      const avgTopSpeed =
-        allLaps.length > 0
-          ? Math.round(
-              allLaps.reduce((sum, l) => sum + (l.maxSpeedKmh || 0), 0) /
-                allLaps.length
-            )
-          : null;
-
-      return {
-        ...track,
-        stats: {
-          totalSessions: sessions.length,
-          totalLaps,
-          bestLapTime,
-          avgTopSpeed,
-        },
-      };
-    })
-  );
-
-  return { data: tracksWithStats, meta: res.meta };
+  return {
+    data: res.data ? mapTrackStatsRowsToApp(res.data) : undefined,
+    meta: res.meta,
+  };
 });
 
 export const getTrackDashboardStats = cache(
   async (searchParams: SearchParams) => {
-    //const db: SupabaseClient = await createClient();
-    const { data: tracks, meta } = await getTracksWithStats(searchParams);
+    const db: SupabaseClient = await createClient();
 
-    const totalTracks = meta.count;
-    const totalSessions = tracks.reduce(
-      (sum, t) => sum + t.stats.totalSessions,
-      0
-    );
-    const totalLaps = tracks.reduce((sum, t) => sum + t.stats.totalLaps, 0);
-    const combinedLength = Math.round(
-      tracks.reduce((sum, t) => sum + (t.lengthMeters || 0), 0) / 1000
-    );
+    const totalTracks = await TracksDAL.countTracks(db, searchParams);
+    const totalSessions = await SessionsDAL.countSessions(db, searchParams);
+    const totalLaps = await LapsDAL.countLaps(db, searchParams);
+    const totalLength = await TracksDAL.getTotalLength(db, searchParams);
+
+    const combinedLength = Math.round(totalLength / 1000);
 
     const data = {
       totalTracks: totalTracks || 0,

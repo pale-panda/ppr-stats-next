@@ -1,3 +1,4 @@
+'use client';
 import {
   Pagination,
   PaginationContent,
@@ -9,8 +10,7 @@ import {
 } from '@/components/ui/pagination';
 import type { MetaOptions, QueryOptions } from '@/db/types/db.types';
 import { cn } from '@/lib/utils';
-import { useRouter, type ReadonlyURLSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { type ReadonlyURLSearchParams } from 'next/navigation';
 
 interface PageItemsProps {
   pages: number[];
@@ -61,8 +61,9 @@ function PageItems({ pages, currentPage, newParams }: PageItemsProps) {
   return pages.map((page) => (
     <PaginationItem key={page} value={page}>
       <PaginationLink
-        href={`?${newParams(page)}`}
-        isActive={page === currentPage}>
+        href={newParams(page)}
+        isActive={page === currentPage}
+        scroll={false}>
         {page}
       </PaginationLink>
     </PaginationItem>
@@ -89,23 +90,13 @@ export function TrackSessionPagination({
   const shouldShowLeadingEllipsis = firstVisiblePage > 2;
   const shouldShowTrailingEllipsis =
     lastVisiblePage < Math.ceil(meta.count / meta.limit) - 1;
-  const { replace } = useRouter();
-
-  useEffect(() => {
-    if (meta.page > Math.ceil(meta.count / meta.limit)) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete('page');
-      params.sort();
-      replace(`?${params.toString()}`);
-    }
-  }, [meta.page, meta.count, meta.limit, replace, searchParams]);
 
   const newParams = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
-    params.delete('page');
+    params.set('page', page.toString());
     params.sort();
     const qs = params.toString();
-    return qs ? `${qs}&page=${page}` : `page=${page}`;
+    return `?${qs}`;
   };
 
   return (
@@ -115,13 +106,18 @@ export function TrackSessionPagination({
           <PaginationContent>
             {meta.page !== 1 && (
               <PaginationItem value={meta.page - 1}>
-                <PaginationPrevious href={`?${newParams(meta.page - 1)}`} />
+                <PaginationPrevious
+                  href={newParams(meta.page - 1)}
+                  scroll={false}
+                />
               </PaginationItem>
             )}
             {hasHiddenLeadingPages && (
               <>
                 <PaginationItem value={1}>
-                  <PaginationLink href={`?${newParams(1)}`}>1</PaginationLink>
+                  <PaginationLink href={newParams(1)} scroll={false}>
+                    1
+                  </PaginationLink>
                 </PaginationItem>
                 {shouldShowLeadingEllipsis && (
                   <PaginationItem>
@@ -144,7 +140,8 @@ export function TrackSessionPagination({
                 )}
                 <PaginationItem value={Math.ceil(meta.count / meta.limit)}>
                   <PaginationLink
-                    href={`?${newParams(Math.ceil(meta.count / meta.limit))}`}>
+                    href={newParams(Math.ceil(meta.count / meta.limit))}
+                    scroll={false}>
                     {Math.ceil(meta.count / meta.limit)}
                   </PaginationLink>
                 </PaginationItem>
@@ -152,7 +149,10 @@ export function TrackSessionPagination({
             )}
             {meta.page < Math.ceil(meta.count / meta.limit) && (
               <PaginationItem value={meta.page + 1}>
-                <PaginationNext href={`?${newParams(meta.page + 1)}`} />
+                <PaginationNext
+                  href={newParams(meta.page + 1)}
+                  scroll={false}
+                />
               </PaginationItem>
             )}
           </PaginationContent>

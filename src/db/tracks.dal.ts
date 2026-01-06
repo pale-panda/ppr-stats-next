@@ -1,6 +1,6 @@
+import { applyInFilters, normalizeQuery } from '@/db/utils/helpers';
 import 'server-only';
 
-import { applyInFilters, normalizeQuery } from '@/db/utils/helpers';
 import type { SearchParams } from '@/types';
 import type { Database } from '@/types/supabase.type';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -46,6 +46,48 @@ export const TracksDAL = {
     };
   },
 
+  async getTracksWithStats(db: DB, searchParams: SearchParams) {
+    const { options, filters } = normalizeQuery(searchParams);
+    const offset = (options.page - 1) * options.limit;
+    const to = offset + options.limit - 1;
+
+    options.sort = options.sort ?? 'session_date';
+    options.dir = options.dir ?? 'desc';
+
+    let q = db.from('tracks')
+      .select(`id, name, country, length_meters, turns, image_url,
+        lap_stats:laps(best_lap_time:lap_time_seconds.min(), total_laps:id.count(), avg_top_speed:max_speed_kmh.avg()),
+        session_stats:sessions(total_sessions:id.count())`);
+
+    q = applyInFilters(q, [
+      { column: 'name', values: filters.name },
+      { column: 'country', values: filters.country },
+    ]);
+
+    q = q
+      .order(options.sort, {
+        ascending: options.dir !== 'desc',
+      })
+      .range(offset, to);
+
+    const { data, error } = await q;
+    if (error) throw error;
+
+    const count = await this.countTracks(db, { ...filters } as SearchParams);
+
+    return {
+      data: data ?? [],
+      meta: {
+        page: options.page,
+        limit: options.limit,
+        count: count ?? 0,
+        sort: options.sort,
+        dir: options.dir,
+        filters,
+      },
+    };
+  },
+
   async getTrackById(db: DB, id: string) {
     const { data, error } = await db
       .from('tracks')
@@ -69,6 +111,18 @@ export const TracksDAL = {
     const { count, error } = await q;
     if (error) throw error;
     return count ?? 0;
+  },
+
+  async getTotalLength(db: DB, searchParams: SearchParams) {
+    const { filters } = normalizeQuery(searchParams);
+    let q = db.from('tracks').select('length_meters.sum()');
+    q = applyInFilters(q, [
+      { column: 'name', values: filters.name },
+      { column: 'country', values: filters.country },
+    ]);
+    const { data, error } = await q.single();
+    if (error) throw error;
+    return data?.sum ?? 0;
   },
 
   async getAllTracks(db: DB) {

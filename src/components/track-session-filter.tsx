@@ -100,8 +100,8 @@ export function TrackSessionFilter({ tracks }: TrackSessionFilterProps) {
     (params: URLSearchParams) => {
       params.sort();
       const qs = params.toString();
-      const nextUrl = qs ? `${pathname}?${qs}` : pathname;
-      replace(nextUrl);
+
+      replace(`${pathname}${qs ? `?${qs}` : ''}`, { scroll: false });
     },
     [pathname, replace]
   );

@@ -1,3 +1,4 @@
+'use server';
 import {
   StatsBarSkeleton,
   TrackCardSkeleton,
@@ -12,16 +13,8 @@ import {
   getTracksWithStats,
 } from '@/services/tracks.service';
 import type { SearchParams } from '@/types';
-import type { Metadata } from 'next';
 import Image from 'next/image';
 import { Suspense } from 'react';
-
-export const metadata: Metadata = {
-  title: 'Tracks',
-  description:
-    "Explore circuit information and your personal statistics for each track you've raced on with the Pale Panda Racing Team",
-  keywords: ['Pale Panda Racing Team', 'Tracks', 'Stats'],
-};
 
 export default async function TracksPage({
   searchParams,
@@ -29,12 +22,12 @@ export default async function TracksPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const tracks = getTracks({});
   const tracksWithStats = getTracksWithStats(params);
-  const stats = getTrackDashboardStats(params);
+  const stats = getTrackDashboardStats({});
+  const tracks = getTracks({});
 
   return (
-    <>
+    <div>
       {/* Hero Section */}
       <section className='relative h-64 md:h-80'>
         <Image
@@ -65,30 +58,6 @@ export default async function TracksPage({
       <Suspense fallback={<StatsBarSkeleton />}>
         <StatsBar statItems={stats} type='dashboard' />
       </Suspense>
-      {/**
-      <section className=' py-8 border-b border-border bg-card/50'>
-        <div className='container mx-auto px-4'>
-          <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
-            <div className='text-center'>
-              <p className='text-3xl font-bold text-foreground'>0</p>
-              <p className='text-sm text-muted-foreground'>Total Tracks</p>
-            </div>
-            <div className='text-center'>
-              <p className='text-3xl font-bold text-primary'>10</p>
-              <p className='text-sm text-muted-foreground'>Total Sessions</p>
-            </div>
-            <div className='text-center'>
-              <p className='text-3xl font-bold text-foreground'>10</p>
-              <p className='text-sm text-muted-foreground'>Total Laps</p>
-            </div>
-            <div className='text-center'>
-              <p className='text-3xl font-bold text-foreground'>104 km</p>
-              <p className='text-sm text-muted-foreground'>Combined Length</p>
-            </div>
-          </div>
-        </div>
-      </section>
-      */}
 
       {/* Tracks Grid */}
       <section className='container mx-auto px-4 py-8'>
@@ -105,6 +74,6 @@ export default async function TracksPage({
           <TrackStatsCards trackStats={tracksWithStats} />
         </Suspense>
       </section>
-    </>
+    </div>
   );
 }

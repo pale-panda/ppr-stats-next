@@ -18,3 +18,18 @@ export type Track = {
   description?: string | null;
   gpsPoint?: LatLngLiteral | null;
 };
+
+export type TrackStats = {
+  id: string;
+  name: string;
+  country: string;
+  lengthMeters: number;
+  turns: number;
+  imageUrl: string | null;
+  stats: {
+      bestLapTime: number;
+      totalLaps: number;
+      avgTopSpeed: number;
+      totalSessions: number;
+  };
+}
