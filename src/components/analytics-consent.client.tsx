@@ -1,6 +1,7 @@
 'use client';
 
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { useEffect, useState } from 'react';
 
 import {
@@ -22,5 +23,10 @@ export function AnalyticsConsentClient() {
   }, []);
 
   if (!enabled) return null;
-  return <Analytics />;
+  return (
+    <>
+      <Analytics />
+      <SpeedInsights />
+    </>
+  );
 }
