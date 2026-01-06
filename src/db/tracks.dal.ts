@@ -19,6 +19,7 @@ export const TracksDAL = {
     q = applyInFilters(q, [
       { column: 'name', values: filters.name },
       { column: 'country', values: filters.country },
+      { column: 'slug', values: filters.slug },
     ]);
 
     if (filters.search) {
@@ -55,13 +56,14 @@ export const TracksDAL = {
     options.dir = options.dir ?? 'desc';
 
     let q = db.from('tracks')
-      .select(`id, name, country, length_meters, turns, image_url,
+      .select(`id, name, country, length_meters, turns, image_url, slug,
         lap_stats:laps(best_lap_time:lap_time_seconds.min(), total_laps:id.count(), avg_top_speed:max_speed_kmh.avg()),
         session_stats:sessions(total_sessions:id.count())`);
 
     q = applyInFilters(q, [
       { column: 'name', values: filters.name },
       { column: 'country', values: filters.country },
+      { column: 'slug', values: filters.slug },
     ]);
 
     q = q
@@ -98,12 +100,23 @@ export const TracksDAL = {
     return data;
   },
 
+  async getTrackBySlug(db: DB, slug: string) {
+    const { data, error } = await db
+      .from('tracks')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
   async countTracks(db: DB, searchParams: SearchParams) {
     const { filters } = normalizeQuery(searchParams);
     let q = db.from('tracks').select('id', { count: 'exact', head: true });
     q = applyInFilters(q, [
       { column: 'name', values: filters.name },
       { column: 'country', values: filters.country },
+      { column: 'slug', values: filters.slug },
     ]);
     if (filters.search) {
       q = q.ilike('name', `%${filters.search}%`);
@@ -119,6 +132,7 @@ export const TracksDAL = {
     q = applyInFilters(q, [
       { column: 'name', values: filters.name },
       { column: 'country', values: filters.country },
+      { column: 'slug', values: filters.slug },
     ]);
     const { data, error } = await q.single();
     if (error) throw error;
@@ -137,6 +151,7 @@ export const TracksDAL = {
     f = applyInFilters(f, [
       { column: 'name', values: filters.name },
       { column: 'country', values: filters.country },
+      { column: 'slug', values: filters.slug },
     ]);
 
     const { data: trackData, error: filterError } = await f;

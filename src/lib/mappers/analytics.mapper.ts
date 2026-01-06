@@ -22,6 +22,9 @@ export type AnalyticsSessionRow = {
     max_speed_kmh: number | null;
     sectors: number[];
   }> | null;
+  speed_stats: {
+    avg_speed_kmh: number | null;
+  } | null;
 };
 
 function toSectorsTuple(
@@ -71,5 +74,6 @@ export function mapAnalyticsSessionRowsToDomain(
     bestLapTimeSeconds: s.best_lap_time_seconds,
     track: mapAnalyticsTrackRowToDomain(s.track),
     laps: mapAnalyticsLapRowsToDomain(s.laps),
+    avgSpeedKmh: s.speed_stats?.avg_speed_kmh ?? null,
   }));
 }

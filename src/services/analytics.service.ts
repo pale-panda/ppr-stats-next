@@ -32,7 +32,8 @@ export const getAnalyticsData = cache(async (): Promise<AnalyticsData> => {
         lap_time_seconds,
         max_speed_kmh,
         sectors
-      )
+      ),
+      speed_stats:telemetry_points(avg_speed_kmh:speed_kmh.avg())
     `
     )
     .order('session_date', { ascending: false });

@@ -17,6 +17,7 @@ export type Track = {
   configuration?: string | null;
   description?: string | null;
   gpsPoint?: LatLngLiteral | null;
+  slug: string;
 };
 
 export type TrackStats = {
@@ -26,10 +27,11 @@ export type TrackStats = {
   lengthMeters: number;
   turns: number;
   imageUrl: string | null;
+  slug: string;
   stats: {
-      bestLapTime: number;
-      totalLaps: number;
-      avgTopSpeed: number;
-      totalSessions: number;
+    bestLapTime: number;
+    totalLaps: number;
+    avgTopSpeed: number;
+    totalSessions: number;
   };
-}
+};

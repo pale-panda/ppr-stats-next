@@ -199,14 +199,16 @@ export default function AnalyticsPageClient({ initialData }: Props) {
         bestLap2) *
         100;
 
+    const avgSpeed1 = session1.avgSpeedKmh || 0;
+    const avgSpeed2 = session2.avgSpeedKmh || 0;
     const topSpeed1 = Math.max(...laps1.map((l) => l.maxSpeedKmh || 0));
     const topSpeed2 = Math.max(...laps2.map((l) => l.maxSpeedKmh || 0));
 
     return [
       {
         attribute: 'Top Speed',
-        'Session 1': (topSpeed1 / 350) * 100,
-        'Session 2': (topSpeed2 / 350) * 100,
+        'Session 1': (topSpeed1 / 250) * 100,
+        'Session 2': (topSpeed2 / 250) * 100,
         fullMark: 100,
       },
       {
@@ -229,8 +231,8 @@ export default function AnalyticsPageClient({ initialData }: Props) {
       },
       {
         attribute: 'Speed',
-        'Session 1': (topSpeed1 / 300) * 100,
-        'Session 2': (topSpeed2 / 300) * 100,
+        'Session 1': (avgSpeed1 / 250) * 100,
+        'Session 2': (avgSpeed2 / 250) * 100,
         fullMark: 100,
       },
     ];

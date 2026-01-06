@@ -306,7 +306,7 @@ export type Database = {
           image_url: string | null
           length_meters: number
           name: string
-          track_slug: string
+          slug: string
           turns: number
           updated_at: string | null
         }
@@ -320,7 +320,7 @@ export type Database = {
           image_url?: string | null
           length_meters?: number
           name: string
-          track_slug: string
+          slug: string
           turns?: number
           updated_at?: string | null
         }
@@ -334,7 +334,7 @@ export type Database = {
           image_url?: string | null
           length_meters?: number
           name?: string
-          track_slug?: string
+          slug?: string
           turns?: number
           updated_at?: string | null
         }

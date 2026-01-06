@@ -77,12 +77,12 @@ export function TrackStatsCards({
                         variant='outline'
                         className='flex-1 bg-transparent text-foreground'
                         asChild>
-                        <Link href={`/tracks/${track.id}`}>View Details</Link>
+                        <Link href={`/tracks/${track.slug}`}>View Details</Link>
                       </Button>
                       <Button
                         className='flex-1 bg-primary hover:bg-primary/90'
                         asChild>
-                        <Link href={`/tracks/${track.id}/analytics`}>
+                        <Link href={`/tracks/${track.slug}/analytics`}>
                           Open Analytics
                           <ChevronRight className='w-4 h-4 ml-1' />
                         </Link>

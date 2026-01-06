@@ -20,6 +20,7 @@ export type AnalyticsSession = {
   bestLapTimeSeconds: number;
   track: AnalyticsTrack;
   laps: AnalyticsLap[];
+  avgSpeedKmh: number | null;
 };
 
 export type AnalyticsData = {

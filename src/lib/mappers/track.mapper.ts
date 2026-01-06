@@ -13,6 +13,7 @@ export function mapTrackRowToApp(r: TrackRow): Track {
     imageUrl: r.image_url ?? null,
     configuration: r.configuration ?? null,
     description: r.description ?? null,
+    slug: r.slug,
     gpsPoint: (() => {
       const gp = r.gps_point;
       if (!gp) return null;
@@ -47,6 +48,7 @@ type TrackStatsRow = {
   length_meters: number;
   turns: number;
   image_url: string | null;
+  slug: string;
   lap_stats: {
     best_lap_time: number;
     total_laps: number;
@@ -65,6 +67,7 @@ export function mapTrackStatsRowToApp(rows: TrackStatsRow): TrackStats {
     lengthMeters: rows.length_meters,
     turns: rows.turns,
     imageUrl: rows.image_url,
+    slug: rows.slug,
     stats: {
       bestLapTime: rows.lap_stats[0]?.best_lap_time ?? null,
       totalLaps: rows.lap_stats[0]?.total_laps ?? 0,
