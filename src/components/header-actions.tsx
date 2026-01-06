@@ -29,7 +29,7 @@ import {
 import Link from 'next/link';
 
 interface HeaderActionsProps {
-  user: User | null;
+  user: Partial<User>;
 }
 
 export function HeaderActions({ user }: HeaderActionsProps) {

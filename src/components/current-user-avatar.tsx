@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { User } from '@/types';
 
 interface CurrentUserAvatarProps {
-  user: User;
+  user: Partial<User>;
   className?: string;
 }
 
