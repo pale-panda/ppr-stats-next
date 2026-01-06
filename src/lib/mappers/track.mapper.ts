@@ -1,9 +1,9 @@
 import type { Database } from '@/types/supabase.type';
-import type { TrackApp } from '@/types/track.type';
+import type { Track } from '@/types/track.type';
 
 type TrackRow = Database['public']['Tables']['tracks']['Row'];
 
-export function mapTrackRowToApp(r: TrackRow): TrackApp {
+export function mapTrackRowToApp(r: TrackRow): Track {
   return {
     id: r.id,
     name: r.name,
@@ -36,6 +36,6 @@ export function mapTrackRowToApp(r: TrackRow): TrackApp {
   };
 }
 
-export function mapTrackRowsToApp(rows: TrackRow[]): TrackApp[] {
+export function mapTrackRowsToApp(rows: TrackRow[]): Track[] {
   return rows.map(mapTrackRowToApp);
 }

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import type { QueryOptions } from '@/db/types/db.types';
 import { formatLapTime, formatSpeed } from '@/lib/format-utils';
-import type { TrackApp } from '@/types';
+import type { Track } from '@/types';
 import {
   Calendar,
   ChevronRight,
@@ -23,7 +23,7 @@ import { use } from 'react';
 
 interface TrackCardProps {
   trackCardsData: Promise<{
-    data: (TrackApp & {
+    data: (Track & {
       stats: {
         totalSessions: number;
         totalLaps: number;
