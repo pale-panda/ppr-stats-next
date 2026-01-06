@@ -61,6 +61,7 @@ export const SlugDAL = {
             lap_time_seconds,
             sectors,
             lap_telemetry:telemetry_points(
+              lap_id,
               lap_number,
               total_points:id.count(),
               avg_speed_kmh:speed_kmh.avg(),
