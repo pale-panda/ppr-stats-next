@@ -4,11 +4,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { formatLeanAngle, formatSpeed } from '@/lib/format-utils';
-import type { SessionAppFull } from '@/types';
+import type { SessionFull } from '@/types';
 import { use } from 'react';
 
 interface TelemetryPanelProps {
-  trackSession: Promise<SessionAppFull | null>;
+  trackSession: Promise<SessionFull | null>;
 }
 
 export function TelemetryPanel({ trackSession }: TelemetryPanelProps) {

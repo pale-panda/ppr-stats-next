@@ -1,9 +1,9 @@
-import type { SessionAppFull } from '@/types';
+import type { SessionFull } from '@/types';
 import Image from 'next/image';
 import { use } from 'react';
 
 interface TrackSessionHeroProps {
-  session: Promise<SessionAppFull | null>;
+  session: Promise<SessionFull | null>;
 }
 
 export default function TrackSessionHero({ session }: TrackSessionHeroProps) {

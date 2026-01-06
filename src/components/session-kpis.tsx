@@ -6,10 +6,10 @@ import {
   formatLapTime,
   formatMinMaxSpeed,
 } from '@/lib/format-utils';
-import { type SessionAppFull } from '@/types';
+import { type SessionFull } from '@/types';
 import { Bike, Clock, Flag, Gauge, Target } from 'lucide-react';
 
-export function SessionKPIs({ ...stats }: SessionAppFull) {
+export function SessionKPIs({ ...stats }: SessionFull) {
   const kpis = [
     {
       label: 'Vehicle',

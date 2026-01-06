@@ -1,11 +1,19 @@
 import type {
   Session,
-  SessionApp,
-  SessionAppExtras,
-  SessionAppFull,
+  SessionExtras,
+  SessionFull,
 } from '@/types/sessions.type';
+import type { Database } from '@/types/supabase.type';
 
-export function mapSessionRowToApp(s: Session): SessionApp {
+type SessionRow = Database['public']['Tables']['sessions']['Row'] & {
+  tracks?: {
+    name: string;
+    country: string;
+    image_url: string | null;
+  };
+};
+
+export function mapSessionRowToApp(s: SessionRow): Session {
   return {
     id: s.id,
     bestLapTimeSeconds: s.best_lap_time_seconds ?? null,
@@ -29,16 +37,16 @@ export function mapSessionRowToApp(s: Session): SessionApp {
 }
 
 export function mapSessionRowsToApp(
-  rows: Session[] | undefined
-): SessionApp[] | undefined {
+  rows: SessionRow[] | undefined
+): Session[] | undefined {
   if (!rows) return undefined;
   return rows.map(mapSessionRowToApp);
 }
 
 export function mapSessionFullRowToApp(
-  s: Session,
-  extras: SessionAppExtras
-): SessionAppFull {
+  s: SessionRow,
+  extras: SessionExtras
+): SessionFull {
   return {
     id: s.id,
     bestLapTimeSeconds: s.best_lap_time_seconds ?? null,

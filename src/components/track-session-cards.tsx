@@ -4,13 +4,13 @@ import { SessionCard } from '@/components/session-card';
 import { TrackSessionPagination } from '@/components/track-session-pagination';
 import type { QueryOptions } from '@/db/types/db.types';
 import { formatLapTime } from '@/lib/format-utils';
-import type { SessionApp } from '@/types';
+import type { Session } from '@/types';
 import { useSearchParams } from 'next/navigation';
 import { use } from 'react';
 
 interface TrackSessionCardsProps {
   sessions: Promise<{
-    data?: SessionApp[];
+    data?: Session[];
     meta: QueryOptions;
   }>;
 }

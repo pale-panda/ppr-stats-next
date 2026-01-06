@@ -2,7 +2,7 @@
 
 import { Card } from '@/components/ui/card';
 import { formatLapTime, formatTime } from '@/lib/format-utils';
-import type { LapApp } from '@/types/laps.type';
+import type { Lap } from '@/types/laps.type';
 import type { TelemetryPointApp } from '@/types/telemetry.type';
 import { useMemo } from 'react';
 import {
@@ -18,7 +18,7 @@ import {
 
 interface TelemetryChartProps {
   selectedLap: number;
-  laps: LapApp[];
+  laps: Lap[];
   telemetry?: TelemetryPointApp[];
 }
 

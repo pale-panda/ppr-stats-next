@@ -39,8 +39,6 @@ export function TrackCards({ ...props }: TrackCardProps) {
   const searchParams = useSearchParams();
   const { data: tracksWithStats, meta } = use(props.trackCardsData);
 
-  console.log('meta: ', meta);
-
   return (
     <div className='container mx-auto px-4'>
       {tracksWithStats.length === 0 ? (

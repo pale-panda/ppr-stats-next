@@ -1,23 +1,10 @@
-import type { LapApp } from '@/types/laps.type';
-import type { Database } from '@/types/supabase.type';
+import type { Lap } from '@/types/laps.type';
 import type { TelemetryApp } from '@/types/telemetry.type';
-import type { TrackApp } from '@/types/track.type';
-import type { ProfileApp } from './profile.type';
-
-export type Session = Database['public']['Tables']['sessions']['Row'] & {
-  tracks?: {
-    name: string;
-    country: string;
-    image_url: string | null;
-  };
-};
-
-export type SessionInsert = Database['public']['Tables']['sessions']['Insert'];
-
-export type SessionUpdate = Database['public']['Tables']['sessions']['Update'];
+import type { Track } from '@/types/track.type';
+import type { Profile } from './profile.type';
 
 // App-facing session model (camelCase) — produce this from mappers in services
-export type SessionApp = {
+export type Session = {
   id: string;
   bestLapTimeSeconds: number;
   createdAt?: string | null;
@@ -34,11 +21,11 @@ export type SessionApp = {
   tracks: { name: string; country: string; imageUrl: string | null };
 };
 
-export type SessionAppExtras = {
-  tracks: TrackApp;
-  profiles: ProfileApp;
+export type SessionExtras = {
+  tracks: Track;
+  profiles: Profile;
   telemetryPoints?: TelemetryApp;
-  laps: LapApp[];
+  laps: Lap[];
 
   // computed
   avgSpeed?: number | null;
@@ -52,7 +39,7 @@ export type SessionAppExtras = {
 };
 
 // Full session shape returned by joined queries (DAL) — reference shared types
-export type SessionAppFull = SessionApp & SessionAppExtras;
+export type SessionFull = Session & SessionExtras;
 
 export type SessionFilters = {
   track_id?: string[];

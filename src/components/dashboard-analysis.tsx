@@ -7,11 +7,11 @@ import { TelemetryChart } from '@/components/telemetry-chart';
 import TrackMap from '@/components/track-map';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFetchLapTelemetryQuery } from '@/state/services/track-session';
-import { type LatLngLiteral, type SessionAppFull } from '@/types';
+import { type LatLngLiteral, type SessionFull } from '@/types';
 import { use, useMemo, useState } from 'react';
 
 interface DashboardAnalysisProps {
-  trackSession: Promise<SessionAppFull | null>;
+  trackSession: Promise<SessionFull | null>;
 }
 
 export function DashboardAnalysis({ trackSession }: DashboardAnalysisProps) {

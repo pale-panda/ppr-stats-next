@@ -4,13 +4,13 @@ import {
   formatSpeed,
   formatTrackLength,
 } from '@/lib/format-utils';
-import type { SessionAppFull } from '@/types';
+import type { SessionFull } from '@/types';
 import { use } from 'react';
 
 export default function TrackSessionDetails({
   session,
 }: {
-  session: Promise<SessionAppFull | null>;
+  session: Promise<SessionFull | null>;
 }) {
   const data = use(session);
   if (!data) {

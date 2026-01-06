@@ -1,4 +1,5 @@
 'use server';
+
 import { TracksDAL } from '@/db/tracks.dal';
 import {
   mapTrackRowsToApp,
@@ -6,7 +7,7 @@ import {
 } from '@/lib/mappers/track.mapper';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionsByTrackId } from '@/services/sessions.service';
-import type { LapApp, SearchParams, StatItem, TrackApp } from '@/types';
+import type { Lap, SearchParams, StatItem, Track } from '@/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { Clock, Flag, Gauge, Zap } from 'lucide-react';
 import { cache } from 'react';
@@ -36,10 +37,10 @@ export const getTracksWithStats = cache(async (searchParams: SearchParams) => {
   const tracks = mapTrackRowsToApp(res.data);
 
   const tracksWithStats = await Promise.all(
-    tracks.map(async (track: TrackApp) => {
+    tracks.map(async (track: Track) => {
       const sessions = await getSessionsByTrackId(track.id);
       const totalLaps = sessions.reduce((sum, s) => sum + s.totalLaps, 0);
-      const allLaps = sessions.flatMap((s) => s.laps) as LapApp[];
+      const allLaps = sessions.flatMap((s) => s.laps) as Lap[];
       const bestLapTime =
         allLaps.length > 0
           ? Math.min(

@@ -16,7 +16,7 @@ import {
 } from '@/lib/format-utils';
 import { getSessionsByTrackId } from '@/services/sessions.service';
 import { getTrackById } from '@/services/tracks.service';
-import { type LapApp } from '@/types';
+import { type Lap, type SessionFull, type Track } from '@/types';
 import {
   ChevronLeft,
   CornerDownRight,
@@ -42,7 +42,7 @@ export default async function TrackDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [track, sessions] = await Promise.all([
+  const [track, sessions]: [Track | null, SessionFull[] | null] = await Promise.all([
     getTrackById(id),
     getSessionsByTrackId(id),
   ]);
@@ -55,10 +55,13 @@ export default async function TrackDetailPage({
     throw new Error('Failed to fetch sessions for this track');
   }
 
-  const totalLaps = sessions.reduce((sum, s) => sum + s.totalLaps, 0);
+  const totalLaps = sessions.reduce(
+    (sum: number, s) => sum + s.totalLaps,
+    0
+  );
   const allLaps = sessions
     .flatMap((s) => s.laps)
-    .filter((l): l is LapApp => l != null) as LapApp[];
+    .filter((l): l is Lap => l != null) as Lap[];
   const lapTimes = allLaps
     .map((l) => l.lapTimeSeconds)
     .filter((t): t is number => typeof t === 'number');

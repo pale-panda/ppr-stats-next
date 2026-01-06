@@ -4,13 +4,13 @@ import {
   formatLeanAngle,
   formatSpeed,
 } from '@/lib/format-utils';
-import type { SessionAppFull } from '@/types/sessions.type';
+import type { SessionFull } from '@/types/sessions.type';
 import { use } from 'react';
 
 export default function TrackSessionLapTimesTable({
   session,
 }: {
-  session: Promise<SessionAppFull | null>;
+  session: Promise<SessionFull | null>;
 }) {
   const data = use(session);
   if (!data) {

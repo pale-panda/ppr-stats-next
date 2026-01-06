@@ -1,9 +1,9 @@
-import type { AppStatsApp } from '@/types/app-stats';
+import type { AppStats } from '@/types/app-stats';
 import type { Database } from '@/types/supabase.type';
 
 type AppStatsRow = Database['public']['Tables']['app_stats']['Row'];
 
-export function mapAppStatsRowToApp(r: AppStatsRow): AppStatsApp {
+export function mapAppStatsRowToApp(r: AppStatsRow): AppStats {
   return {
     totalSessions: r.total_sessions || 0,
     totalUsers: r.total_users || 0,
@@ -14,7 +14,7 @@ export function mapAppStatsRowToApp(r: AppStatsRow): AppStatsApp {
 
 export function mapAppStatsRowsToApp(
   rows: AppStatsRow[] | undefined
-): AppStatsApp[] | undefined {
+): AppStats[] | undefined {
   if (!rows) return undefined;
   return rows.map(mapAppStatsRowToApp);
 }

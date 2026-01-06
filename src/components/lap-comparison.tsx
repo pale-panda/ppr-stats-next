@@ -2,7 +2,7 @@
 
 import { Card } from '@/components/ui/card';
 import { formatLapTime, formatSpeed } from '@/lib/format-utils';
-import type { LapApp } from '@/types';
+import type { Lap } from '@/types';
 import { Minus, TrendingDown, TrendingUp } from 'lucide-react';
 import {
   CartesianGrid,
@@ -18,7 +18,7 @@ import {
 interface LapComparisonProps {
   lap1: number;
   lap2: number;
-  laps: LapApp[];
+  laps: Lap[];
 }
 
 export function LapComparison({ lap1, lap2, laps }: LapComparisonProps) {

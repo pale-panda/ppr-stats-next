@@ -12,12 +12,12 @@ import {
 import { mapTelemetryRowsToApp } from '@/lib/mappers/telemetry.mapper';
 import { mapTrackRowToApp } from '@/lib/mappers/track.mapper';
 import { createClient } from '@/lib/supabase/server';
-import type { SearchParams, SessionAppExtras, SessionAppFull } from '@/types';
+import type { SearchParams, SessionExtras, SessionFull } from '@/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { cache } from 'react';
 
 export type SessionFullData = {
-  data: SessionAppFull[];
+  data: SessionFull[];
   meta: QueryOptions;
 };
 
@@ -40,7 +40,7 @@ export const getSessionsFull = cache(async (searchParams: SearchParams) => {
     const telemetryRaw = s.telemetry_points ? s.telemetry_points : undefined;
     const lapsRaw = s.laps;
 
-    const extras: SessionAppExtras = {
+    const extras: SessionExtras = {
       tracks: mapTrackRowToApp(trackRaw),
       profiles: mapProfileRowToApp(profilesRaw),
       telemetryPoints: telemetryRaw
@@ -53,7 +53,7 @@ export const getSessionsFull = cache(async (searchParams: SearchParams) => {
     return mapSessionFullRowToApp(s, extras);
   });
 
-  return { data: mapped as SessionAppFull[], meta: res.meta };
+  return { data: mapped as SessionFull[], meta: res.meta };
 });
 
 export const getSessionById = cache(async (id: string) => {
@@ -67,7 +67,7 @@ export const getSessionById = cache(async (id: string) => {
     : undefined;
   const lapsRaw = data.laps;
 
-  const extras: SessionAppExtras = {
+  const extras: SessionExtras = {
     tracks: mapTrackRowToApp(trackRaw),
     profiles: mapProfileRowToApp(profilesRaw),
     telemetryPoints: telemetryRaw
@@ -89,7 +89,7 @@ export const getSessionsByTrackId = cache(async (id: string) => {
     const telemetryRaw = s.telemetry_points ? s.telemetry_points : undefined;
     const lapsRaw = s.laps;
 
-    const extras: SessionAppExtras = {
+    const extras: SessionExtras = {
       tracks: mapTrackRowToApp(trackRaw),
       profiles: mapProfileRowToApp(profilesRaw),
       telemetryPoints: telemetryRaw
@@ -102,7 +102,7 @@ export const getSessionsByTrackId = cache(async (id: string) => {
     return mapSessionFullRowToApp(s, extras);
   });
 
-  return mapped as SessionAppFull[];
+  return mapped as SessionFull[];
 });
 
 export const getSessionByIdFull = cache(async (id: string) => {
@@ -156,7 +156,7 @@ export const getSessionByIdFull = cache(async (id: string) => {
       : session.profiles
     : undefined;
 
-  const extras: SessionAppExtras = {
+  const extras: SessionExtras = {
     telemetryPoints: telemetryRaw
       ? mapTelemetryRowsToApp(telemetryRaw)
       : undefined,

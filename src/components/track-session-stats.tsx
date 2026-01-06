@@ -1,6 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { formatDuration, formatLapTime, formatSpeed } from '@/lib/format-utils';
-import type { SessionAppFull } from '@/types/sessions.type';
+import type { SessionFull } from '@/types/sessions.type';
 import {
   Clock,
   Cloud,
@@ -12,7 +12,7 @@ import {
 import { use } from 'react';
 
 interface TrackSessionStatsProps {
-  session: Promise<SessionAppFull | null>;
+  session: Promise<SessionFull | null>;
 }
 
 export default function TrackSessionStats({ session }: TrackSessionStatsProps) {

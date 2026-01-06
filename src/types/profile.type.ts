@@ -1,5 +1,3 @@
-import type { Database } from '@/types/supabase.type';
-
 export type UserData = {
   id: string;
   email: string;
@@ -29,19 +27,13 @@ export type User = {
   isAuthenticated: boolean;
 };
 
-export type Profile = Database['public']['Tables']['profiles']['Row'];
-
-export type ProfileInsert = Omit<Profile, 'id' | 'created_at' | 'updated_at'>;
-
-export type ProfileUpdate = Partial<Profile>;
-
 export type ProfileFilters = {
   id?: string[];
   email?: string[];
   full_name?: string[];
 };
 
-export type ProfileApp = {
+export type Profile = {
   fullName: string;
   firstName: string;
   lastName: string;

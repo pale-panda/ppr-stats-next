@@ -11,12 +11,12 @@ import {
   formatSpeed,
   formatTrackLength,
 } from '@/lib/format-utils';
-import type { SessionAppFull } from '@/types';
+import type { SessionFull } from '@/types';
 import { Activity, Bike, Flag, Gauge, Wind, Zap } from 'lucide-react';
 import { use } from 'react';
 
 interface DashboardOverviewProps {
-  trackSession: Promise<SessionAppFull | null>;
+  trackSession: Promise<SessionFull | null>;
 }
 
 export function DashboardOverview({ trackSession }: DashboardOverviewProps) {

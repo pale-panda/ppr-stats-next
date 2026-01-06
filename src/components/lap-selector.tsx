@@ -11,11 +11,11 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { formatLapTime, formatSpeed } from '@/lib/format-utils';
-import { type SessionAppFull } from '@/types';
+import { type SessionFull } from '@/types';
 import { Minus, TrendingDown, TrendingUp } from 'lucide-react';
 
 interface LapSelectorProps {
-  laps: SessionAppFull['laps'];
+  laps: SessionFull['laps'];
   selectedLap: number;
   onSelectLap: (lap: number) => void;
   comparisonLap: number | null;

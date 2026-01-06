@@ -1,14 +1,3 @@
-import type { Database } from '@/types/supabase.type';
-
-export type Lap = Database['public']['Tables']['laps']['Row'];
-
-export type LapInsert = Omit<
-  Database['public']['Tables']['laps']['Insert'],
-  'id' | 'created_at' | 'updated_at'
->;
-
-export type LapUpdate = Partial<LapInsert>;
-
 export type LapFilters = {
   session_id?: string[];
   lap_number?: number[];
@@ -16,7 +5,7 @@ export type LapFilters = {
 };
 
 // App-facing lap model (camelCase)
-export type LapApp = {
+export type Lap = {
   id: string;
   lapNumber: number;
   lapTimeSeconds: number;
