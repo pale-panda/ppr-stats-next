@@ -59,8 +59,8 @@ export const getTrackDashboardStats = cache(
     const data = {
       totalTracks: totalTracks || 0,
       totalSessions: totalSessions || 0,
-      totalLaps: totalLaps * 1000 || 0,
-      combinedLengthKm: combinedLength * 1000 || 0,
+      totalLaps: totalLaps || 0,
+      combinedLengthKm: combinedLength || 0,
     };
 
     const statsList: StatItem[] = [
