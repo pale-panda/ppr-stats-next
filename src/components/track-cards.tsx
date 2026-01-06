@@ -40,7 +40,7 @@ export function TrackCards({ ...props }: TrackCardProps) {
   const { data: tracksWithStats, meta } = use(props.trackCardsData);
 
   return (
-    <div className='container mx-auto px-4'>
+    <div className='container mx-auto'>
       {tracksWithStats.length === 0 ? (
         <div className='text-center py-12'>
           <p className='text-muted-foreground'>
