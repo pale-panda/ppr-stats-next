@@ -85,6 +85,7 @@ export function FeaturesCarousel({
                           fill
                           className='object-contain'
                           priority={false}
+                          unoptimized
                         />
                       </div>
                     </CardContent>

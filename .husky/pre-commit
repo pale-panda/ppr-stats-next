@@ -1,3 +1,2 @@
+npm run supabase:types
 npx eslint .
-npm install
-npm run build

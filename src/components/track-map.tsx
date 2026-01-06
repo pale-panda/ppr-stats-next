@@ -1,15 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, memo } from 'react';
 import '@/components/track-map.css';
-import { APIProvider, useMap, Map } from '@vis.gl/react-google-maps';
-import { LatLngLiteral, Telemetry } from '@/types';
-import { useFetchLapTelemetryQuery } from '@/state/services/track-session';
+import { LatLngLiteral } from '@/types';
+import type { TelemetryPointApp } from '@/types/telemetry.type';
+import { APIProvider, Map, useMap } from '@vis.gl/react-google-maps';
+import { memo, useEffect, useMemo } from 'react';
 
 interface TrackMapProps {
-  sessionId: string;
-  telemetry: Telemetry;
-  selectedLap: number;
+  telemetry: TelemetryPointApp[] | [];
+  telemetryComparison: TelemetryPointApp[] | [];
   comparisonLap: number | null;
   showComparison: boolean;
   center: LatLngLiteral;
@@ -71,9 +70,8 @@ const TelemetryPolyline = memo(function TelemetryPolyline({
 });
 
 function TrackMap({
-  sessionId,
   telemetry,
-  //selectedLap,
+  telemetryComparison,
   comparisonLap,
   showComparison,
   center,
@@ -85,31 +83,24 @@ function TrackMap({
       return [];
     }
     return telemetry.map((entry) => {
-      if (entry.gps_point) return entry.gps_point;
-      else return { lat: 0, lng: 0 };
+      // support both DB (gps_point) and app (gpsPoint) shapes
+      const gp = entry.gpsPoint;
+      if (gp) return gp as google.maps.LatLngLiteral;
+      return { lat: 0, lng: 0 };
     });
   }, [telemetry]);
 
-  const {
-    data: comparisonTelemetry,
-    isLoading: comparisonLoading,
-    error: comparisonError,
-  } = useFetchLapTelemetryQuery({
-    sessionId: sessionId,
-    lapNumber: comparisonLap || 0,
-    isComparison: true,
-  });
-
   const comparisonLapPath = useMemo<google.maps.LatLngLiteral[]>(() => {
-    if (!showComparison || comparisonLap === null || !comparisonTelemetry) {
+    if (!showComparison || comparisonLap === null || !telemetryComparison) {
       return [];
     }
 
-    return comparisonTelemetry.map((entry) => {
-      if (entry.gps_point) return entry.gps_point;
-      else return { lat: 0, lng: 0 };
+    return telemetryComparison.map((entry) => {
+      const gp = entry.gpsPoint;
+      if (gp) return gp as google.maps.LatLngLiteral;
+      return { lat: 0, lng: 0 };
     });
-  }, [comparisonLap, comparisonTelemetry, showComparison]);
+  }, [comparisonLap, telemetryComparison, showComparison]);
 
   const selectedPolylineOptions = useMemo<google.maps.PolylineOptions>(
     () => ({
@@ -132,14 +123,6 @@ function TrackMap({
     }),
     []
   );
-
-  if (comparisonLoading) {
-    return <div>Loading comparison telemetry data...</div>;
-  }
-
-  if (comparisonError) {
-    return <div>Error loading comparison telemetry data.</div>;
-  }
 
   return (
     <APIProvider apiKey={API_KEY}>

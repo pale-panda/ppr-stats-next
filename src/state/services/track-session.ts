@@ -1,4 +1,4 @@
-import { TrackSessionApiResponse as ApiResponse, Telemetry } from '@/types';
+import type { TelemetryPointApp } from '@/types/telemetry.type';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 type LapTelemetryParams = {
@@ -13,13 +13,7 @@ export const trackSessionApi = createApi({
     baseUrl: '/api/sessions',
   }),
   endpoints: (builder) => ({
-    fetchTrackSessions: builder.query<ApiResponse, string>({
-      query: (query) => (query ? `?${query}` : ''),
-    }),
-    fetchTrackSessionById: builder.query<Telemetry, string>({
-      query: (sessionId: string) => `/${sessionId}`,
-    }),
-    fetchLapTelemetry: builder.query<Telemetry, LapTelemetryParams>({
+    fetchLapTelemetry: builder.query<TelemetryPointApp[], LapTelemetryParams>({
       query: ({ sessionId, lapNumber, isComparison }) =>
         `/${sessionId}/laps/${lapNumber}${
           isComparison ? '?comparison=true' : ''
@@ -28,8 +22,4 @@ export const trackSessionApi = createApi({
   }),
 });
 
-export const {
-  useFetchTrackSessionsQuery,
-  useFetchTrackSessionByIdQuery,
-  useFetchLapTelemetryQuery,
-} = trackSessionApi;
+export const { useFetchLapTelemetryQuery } = trackSessionApi;

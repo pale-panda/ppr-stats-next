@@ -1,15 +1,15 @@
 'use client';
 
 import { Card } from '@/components/ui/card';
-import { Clock, Gauge, Target, Flag, Bike } from 'lucide-react';
 import {
-  formatLapTime,
   formatDuration,
+  formatLapTime,
   formatMinMaxSpeed,
 } from '@/lib/format-utils';
-import { TrackSession } from '@/types';
+import { type SessionFull } from '@/types';
+import { Bike, Clock, Flag, Gauge, Target } from 'lucide-react';
 
-export function SessionKPIs({ ...stats }: TrackSession) {
+export function SessionKPIs({ ...stats }: SessionFull) {
   const kpis = [
     {
       label: 'Vehicle',
@@ -18,22 +18,22 @@ export function SessionKPIs({ ...stats }: TrackSession) {
     },
     {
       label: 'Duration',
-      value: formatDuration(stats.duration_seconds),
+      value: formatDuration(stats.durationSeconds ?? 0),
       icon: Clock,
     },
     {
       label: 'Best Lap Time',
-      value: formatLapTime(stats.best_lap_time_seconds),
+      value: formatLapTime(stats.bestLapTimeSeconds),
       icon: Flag,
     },
     {
       label: 'Theoretical Best Lap',
-      value: formatLapTime(stats.theoretical_best),
+      value: formatLapTime(stats.theoreticalBest ?? 0),
       icon: Target,
     },
     {
       label: 'Max/Min Speed',
-      value: formatMinMaxSpeed(stats.min_speed, stats.max_speed),
+      value: formatMinMaxSpeed(stats.minSpeed ?? 0, stats.maxSpeed ?? 0),
       icon: Gauge,
     },
   ];

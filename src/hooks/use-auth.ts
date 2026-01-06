@@ -10,18 +10,13 @@ export const useAuth = () => {
 
   useEffect(() => {
     const supabase = createClient();
-
     const fetchAuthStatus = async () => {
       const {
         data: { user },
         error,
       } = await supabase.auth.getUser();
 
-      if (error) {
-        console.error(error);
-      }
-
-      if (!user) {
+      if (!user || error) {
         dispatch(clearUser());
         return;
       }

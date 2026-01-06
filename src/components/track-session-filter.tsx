@@ -1,5 +1,4 @@
 'use client';
-import { TrackSessionFilterSkeleton } from '@/components/skeletons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,12 +14,13 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import type { MetaOptions } from '@/db/types/db.types';
 import { cn } from '@/lib/utils';
-import { useFetchTracksQuery } from '@/state/services/tracks';
+import type { Track } from '@/types';
 import { type DropdownMenuCheckboxItemProps } from '@radix-ui/react-dropdown-menu';
 import { BadgeCheck, ChevronRight, Filter } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useMemo } from 'react';
+import { use, useCallback, useMemo } from 'react';
 
 type FilterKey = 'name' | 'country';
 type Checked = DropdownMenuCheckboxItemProps['checked'];
@@ -36,12 +36,15 @@ function serializeSelected(params: URLSearchParams) {
     .join('&');
 }
 
-export function TrackSessionFilter() {
+interface TrackSessionFilterProps {
+  tracks: Promise<{ data?: Track[]; meta: MetaOptions }>;
+}
+
+export function TrackSessionFilter({ tracks }: TrackSessionFilterProps) {
+  const { data } = use(tracks);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { replace } = useRouter();
-
-  const { data: tracks, isLoading, error } = useFetchTracksQuery({});
 
   const selected = useMemo(() => {
     return {
@@ -52,7 +55,7 @@ export function TrackSessionFilter() {
 
   const computeAvailableFilterValues = useCallback(
     (state: { name?: string[]; country?: string[] }) => {
-      const allTracks = tracks ?? [];
+      const allTracks = data ?? [];
 
       // Country är "master" och ska inte påverkas av name
       const countrySet = new Set(allTracks.map((t) => t.country));
@@ -71,7 +74,7 @@ export function TrackSessionFilter() {
         country: countrySet,
       };
     },
-    [tracks]
+    [data]
   );
 
   const availableFilterValues = useMemo(() => {
@@ -80,7 +83,7 @@ export function TrackSessionFilter() {
 
   // Visuell hint: vilka länder innehåller valt "name"?
   const countryHasSelectedName = useMemo(() => {
-    const allTracks = tracks ?? [];
+    const allTracks = data ?? [];
     const selectedNames = new Set(selected.name);
 
     // Om inget "name" valt: inga hints behövs
@@ -91,14 +94,14 @@ export function TrackSessionFilter() {
       if (selectedNames.has(t.name)) matchingCountries.add(t.country);
     }
     return matchingCountries;
-  }, [selected.name, tracks]);
+  }, [selected.name, data]);
 
   const navigateWithParams = useCallback(
     (params: URLSearchParams) => {
       params.sort();
       const qs = params.toString();
-      const nextUrl = qs ? `${pathname}?${qs}` : pathname;
-      replace(nextUrl);
+
+      replace(`${pathname}${qs ? `?${qs}` : ''}`, { scroll: false });
     },
     [pathname, replace]
   );
@@ -165,10 +168,10 @@ export function TrackSessionFilter() {
   };
 
   const getTrackFilters = (): TrackFilterItem[] => {
-    if (!tracks) return [];
+    if (!data) return [];
 
-    const trackNames = [...new Set(tracks.map((track) => track.name))];
-    const trackCountries = [...new Set(tracks.map((track) => track.country))];
+    const trackNames = [...new Set(data.map((track) => track.name))];
+    const trackCountries = [...new Set(data.map((track) => track.country))];
 
     const getDisabledState = (item: string, key: FilterKey) => {
       if (key === 'name') {
@@ -204,7 +207,7 @@ export function TrackSessionFilter() {
             : undefined,
           getOppositeCount: () => {
             if (!shouldHintCountries) return 0;
-            const allTracks = tracks ?? [];
+            const allTracks = data ?? [];
             const selectedNamesSet = new Set(selected.name);
             return allTracks.filter(
               (t) => t.country === item && selectedNamesSet.has(t.name)
@@ -215,14 +218,6 @@ export function TrackSessionFilter() {
       },
     ];
   };
-
-  if (isLoading) {
-    return <TrackSessionFilterSkeleton />;
-  }
-
-  if (error) {
-    return <div>Error loading filters</div>;
-  }
 
   const trackFilters = getTrackFilters();
 

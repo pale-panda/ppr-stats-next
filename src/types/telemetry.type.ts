@@ -1,17 +1,23 @@
 import { LatLngLiteral } from '@/types';
+import { ID, ISODateString } from '@/types/common-types';
 
-export type TelemetryPoint = {
-  lap_number: number;
-  record_number: number;
-  timestamp: string;
-  speed_kmh: number;
-  g_force_x: number;
-  g_force_z: number;
-  lean_angle: number;
-  gyro_x: number;
-  gyro_y: number;
-  gyro_z: number;
-  gps_point: LatLngLiteral;
+// App-level telemetry point type (camelCase) — preferred for UI and business logic
+export type TelemetryPointApp = {
+  id?: ID<'telemetry'>;
+  lapId?: ID<'lap'> | null;
+  lapNumber: number | null;
+  recordNumber: number;
+  timestamp: ISODateString;
+  speedKmh: number | null;
+  gForceX: number | null;
+  gForceZ: number | null;
+  leanAngle: number | null;
+  gyroX: number | null;
+  gyroY: number | null;
+  gyroZ: number | null;
+  altitude?: number | null;
+  gpsPoint?: LatLngLiteral | null;
+  sessionId?: ID<'session'> | null;
 };
 
-export type Telemetry = Array<TelemetryPoint>;
+export type TelemetryApp = Array<TelemetryPointApp>;

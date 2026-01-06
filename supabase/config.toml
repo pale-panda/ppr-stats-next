@@ -15,7 +15,7 @@ schemas = ["public", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 # The maximum number of rows returns from a view, table, or stored procedure. Limits payload size
 # for accidental or malicious requests.
-max_rows = 1000
+max_rows = 10000
 
 [api.tls]
 # Enable HTTPS endpoints locally using a self-signed certificate.
@@ -60,7 +60,7 @@ schema_paths = []
 enabled = true
 # Specifies an ordered list of seed files to load during db reset.
 # Supports glob patterns relative to supabase directory: "./seeds/*.sql"
-sql_paths = ["./seeds/*.sql"]
+sql_paths = ["./.seeds/*.sql"]
 
 [db.network_restrictions]
 # Enable management of network restrictions.

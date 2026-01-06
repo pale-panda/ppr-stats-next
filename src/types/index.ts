@@ -1,8 +1,8 @@
-export * from './lap.type';
+export * from './laps.type';
 export * from './profile.type';
+export * from './sessions.type';
 export * from './stats.type';
 export * from './telemetry.type';
-export * from './track-session.type';
 export * from './track.type';
 
 export type LatLngLiteral = {
@@ -56,3 +56,5 @@ export interface RaceBoxCSVRecord {
   gyroY: number;
   gyroZ: number;
 }
+
+export type SearchParams = Record<string, string | string[] | undefined>;

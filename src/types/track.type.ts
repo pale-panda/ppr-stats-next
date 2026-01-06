@@ -1,17 +1,37 @@
 import { LatLngLiteral } from '@/types';
 
+export type TrackFilters = {
+  name?: string[];
+  country?: string[];
+  search?: string;
+};
+
+// App-facing track model (camelCase)
 export type Track = {
   id: string;
   name: string;
   country: string;
-  length_meters: number;
-  turns: number;
-  configuration: string;
-  description: string;
-  image_url: string;
-  gps_point: LatLngLiteral;
-  created_at: string;
-  updated_at: string;
+  lengthMeters?: number | null;
+  turns?: number | null;
+  imageUrl: string | null;
+  configuration?: string | null;
+  description?: string | null;
+  gpsPoint?: LatLngLiteral | null;
+  slug: string;
 };
 
-export type Tracks = Array<Track>;
+export type TrackStats = {
+  id: string;
+  name: string;
+  country: string;
+  lengthMeters: number;
+  turns: number;
+  imageUrl: string | null;
+  slug: string;
+  stats: {
+    bestLapTime: number;
+    totalLaps: number;
+    avgTopSpeed: number;
+    totalSessions: number;
+  };
+};

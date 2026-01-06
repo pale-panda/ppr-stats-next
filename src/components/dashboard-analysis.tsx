@@ -1,17 +1,17 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { SessionKPIs } from '@/components/session-kpis';
-import { LapSelector } from '@/components/lap-selector';
-import TrackMap from '@/components/track-map';
-import { TelemetryChart } from '@/components/telemetry-chart';
 import { LapComparison } from '@/components/lap-comparison';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Telemetry, TrackSessionJoined } from '@/types';
+import { LapSelector } from '@/components/lap-selector';
+import { SessionKPIs } from '@/components/session-kpis';
+import { TelemetryChart } from '@/components/telemetry-chart';
+import TrackMap from '@/components/track-map';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFetchLapTelemetryQuery } from '@/state/services/track-session';
+import { type LatLngLiteral, type SessionFull } from '@/types';
+import { use, useMemo, useState } from 'react';
 
 interface DashboardAnalysisProps {
-  trackSession: TrackSessionJoined;
+  trackSession: Promise<SessionFull | null>;
 }
 
 export function DashboardAnalysis({ trackSession }: DashboardAnalysisProps) {
@@ -19,46 +19,61 @@ export function DashboardAnalysis({ trackSession }: DashboardAnalysisProps) {
   const [comparisonLap, setComparisonLap] = useState<number | null>(null);
   const [showComparison, setShowComparison] = useState(false);
 
+  const session = use(trackSession);
+
   const {
-    data: mainTelemetry,
+    data: telemetryData,
     isLoading,
     error,
   } = useFetchLapTelemetryQuery({
-    sessionId: trackSession.id,
+    sessionId: session ? session.id : '',
     lapNumber: selectedLap,
   });
 
-  const telemetry = useMemo(() => {
-    if (isLoading || !mainTelemetry) {
-      return [] as Telemetry;
-    }
-    return mainTelemetry;
-  }, [isLoading, mainTelemetry]);
+  const {
+    data: telemetryComparisonData,
+    isLoading: comparisonLoading,
+    error: comparisonError,
+  } = useFetchLapTelemetryQuery({
+    sessionId: session ? session.id : '',
+    lapNumber: comparisonLap,
+  });
+
+  const center = useMemo<LatLngLiteral>(() => {
+    const gp = session?.tracks?.gpsPoint as LatLngLiteral | null;
+    if (!gp) return { lat: 0, lng: 0 };
+    // handle objects and valueOf() shapes, and common key names
+    const value = gp as LatLngLiteral;
+    const lat = Number(value?.lat ?? 0);
+    const lng = Number(value?.lng ?? 0);
+    return { lat, lng };
+  }, [session?.tracks?.gpsPoint]);
 
   const handleSelectComparisonLap = (lap: number) => {
     setComparisonLap(lap);
   };
 
-  if (!trackSession || !trackSession.laps) {
+  if (!session || !session.laps) {
     return <div>Session not found.</div>;
   }
 
-  if (isLoading) {
-    return <div>Loading telemetry data...</div>;
+  const { id, laps, tracks } = session;
+  if (!tracks || !laps || !id) {
+    return <div>Session data is incomplete.</div>;
   }
 
-  if (error) {
-    return <div>Error loading telemetry data.</div>;
+  if (error || comparisonError || isLoading || comparisonLoading) {
+    return <div>Session is loading...</div>;
   }
 
   return (
     <div className='flex flex-col'>
-      {trackSession && <SessionKPIs {...trackSession} />}
+      {session && <SessionKPIs {...session} />}
       <div className='flex-1 py-4 lg:py-6 space-y-4 lg:space-y-6'>
         <div className='grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6'>
           <div className='lg:col-span-3'>
             <LapSelector
-              laps={trackSession.laps}
+              laps={laps}
               selectedLap={selectedLap}
               onSelectLap={setSelectedLap}
               comparisonLap={comparisonLap}
@@ -70,14 +85,11 @@ export function DashboardAnalysis({ trackSession }: DashboardAnalysisProps) {
 
           <div className='lg:col-span-9'>
             <TrackMap
-              sessionId={trackSession.id}
-              telemetry={telemetry}
-              selectedLap={selectedLap}
+              telemetry={telemetryData ?? []}
+              telemetryComparison={telemetryComparisonData ?? []}
               comparisonLap={comparisonLap}
               showComparison={showComparison}
-              center={{
-                ...trackSession.track?.gps_point,
-              }}
+              center={center}
             />
           </div>
         </div>
@@ -86,13 +98,13 @@ export function DashboardAnalysis({ trackSession }: DashboardAnalysisProps) {
           <LapComparison
             lap1={selectedLap}
             lap2={comparisonLap}
-            laps={trackSession.laps}
+            laps={session.laps}
           />
         ) : (
           <TelemetryChart
             selectedLap={selectedLap}
-            laps={trackSession.laps}
-            telemetry={telemetry}
+            laps={session.laps}
+            telemetry={telemetryData}
           />
         )}
       </div>

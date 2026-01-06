@@ -14,33 +14,26 @@ export type UserData = {
 };
 
 export type User = {
-  id?: string;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  fullName?: string;
-  avatarUrl?: string | null;
-  emailVerified?: boolean;
-  lastSignInAt?: string | null;
-  createdAt?: string;
-  updatedAt?: string | null;
-  isAuthenticated: boolean;
-} | null;
-
-export type ProfileData = {
   id: string;
-  first_name: string;
-  last_name: string;
-  full_name: string;
-  avatar_url: string | null;
-  updated_at: string;
-};
-
-export type Profile = {
-  id: string;
+  email: string;
   firstName: string;
   lastName: string;
   fullName: string;
   avatarUrl: string | null;
-  updatedAt: string | null;
+  emailVerified: boolean;
+  lastSignInAt: string | null;
+  isAuthenticated: boolean;
+};
+
+export type ProfileFilters = {
+  id?: string[];
+  email?: string[];
+  full_name?: string[];
+};
+
+export type Profile = {
+  fullName: string;
+  firstName: string;
+  lastName: string;
+  email: string;
 };

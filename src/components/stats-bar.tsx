@@ -61,6 +61,7 @@ interface StatsBarProps {
 
 export function StatsBar({ ...props }: StatsBarProps) {
   const stats = use(props.statItems);
+  //const stats = props.statItems;
   return (
     <section className='border-b border-border bg-card/50'>
       <div className='px-4 py-8 container mx-auto  grid grid-cols-2 md:grid-cols-4 gap-4 divide-x divide-border'>
