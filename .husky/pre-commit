@@ -1,1 +1,2 @@
+npm run supabase:types
 npx eslint .

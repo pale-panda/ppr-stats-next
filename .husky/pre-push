@@ -1,3 +1,2 @@
 npm install
-npm run supabase:types
 npm run build
