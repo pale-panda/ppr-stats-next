@@ -18,7 +18,14 @@ export type Session = {
   updatedAt?: string | null;
   userId: string;
   vehicle?: string | null;
-  tracks: { name: string; country: string; imageUrl: string | null };
+  track_slug: string | null;
+  theoreticalBestLapTimeSeconds?: number | null;
+  tracks: {
+    name: string;
+    country: string;
+    imageUrl: string | null;
+    slug: string;
+  };
 };
 
 export type SessionExtras = {

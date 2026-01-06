@@ -6,6 +6,7 @@ import { formatLapTime, formatSessionDate } from '@/lib/format-utils';
 import { type SessionFull } from '@/types';
 import { ArrowLeft, Flag, Zap } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { use } from 'react';
 
 interface DashboardHeaderProps {
@@ -14,10 +15,13 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ trackSession }: DashboardHeaderProps) {
   const session = use(trackSession);
+  const pathname = usePathname();
 
   if (!session || !session.tracks) {
     return <div>Session not found.</div>;
   }
+
+  const sessionUrl = pathname.replace('/dashboard', '/sessions');
 
   return (
     <div className='border-b border-border bg-card/50'>
@@ -25,7 +29,7 @@ export function DashboardHeader({ trackSession }: DashboardHeaderProps) {
         <div className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
           <div className='flex items-center gap-4'>
             <Button variant='ghost' size='icon' asChild>
-              <Link href={`/sessions/${session.id}`}>
+              <Link href={sessionUrl}>
                 <ArrowLeft className='w-5 h-5' />
               </Link>
             </Button>

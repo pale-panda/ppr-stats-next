@@ -6,7 +6,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 interface SessionCardProps {
-  id: string;
   title: string;
   track: string;
   date: string;
@@ -15,10 +14,10 @@ interface SessionCardProps {
   bestLap: string;
   status: 'completed' | 'live' | 'upcoming';
   imageUrl: string | null;
+  url: string;
 }
 
 export function SessionCard({
-  id,
   title,
   track,
   date,
@@ -27,6 +26,7 @@ export function SessionCard({
   bestLap,
   status,
   imageUrl,
+  url,
 }: SessionCardProps) {
   const statusStyles = {
     completed: 'bg-muted text-muted-foreground',
@@ -102,10 +102,10 @@ export function SessionCard({
             variant='outline'
             className='flex-1 bg-transparent text-foreground'
             asChild>
-            <Link href={`sessions/${id}`}>View Results</Link>
+            <Link href={`sessions/${url}`}>View Results</Link>
           </Button>
           <Button className='flex-1 bg-primary hover:bg-primary/90' asChild>
-            <Link href={`sessions/${id}/dashboard`}>
+            <Link href={`dashboard/${url}`}>
               Dashboard
               <ChevronRight className='w-4 h-4 ml-1' />
             </Link>

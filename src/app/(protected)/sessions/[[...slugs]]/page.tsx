@@ -1,5 +1,4 @@
 import { HeroSection } from '@/components/hero-section';
-import { SectionSessionDetails } from '@/components/section-session-details';
 import { SectionSessionTrack } from '@/components/section-session-track';
 import {
   StatsBarSkeleton,
@@ -8,7 +7,13 @@ import {
 } from '@/components/skeletons';
 import { StatsBar } from '@/components/stats-bar';
 import { TrackSessionCards } from '@/components/track-session-cards';
+import TrackSessionDetails from '@/components/track-session-details';
 import { TrackSessionFilter } from '@/components/track-session-filter';
+import TrackSessionHero from '@/components/track-session-hero';
+import TrackSessionLapTimesTable from '@/components/track-session-laptimes-table';
+import TrackSessionStats from '@/components/track-session-stats';
+import TrackSessionTopSection from '@/components/track-session-top-section';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getDashboardStats } from '@/services/dashboard-stats.service';
 import { getSessionByIdFull, getSessions } from '@/services/sessions.service';
 import { getTrackSessionsBySlug } from '@/services/slug.service';
@@ -18,8 +23,6 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 
-
-
 export async function generateMetadata(
   props: PageProps<'/sessions/[[...slugs]]'>
 ): Promise<Metadata> {
@@ -28,9 +31,9 @@ export async function generateMetadata(
 
   const description = {
     description:
-    'View detailed information about a specific Pale Panda Racing Team session',
+      'View detailed information about a specific Pale Panda Racing Team session',
     keywords: ['Pale Panda Racing Team', 'Session', 'Details'],
-  }
+  };
 
   if (state.kind === 'index') {
     return { title: 'Sessions', ...description };
@@ -44,11 +47,15 @@ export async function generateMetadata(
   }
 
   if (state.kind === 'year') {
-    return { title: `Sessions – ${track.name} – ${state.year}`, ...description  };
+    return {
+      title: `Sessions – ${track.name} – ${state.year}`,
+      ...description,
+    };
   }
 
   return {
-    title: `Session – ${track.name} – ${state.year} – Details`, ...description
+    title: `Session – ${track.name} – ${state.year} – Details`,
+    ...description,
   };
 }
 
@@ -65,8 +72,9 @@ function parseSlug(params?: string[]): RouteState {
     return { kind: 'track', slug: slug! };
   }
 
-  const isValidYM = /^\d{4}(0[1-9]|1[0-2])$/.test(year);
-  if (!isValidYM) notFound();
+  const isValidYear = /^(19|20)\d{2}$/.test(year);
+
+  if (!isValidYear) notFound();
   if (params.length === 2) {
     return { kind: 'year', slug: slug!, year: year! };
   }
@@ -80,17 +88,6 @@ function parseSlug(params?: string[]): RouteState {
     sessionId: sessionId!,
   };
 }
-
-/*
-function monthRangeUTC(yearMonth: string) {
-  const [yStr, mStr] = yearMonth.split('-');
-  const y = Number(yStr);
-  const m = Number(mStr); // 1-12
-  const from = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0));
-  const to = new Date(Date.UTC(y, m, 1, 0, 0, 0)); // nästa månad
-  return { from: from.toISOString(), to: to.toISOString() };
-}
-*/
 
 export default async function SessionPage(
   props: PageProps<'/sessions/[[...slugs]]'>
@@ -144,13 +141,88 @@ export default async function SessionPage(
       );
 
     case 'year':
-      notFound();
+      const sessionsBySlugYear = getTrackSessionsBySlug(state);
+      return (
+        <Suspense fallback={<TrackSessionCardSkeleton />}>
+          <SectionSessionTrack sessions={sessionsBySlugYear} />
+        </Suspense>
+      );
+
     case 'session':
       const session = getSessionByIdFull(state.sessionId);
       return (
-        <Suspense fallback={<div>Loading session details...</div>}>
-          <SectionSessionDetails session={session} />
-        </Suspense>
+        <>
+          {/* Hero Section */}
+          <div className='relative h-64 md:h-80 overflow-hidden'>
+            <Suspense
+              fallback={
+                <h1>
+                  {/* TODO: Create and replace with skeleton! */}
+                  Loading...
+                </h1>
+              }>
+              <TrackSessionHero session={session} />
+            </Suspense>
+            <div className='absolute inset-0 bg-linear-to-t from-background via-background/60 to-transparent' />
+            <div className='absolute inset-0 flex items-end'>
+              <Suspense
+                fallback={
+                  <h1>
+                    {/* TODO: Create and replace with skeleton! */}
+                    Loading...
+                  </h1>
+                }>
+                <TrackSessionTopSection session={session} />
+              </Suspense>
+            </div>
+          </div>
+
+          <div className='container mx-auto px-4 py-8'>
+            {/* Stats Grid */}
+            <div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8'>
+              <Suspense
+                fallback={
+                  <h1>
+                    {/* TODO: Create and replace with skeleton! */}
+                    Loading...
+                  </h1>
+                }>
+                <TrackSessionStats session={session} />
+              </Suspense>
+            </div>
+            <div className='grid lg:grid-cols-3 gap-6'>
+              {/* Lap Times Table */}
+              <Card className='lg:col-span-2 bg-card border-border/50'>
+                <CardHeader>
+                  <CardTitle className='text-foreground'>Lap Times</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <TrackSessionLapTimesTable session={session} />
+                </CardContent>
+              </Card>
+
+              {/* Session Details */}
+              <Card className='bg-card border-border/50'>
+                <CardHeader>
+                  <CardTitle className='text-foreground'>
+                    Session Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className='space-y-4'>
+                  <Suspense
+                    fallback={
+                      <h1>
+                        {/* TODO: Create and replace with skeleton! */}
+                        Loading...
+                      </h1>
+                    }>
+                    <TrackSessionDetails session={session} />
+                  </Suspense>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </>
       );
     default:
       notFound();

@@ -10,6 +10,7 @@ type SessionRow = Database['public']['Tables']['sessions']['Row'] & {
     name: string;
     country: string;
     image_url: string | null;
+    slug: string;
   };
 };
 
@@ -28,10 +29,12 @@ export function mapSessionRowToApp(s: SessionRow): Session {
     updatedAt: s.updated_at ?? null,
     userId: s.user_id,
     vehicle: s.vehicle ?? null,
+    track_slug: s.track_slug ?? null,
     tracks: {
       name: s.tracks?.name ?? '',
       country: s.tracks?.country ?? '',
       imageUrl: s.tracks?.image_url ?? null,
+      slug: s.tracks?.slug ?? '',
     },
   };
 }
@@ -70,5 +73,6 @@ export function mapSessionFullRowToApp(
     maxSpeed: extras?.maxSpeed ?? null,
     maxLeanAngle: extras?.maxLeanAngle ?? null,
     theoreticalBest: extras?.theoreticalBest ?? null,
+    track_slug: s.track_slug ?? null,
   };
 }

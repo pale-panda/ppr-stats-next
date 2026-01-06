@@ -5,7 +5,7 @@ import { TrackSessionPagination } from '@/components/track-session-pagination';
 import type { QueryOptions } from '@/db/types/db.types';
 import { formatLapTime, formatSessionDate } from '@/lib/format-utils';
 import type { Session } from '@/types';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { use } from 'react';
 
 interface TrackSessionCardsProps {
@@ -18,6 +18,8 @@ interface TrackSessionCardsProps {
 export function TrackSessionCards({ sessions }: TrackSessionCardsProps) {
   const { data, meta } = use(sessions);
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  console.log(pathname);
 
   return (
     <>
@@ -32,7 +34,6 @@ export function TrackSessionCards({ sessions }: TrackSessionCardsProps) {
           data.map((session) => (
             <SessionCard
               key={session.id}
-              id={session.id}
               title={`${session.tracks?.name}`}
               track={session.tracks ? session.tracks.name : 'Unknown Track'}
               date={formatSessionDate(session.sessionDate)}
@@ -40,6 +41,9 @@ export function TrackSessionCards({ sessions }: TrackSessionCardsProps) {
               bestLap={formatLapTime(session.bestLapTimeSeconds)}
               status='completed'
               imageUrl={session.tracks?.imageUrl ?? null}
+              url={`${session.tracks?.slug}/${new Date(
+                session.sessionDate
+              ).getFullYear()}/${session.id}`}
             />
           ))
         )}

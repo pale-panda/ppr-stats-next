@@ -3,7 +3,7 @@ import {
   TrackCardSkeleton,
   TrackSessionFilterSkeleton,
 } from '@/components/skeletons';
-import { StatsBar } from '@/components/stats-bar';
+import { StatsBarMini } from '@/components/stats-bar-mini';
 import { TrackSessionFilter } from '@/components/track-session-filter';
 import { TrackStatsCards } from '@/components/track-stats-cards';
 import {
@@ -42,7 +42,7 @@ export default async function TracksPage({
           alt='Track Hero Image'
           width={1200}
           height={500}
-          className='absolute inset-0 w-full h-full object-fill'
+          className='absolute inset-0 w-full h-full object-cover'
         />
 
         <div className='absolute inset-0 bg-linear-to-t from-background via-background/60 to-transparent' />
@@ -63,32 +63,8 @@ export default async function TracksPage({
 
       {/* Track Stats Overview */}
       <Suspense fallback={<StatsBarSkeleton />}>
-        <StatsBar statItems={stats} type='dashboard' />
+        <StatsBarMini statItems={stats} type='dashboard' />
       </Suspense>
-      {/**
-      <section className=' py-8 border-b border-border bg-card/50'>
-        <div className='container mx-auto px-4'>
-          <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
-            <div className='text-center'>
-              <p className='text-3xl font-bold text-foreground'>0</p>
-              <p className='text-sm text-muted-foreground'>Total Tracks</p>
-            </div>
-            <div className='text-center'>
-              <p className='text-3xl font-bold text-primary'>10</p>
-              <p className='text-sm text-muted-foreground'>Total Sessions</p>
-            </div>
-            <div className='text-center'>
-              <p className='text-3xl font-bold text-foreground'>10</p>
-              <p className='text-sm text-muted-foreground'>Total Laps</p>
-            </div>
-            <div className='text-center'>
-              <p className='text-3xl font-bold text-foreground'>104 km</p>
-              <p className='text-sm text-muted-foreground'>Combined Length</p>
-            </div>
-          </div>
-        </div>
-      </section>
-      */}
 
       {/* Tracks Grid */}
       <section className='container mx-auto px-4 py-8'>

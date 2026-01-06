@@ -16,9 +16,22 @@ export const SessionsDAL = {
 
     const trackIds = await TracksDAL.getTrackIDByFilters(db, searchParams);
 
-    let q = db
-      .from('sessions')
-      .select(`*, tracks!track_id(name, country, image_url)`);
+    let q = db.from('sessions').select(`id,
+        track_id,
+        updated_at,
+        user_id,
+        created_at,
+        theoretical_best_lap_time_seconds,
+        data_source,
+        session_date,
+        session_type,
+        total_laps,
+        best_lap_time_seconds,
+        vehicle,
+        duration_seconds,
+        session_source,
+        track_slug,
+        tracks!track_id(name, country, image_url, slug)`);
     q = applyInFilters(q, [
       { column: 'track_id', values: filters.track_id || trackIds },
       { column: 'user_id', values: filters.user_id },
