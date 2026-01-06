@@ -14,16 +14,14 @@ export type UserData = {
 };
 
 export type User = {
-  id?: string;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  fullName?: string;
-  avatarUrl?: string | null;
-  emailVerified?: boolean;
-  lastSignInAt?: string | null;
-  createdAt?: string;
-  updatedAt?: string | null;
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  avatarUrl: string | null;
+  emailVerified: boolean;
+  lastSignInAt: string | null;
   isAuthenticated: boolean;
 };
 

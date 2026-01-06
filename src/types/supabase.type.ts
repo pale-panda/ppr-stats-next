@@ -173,6 +173,7 @@ export type Database = {
           theoretical_best_lap_time_seconds: number
           total_laps: number
           track_id: string
+          track_slug: string
           updated_at: string | null
           user_id: string
           vehicle: string | null
@@ -189,6 +190,7 @@ export type Database = {
           theoretical_best_lap_time_seconds?: number
           total_laps?: number
           track_id: string
+          track_slug: string
           updated_at?: string | null
           user_id: string
           vehicle?: string | null
@@ -205,6 +207,7 @@ export type Database = {
           theoretical_best_lap_time_seconds?: number
           total_laps?: number
           track_id?: string
+          track_slug?: string
           updated_at?: string | null
           user_id?: string
           vehicle?: string | null
@@ -216,6 +219,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tracks"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_tracks_slug_fkey"
+            columns: ["track_slug"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["slug"]
           },
           {
             foreignKeyName: "sessions_user_id_fkey"

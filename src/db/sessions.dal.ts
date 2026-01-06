@@ -16,7 +16,9 @@ export const SessionsDAL = {
 
     const trackIds = await TracksDAL.getTrackIDByFilters(db, searchParams);
 
-    let q = db.from('sessions').select(`*, tracks(name, country, image_url)`);
+    let q = db
+      .from('sessions')
+      .select(`*, tracks!track_id(name, country, image_url)`);
     q = applyInFilters(q, [
       { column: 'track_id', values: filters.track_id || trackIds },
       { column: 'user_id', values: filters.user_id },
@@ -62,7 +64,7 @@ export const SessionsDAL = {
       .select(
         `*,
         telemetry_points(*),
-        tracks(*),
+        tracks!track_id(*),
         profiles(*),
         laps(*)`
       )
@@ -78,7 +80,7 @@ export const SessionsDAL = {
       .select(
         `*,
         telemetry_points(*),
-        tracks(*),
+        tracks!track_id(*),
         profiles(*),
         laps(*)`
       )
@@ -93,11 +95,26 @@ export const SessionsDAL = {
       .select(
         `*,
         telemetry_points(*),
-        tracks(*),
+        tracks!track_id(*),
         profiles(*),
         laps(*)`
       )
       .eq('track_id', trackId);
+    if (error) throw error;
+    return data ?? [];
+  },
+
+  async getSessionsByTrackSlug(db: DB, slug: string) {
+    const { data, error } = await db
+      .from('sessions')
+      .select(
+        `*,
+        telemetry_points(*),
+        tracks!track_slug(*),
+        profiles(*),
+        laps(*)`
+      )
+      .eq('track_slug', slug);
     if (error) throw error;
     return data ?? [];
   },
@@ -115,7 +132,7 @@ export const SessionsDAL = {
     let q = db.from('sessions').select(
       `*,
         telemetry_points(*),
-        tracks(*),
+        tracks!track_id(*),
         profiles(*),
         laps(*)`
     );
@@ -167,7 +184,7 @@ export const SessionsDAL = {
       .select(
         `*,
         telemetry_points(*),
-        tracks(*),
+        tracks!track_id(*),
         profiles(*),
         laps(*)`
       )

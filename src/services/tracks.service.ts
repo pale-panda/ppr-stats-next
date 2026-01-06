@@ -28,6 +28,13 @@ export const getTrackById = cache(async (id: string) => {
   return data ? mapTrackRowToApp(data) : null;
 });
 
+export const getTrackBySlug = cache(async (slug: string) => {
+  const db: SupabaseClient = await createClient();
+  const data = await TracksDAL.getTrackBySlug(db, slug);
+  console.log(data.id);
+  return data ? mapTrackRowToApp(data) : null;
+});
+
 export const getTracksWithStats = cache(async (searchParams: SearchParams) => {
   const db: SupabaseClient = await createClient();
   const res = await TracksDAL.getTracksWithStats(db, searchParams);

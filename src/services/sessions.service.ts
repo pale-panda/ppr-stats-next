@@ -105,6 +105,32 @@ export const getSessionsByTrackId = cache(async (id: string) => {
   return mapped as SessionFull[];
 });
 
+export const getSessionsByTrackSlug = cache(async (slug: string) => {
+  const db: SupabaseClient = await createClient();
+  const res = await SessionsDAL.getSessionsByTrackSlug(db, slug);
+
+  const mapped = res.map((s) => {
+    const trackRaw = s.tracks;
+    const profilesRaw = s.profiles;
+    const telemetryRaw = s.telemetry_points ? s.telemetry_points : undefined;
+    const lapsRaw = s.laps;
+
+    const extras: SessionExtras = {
+      tracks: mapTrackRowToApp(trackRaw),
+      profiles: mapProfileRowToApp(profilesRaw),
+      telemetryPoints: telemetryRaw
+        ? mapTelemetryRowsToApp(telemetryRaw)
+        : undefined,
+      laps: mapLapRowsToApp(lapsRaw),
+    };
+
+    // mapSessionRowToApp will combine base session row with computed relations
+    return mapSessionFullRowToApp(s, extras);
+  });
+
+  return mapped as SessionFull[];
+});
+
 export const getSessionByIdFull = cache(async (id: string) => {
   const db: SupabaseClient = await createClient();
 

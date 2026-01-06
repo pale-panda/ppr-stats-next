@@ -14,8 +14,8 @@ import {
   formatSessionDate,
   formatTrackLength,
 } from '@/lib/format-utils';
-import { getSessionsByTrackId } from '@/services/sessions.service';
-import { getTrackById } from '@/services/tracks.service';
+import { getSessionsByTrackSlug } from '@/services/sessions.service';
+import { getTrackBySlug } from '@/services/tracks.service';
 import { type Lap, type SessionFull, type Track } from '@/types';
 import {
   ChevronLeft,
@@ -39,13 +39,11 @@ export const metadata: Metadata = {
 export default async function TrackDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) {
-  const { id } = await params;
-  const [track, sessions]: [Track | null, SessionFull[] | null] = await Promise.all([
-    getTrackById(id),
-    getSessionsByTrackId(id),
-  ]);
+  const { slug } = await params;
+  const [track, sessions]: [Track | null, SessionFull[] | null] =
+    await Promise.all([getTrackBySlug(slug), getSessionsByTrackSlug(slug)]);
 
   if (!track) {
     notFound();
@@ -55,10 +53,7 @@ export default async function TrackDetailPage({
     throw new Error('Failed to fetch sessions for this track');
   }
 
-  const totalLaps = sessions.reduce(
-    (sum: number, s) => sum + s.totalLaps,
-    0
-  );
+  const totalLaps = sessions.reduce((sum: number, s) => sum + s.totalLaps, 0);
   const allLaps = sessions
     .flatMap((s) => s.laps)
     .filter((l): l is Lap => l != null) as Lap[];
