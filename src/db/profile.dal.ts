@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { applyInFilters, normalizeQuery } from '@/db/utils/helpers';
-import type { ProfileUpdate, SearchParams } from '@/types';
+import type { SearchParams } from '@/types';
 import type { Database } from '@/types/supabase.type';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -49,7 +49,7 @@ export const ProfileDAL = {
     return data;
   },
 
-  async updateProfile(db: DB, id: string, updateData: ProfileUpdate) {
+  async updateProfile(db: DB, id: string, updateData: Omit<Database['public']['Tables']['profiles']['Update'], 'id'>) {
     const { data, error } = await db
       .from('profiles')
       .update(updateData)
