@@ -33,9 +33,7 @@ const contactSchema = z.object({
     .min(1, 'Name is required')
     .max(100, 'Name is too long'),
   email: z
-    .string()
-    .trim()
-    .email('Enter a valid email address')
+    .email({ error: 'Enter a valid email address' })
     .max(320, 'Email is too long'),
   message: z
     .string()

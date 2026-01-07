@@ -34,7 +34,7 @@ const signUpFormSchema = z
   .object({
     firstName: z.string().trim().min(1, 'First name is required').max(50),
     lastName: z.string().trim().min(1, 'Last name is required').max(50),
-    email: z.string().trim().email('Enter a valid email address').max(320),
+    email: z.email({ error: 'Enter a valid email address' }).max(320),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string().min(8, 'Please confirm your password'),
   })
