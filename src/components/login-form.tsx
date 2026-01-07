@@ -32,8 +32,10 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 const logibFormSchema = z.object({
-  email: z.string().trim().email('Enter a valid email address').max(320),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.email({ error: 'Enter a valid email address' }).max(320),
+  password: z
+    .string()
+    .min(6, { error: 'Password must be at least 6 characters' }),
 });
 
 type LoginFormValues = z.infer<typeof logibFormSchema>;
@@ -70,7 +72,7 @@ export function LoginForm({
         password: values.password,
       });
       if (error) throw error;
-      if(!user) throw new Error('No user data returned');
+      if (!user) throw new Error('No user data returned');
 
       dispatch(setUser(user));
       toast.success('Login successful', {
@@ -200,8 +202,9 @@ export function LoginForm({
         </CardContent>
       </Card>
       <FieldDescription className='px-6 text-center'>
-        By clicking continue, you agree to our <Link href='/legal/terms-of-service'>Terms of Service</Link>{' '}
-        and <Link href='/legal/privacy-policy'>Privacy Policy</Link>.
+        By clicking continue, you agree to our{' '}
+        <Link href='/legal/terms-of-service'>Terms of Service</Link> and{' '}
+        <Link href='/legal/privacy-policy'>Privacy Policy</Link>.
       </FieldDescription>
     </div>
   );

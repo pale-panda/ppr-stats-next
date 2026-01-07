@@ -1,6 +1,6 @@
-import { applyInFilters, normalizeQuery } from '@/db/utils/helpers';
 import 'server-only';
 
+import { applyInFilters, normalizeQuery } from '@/db/utils/helpers';
 import type { SearchParams } from '@/types';
 import type { Database } from '@/types/supabase.type';
 import type { SupabaseClient } from '@supabase/supabase-js';
