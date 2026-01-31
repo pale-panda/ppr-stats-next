@@ -38,7 +38,7 @@ export function LapTimeChart({ sessionId, bestLap }: LapTimeChartProps) {
     'Rendering LapTimeChart for session:',
     sessionId,
     'bestLap:',
-    bestLap
+    bestLap,
   );
 
   return (
@@ -47,49 +47,51 @@ export function LapTimeChart({ sessionId, bestLap }: LapTimeChartProps) {
         <CardTitle className='text-foreground'>Lap Times</CardTitle>
       </CardHeader>
       <CardContent>
-        <ChartContainer
-          config={{
-            time: {
-              label: 'Lap Time (s)',
-              color: 'hsl(var(--chart-1))',
-            },
-          }}
-          className='h-[300px]'>
-          <ResponsiveContainer width='100%' height='100%'>
-            <LineChart
-              data={lapData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid
-                strokeDasharray='3 3'
-                stroke='hsl(var(--border))'
-              />
-              <XAxis
-                dataKey='lap'
-                stroke='hsl(var(--muted-foreground))'
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                domain={[100, 110]}
-                stroke='hsl(var(--muted-foreground))'
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => `${value}s`}
-              />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Line
-                type='monotone'
-                dataKey='time'
-                stroke='var(--color-time)'
-                strokeWidth={2}
-                dot={{ fill: 'var(--color-time)', strokeWidth: 0 }}
-                activeDot={{ r: 6, fill: 'var(--color-time)' }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartContainer>
+        <div className='overflow-x-scroll sm:overflow-auto'>
+          <ChartContainer
+            config={{
+              time: {
+                label: 'Lap Time (s)',
+                color: 'hsl(var(--chart-1))',
+              },
+            }}
+            className='h-[300px]'>
+            <ResponsiveContainer width='100%' height='100%'>
+              <LineChart
+                data={lapData}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid
+                  strokeDasharray='3 3'
+                  stroke='hsl(var(--border))'
+                />
+                <XAxis
+                  dataKey='lap'
+                  stroke='hsl(var(--muted-foreground))'
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  domain={[100, 110]}
+                  stroke='hsl(var(--muted-foreground))'
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => `${value}s`}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Line
+                  type='monotone'
+                  dataKey='time'
+                  stroke='var(--color-time)'
+                  strokeWidth={2}
+                  dot={{ fill: 'var(--color-time)', strokeWidth: 0 }}
+                  activeDot={{ r: 6, fill: 'var(--color-time)' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        </div>
       </CardContent>
     </Card>
   );

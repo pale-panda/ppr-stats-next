@@ -373,17 +373,17 @@ export function AnalyticsClient({ initialData }: Props) {
         </div>
 
         <Tabs defaultValue='sessions' className='space-y-6'>
-          <TabsList className='bg-card border border-border'>
+          <TabsList className='bg-card border border-border max-w-full'>
             <TabsTrigger value='sessions' className='gap-2'>
-              <GitCompare className='w-4 h-4' />
+              <GitCompare className='w-4 h-4 hidden sm:block' />
               Session Comparison
             </TabsTrigger>
             <TabsTrigger value='laps' className='gap-2'>
-              <TrendingUp className='w-4 h-4' />
+              <TrendingUp className='w-4 h-4 hidden sm:block' />
               Lap Analysis
             </TabsTrigger>
             <TabsTrigger value='progression' className='gap-2'>
-              <Target className='w-4 h-4' />
+              <Target className='w-4 h-4 hidden sm:block' />
               Progression
             </TabsTrigger>
           </TabsList>
@@ -483,7 +483,7 @@ export function AnalyticsClient({ initialData }: Props) {
             </Card>
 
             {/* Comparison Charts */}
-            <div className='grid lg:grid-cols-2 xl:grid-cols-3 gap-6'>
+            <div className='grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6'>
               {/* Lap Times Overlay */}
               <Card className='bg-card lg:col-span-1 xl:col-span-2 border-border/50'>
                 <CardHeader>
@@ -495,59 +495,61 @@ export function AnalyticsClient({ initialData }: Props) {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer
-                    config={{
-                      'Session 1': {
-                        label: 'S1',
-                        color: 'var(--primary)',
-                      },
-                      'Session 2': {
-                        label: 'S2',
-                        color: 'var(--chart-2)',
-                      },
-                    }}
-                    className='w-auto h-auto lg:w-full lg:h-[300px]'>
-                    <ResponsiveContainer width='100%' height='100%'>
-                      <LineChart
-                        data={lapComparisonData}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                        <CartesianGrid
-                          strokeDasharray='3 3'
-                          stroke='var(--border)'
-                        />
-                        <XAxis
-                          dataKey='lap'
-                          stroke='var(--muted-foreground)'
-                          fontSize={12}
-                        />
-                        <YAxis
-                          stroke='var(--muted-foreground)'
-                          fontSize={12}
-                          tickFormatter={(v) => `${v}s`}
-                        />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Legend />
-                        <Line
-                          type='monotone'
-                          dataKey='Session 1'
-                          stroke='var(--primary)'
-                          name='Session 1'
-                          strokeWidth={2}
-                          dot={{ fill: 'var(--primary)' }}
-                          connectNulls
-                        />
-                        <Line
-                          type='monotone'
-                          dataKey='Session 2'
-                          stroke='var(--chart-2)'
-                          name='Session 2'
-                          strokeWidth={2}
-                          dot={{ fill: 'var(--chart-2)' }}
-                          connectNulls
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
+                  <div className='overflow-x-scroll sm:overflow-auto'>
+                    <ChartContainer
+                      config={{
+                        'Session 1': {
+                          label: 'S1',
+                          color: 'var(--primary)',
+                        },
+                        'Session 2': {
+                          label: 'S2',
+                          color: 'var(--chart-2)',
+                        },
+                      }}
+                      className='w-auto h-auto lg:w-full lg:h-[300px]'>
+                      <ResponsiveContainer width='100%' height='100%'>
+                        <LineChart
+                          data={lapComparisonData}
+                          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                          <CartesianGrid
+                            strokeDasharray='3 3'
+                            stroke='var(--border)'
+                          />
+                          <XAxis
+                            dataKey='lap'
+                            stroke='var(--muted-foreground)'
+                            fontSize={12}
+                          />
+                          <YAxis
+                            stroke='var(--muted-foreground)'
+                            fontSize={12}
+                            tickFormatter={(v) => `${v}s`}
+                          />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Legend />
+                          <Line
+                            type='monotone'
+                            dataKey='Session 1'
+                            stroke='var(--primary)'
+                            name='Session 1'
+                            strokeWidth={2}
+                            dot={{ fill: 'var(--primary)' }}
+                            connectNulls
+                          />
+                          <Line
+                            type='monotone'
+                            dataKey='Session 2'
+                            stroke='var(--chart-2)'
+                            name='Session 2'
+                            strokeWidth={2}
+                            dot={{ fill: 'var(--chart-2)' }}
+                            connectNulls
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  </div>
                 </CardContent>
               </Card>
 

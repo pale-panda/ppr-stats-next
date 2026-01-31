@@ -44,7 +44,7 @@ export function SpeedChart({ sessionId, topSpeed }: SpeedChartProps) {
     'Rendering SpeedChart for session:',
     sessionId,
     'topSpeed:',
-    topSpeed
+    topSpeed,
   );
   return (
     <Card className='bg-card border-border/50'>
@@ -52,63 +52,70 @@ export function SpeedChart({ sessionId, topSpeed }: SpeedChartProps) {
         <CardTitle className='text-foreground'>Speed Trace</CardTitle>
       </CardHeader>
       <CardContent>
-        <ChartContainer
-          config={{
-            speed: {
-              label: 'Speed (km/h)',
-              color: 'hsl(var(--chart-2))',
-            },
-          }}
-          className='h-[300px]'>
-          <ResponsiveContainer width='100%' height='100%'>
-            <AreaChart
-              data={speedData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <defs>
-                <linearGradient id='speedGradient' x1='0' y1='0' x2='0' y2='1'>
-                  <stop
-                    offset='5%'
-                    stopColor='hsl(var(--chart-2))'
-                    stopOpacity={0.3}
-                  />
-                  <stop
-                    offset='95%'
-                    stopColor='hsl(var(--chart-2))'
-                    stopOpacity={0}
-                  />
-                </linearGradient>
-              </defs>
-              <CartesianGrid
-                strokeDasharray='3 3'
-                stroke='hsl(var(--border))'
-              />
-              <XAxis
-                dataKey='distance'
-                stroke='hsl(var(--muted-foreground))'
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => `${value}m`}
-              />
-              <YAxis
-                domain={[0, 350]}
-                stroke='hsl(var(--muted-foreground))'
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => `${value}`}
-              />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Area
-                type='monotone'
-                dataKey='speed'
-                stroke='hsl(var(--chart-2))'
-                strokeWidth={2}
-                fill='url(#speedGradient)'
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </ChartContainer>
+        <div className='overflow-x-scroll sm:overflow-auto'>
+          <ChartContainer
+            config={{
+              speed: {
+                label: 'Speed (km/h)',
+                color: 'hsl(var(--chart-2))',
+              },
+            }}
+            className='h-[300px]'>
+            <ResponsiveContainer width='100%' height='100%'>
+              <AreaChart
+                data={speedData}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <defs>
+                  <linearGradient
+                    id='speedGradient'
+                    x1='0'
+                    y1='0'
+                    x2='0'
+                    y2='1'>
+                    <stop
+                      offset='5%'
+                      stopColor='hsl(var(--chart-2))'
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset='95%'
+                      stopColor='hsl(var(--chart-2))'
+                      stopOpacity={0}
+                    />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray='3 3'
+                  stroke='hsl(var(--border))'
+                />
+                <XAxis
+                  dataKey='distance'
+                  stroke='hsl(var(--muted-foreground))'
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => `${value}m`}
+                />
+                <YAxis
+                  domain={[0, 350]}
+                  stroke='hsl(var(--muted-foreground))'
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => `${value}`}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Area
+                  type='monotone'
+                  dataKey='speed'
+                  stroke='hsl(var(--chart-2))'
+                  strokeWidth={2}
+                  fill='url(#speedGradient)'
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        </div>
       </CardContent>
     </Card>
   );
