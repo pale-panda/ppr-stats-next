@@ -20,6 +20,7 @@ export type User = {
   lastName: string;
   fullName: string;
   avatarUrl: string | null;
+  role?: 'admin' | 'team' | 'user';
   emailVerified: boolean;
   lastSignInAt: string | null;
   isAuthenticated: boolean;
@@ -36,4 +37,5 @@ export type Profile = {
   firstName: string;
   lastName: string;
   email: string;
+  role: string;
 };

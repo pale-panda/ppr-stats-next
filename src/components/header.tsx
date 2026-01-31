@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import {
   NavItem,
+  filterNavLinksByRole,
   navLinksProtected,
   navLinksPublic,
 } from '@/lib/data/nav-links';
@@ -19,7 +20,9 @@ import { usePathname } from 'next/navigation';
 export function Header() {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const user = useAuth();
-  const navLinks = user?.isAuthenticated ? navLinksProtected : navLinksPublic;
+  const navLinks = user?.isAuthenticated
+    ? filterNavLinksByRole(navLinksProtected, user?.role)
+    : navLinksPublic;
   const pathname = usePathname();
 
   const isCurrentPage = (link: NavItem) => {

@@ -13,6 +13,7 @@ import TrackSessionHero from '@/components/track-session-hero';
 import TrackSessionLapTimesTable from '@/components/track-session-laptimes-table';
 import TrackSessionStats from '@/components/track-session-stats';
 import TrackSessionTopSection from '@/components/track-session-top-section';
+import { SessionComments } from '@/components/session-comments';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getDashboardStats } from '@/services/dashboard-stats.service';
 import { getSessionByIdFull, getSessions } from '@/services/sessions.service';
@@ -22,6 +23,8 @@ import type { RouteState } from '@/types/slug.type';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
+import { AppBreadcrumb } from '@/components/app-breadcrumb';
+import { breadcrumbLinks } from '@/lib/data/breadcrumb-links';
 
 export async function generateMetadata(
   props: PageProps<'/sessions/[[...slugs]]'>,
@@ -135,17 +138,27 @@ export default async function SessionPage(
       const sessionsBySlug = getTrackSessionsBySlug(state);
 
       return (
-        <Suspense fallback={<TrackSessionCardSkeleton />}>
-          <SectionSessionTrack sessions={sessionsBySlug} />
-        </Suspense>
+        <section className='container mx-auto px-4 py-8'>
+          <AppBreadcrumb {...breadcrumbLinks} />
+          <h1 className='text-3xl font-bold mb-4'>Sessions @ {state.slug}</h1>
+          <Suspense fallback={<TrackSessionCardSkeleton />}>
+            <SectionSessionTrack sessions={sessionsBySlug} />
+          </Suspense>
+        </section>
       );
 
     case 'year':
       const sessionsBySlugYear = getTrackSessionsBySlug(state);
       return (
-        <Suspense fallback={<TrackSessionCardSkeleton />}>
-          <SectionSessionTrack sessions={sessionsBySlugYear} />
-        </Suspense>
+        <section className='container mx-auto px-4 py-8'>
+          <AppBreadcrumb {...breadcrumbLinks} />
+          <h1 className='text-3xl font-bold mb-4'>
+            Sessions @ {state.slug} – {state.year}
+          </h1>
+          <Suspense fallback={<TrackSessionCardSkeleton />}>
+            <SectionSessionTrack sessions={sessionsBySlugYear} />
+          </Suspense>
+        </section>
       );
 
     case 'session':
@@ -220,6 +233,10 @@ export default async function SessionPage(
                   </Suspense>
                 </CardContent>
               </Card>
+            </div>
+
+            <div className='mt-8'>
+              <SessionComments sessionId={state.sessionId} />
             </div>
           </div>
         </>

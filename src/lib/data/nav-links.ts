@@ -1,7 +1,10 @@
+import type { AppRole } from '@/auth/roles';
 import {
   ContactIcon,
   HomeIcon,
   MapIcon,
+  MessageSquare,
+  Newspaper,
   UploadCloud,
   UserPen,
 } from 'lucide-react';
@@ -12,6 +15,7 @@ export type NavItem = {
   title: string;
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   altHref?: string;
+  roles?: AppRole[];
 };
 
 export type NavItems = NavItem[];
@@ -19,6 +23,7 @@ export type NavItems = NavItem[];
 export const navLinksPublic: NavItems = [
   { href: '/', label: 'Home', title: 'Home', icon: HomeIcon },
   { href: '/about', label: 'About', title: 'About Us', icon: UserPen },
+  { href: '/news', label: 'News', title: 'Team News', icon: Newspaper },
   {
     href: '/contact',
     label: 'Contact',
@@ -29,6 +34,7 @@ export const navLinksPublic: NavItems = [
 
 export const navLinksProtected: NavItems = [
   { href: '/home', label: 'Home', title: 'Home', icon: HomeIcon, altHref: '/' },
+  { href: '/news', label: 'News', title: 'Team News', icon: Newspaper },
   {
     href: '/sessions',
     label: 'Sessions',
@@ -48,6 +54,19 @@ export const navLinksProtected: NavItems = [
     label: 'Leaderboard',
     title: 'Leaderboard',
     icon: UploadCloud,
+  },
+  {
+    href: '/messages',
+    label: 'Messages',
+    title: 'Team Messages',
+    icon: MessageSquare,
+  },
+  {
+    href: '/news/manage',
+    label: 'Manage News',
+    title: 'Publish News',
+    icon: Newspaper,
+    roles: ['admin', 'team'],
   },
 ];
 
@@ -92,6 +111,13 @@ export const navLinksHierarchyPublic: NavLinkHierarchyItem[] = [
     title: 'Contact Us',
   },
   {
+    id: 'news',
+    parent: 'home',
+    href: '/news',
+    label: 'News',
+    title: 'Team News',
+  },
+  {
     id: 'legal',
     parent: 'home',
     href: '/legal',
@@ -121,6 +147,20 @@ export const navLinksHierarchyProtected: NavLinkHierarchyItem[] = [
     href: '/home',
     label: 'Home',
     title: 'Home',
+  },
+  {
+    id: 'news',
+    parent: 'home',
+    href: '/news',
+    label: 'News',
+    title: 'Team News',
+  },
+  {
+    id: 'news-manage',
+    parent: 'news',
+    href: '/news/manage',
+    label: 'Manage News',
+    title: 'Publish News',
   },
   {
     id: 'sessions',
@@ -185,7 +225,25 @@ export const navLinksHierarchyProtected: NavLinkHierarchyItem[] = [
     label: 'Leaderboard',
     title: 'Leaderboard',
   },
+  {
+    id: 'messages',
+    parent: 'home',
+    href: '/messages',
+    label: 'Messages',
+    title: 'Team Messages',
+  },
 ];
+
+export const filterNavLinksByRole = (
+  links: NavItems,
+  role?: AppRole
+): NavItems => {
+  return links.filter((link) => {
+    if (!link.roles || link.roles.length === 0) return true;
+    if (!role) return false;
+    return link.roles.includes(role);
+  });
+};
 
 export interface NavLinkHierarchies {
   public: NavLinkHierarchyItem[];
