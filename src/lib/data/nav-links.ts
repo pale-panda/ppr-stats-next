@@ -6,12 +6,15 @@ import {
   UserPen,
 } from 'lucide-react';
 
-export type NavItems = {
+export type NavItem = {
   href: string;
   label: string;
   title: string;
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-}[];
+  altHref?: string;
+};
+
+export type NavItems = NavItem[];
 
 export const navLinksPublic: NavItems = [
   { href: '/', label: 'Home', title: 'Home', icon: HomeIcon },
@@ -31,12 +34,7 @@ export const navLinksProtected: NavItems = [
     label: 'Sessions',
     title: 'Racing Sessions',
     icon: UserPen,
-  },
-  {
-    href: '/analytics',
-    label: 'Analytics',
-    title: 'Analyze Telemetry',
-    icon: UserPen,
+    altHref: '/dashboard',
   },
   { href: '/tracks', label: 'Tracks', title: 'Racing Tracks', icon: MapIcon },
   {

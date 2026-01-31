@@ -1,18 +1,52 @@
 import { AppBreadcrumb } from '@/components/app-breadcrumb';
+import { TrackSessionCards } from '@/components/track-session-cards';
+import { QueryOptions } from '@/db/types/db.types';
 import { breadcrumbLinks } from '@/lib/data/breadcrumb-links';
+import { Session, SessionCondensed } from '@/types/sessions.type';
 import type { TrackSessionsBySlug } from '@/types/slug.type';
-import { use } from 'react';
+import { use, useMemo } from 'react';
 
 interface SectionSessionTrackProps {
   sessions: Promise<TrackSessionsBySlug | null>;
 }
 
+type TrackSessionCardsData = Promise<{
+  data?: Session[] | SessionCondensed[];
+  meta: QueryOptions;
+}>;
+
 export function SectionSessionTrack({ sessions }: SectionSessionTrackProps) {
   const data = use(sessions);
+
+  const sessionMemo = useMemo(() => {
+    if (!data) return [];
+    const trackData = {
+      name: data.name,
+      slug: data.slug,
+      imageUrl: data.imageUrl,
+    };
+    const meta = {
+      page: 1,
+      pageSize: data.sessions.length,
+      total: data.sessions.length,
+    } as unknown as QueryOptions;
+
+    const sessionData = data.sessions.map((session) => ({
+      id: session.id,
+      sessionDate: session.sessionDate,
+      bestLapTimeSeconds: session.lapStats[0]?.bestLapTimeSeconds || 0,
+      totalLaps: session.lapStats[0]?.totalLaps || 0,
+      tracks: trackData,
+    })) as SessionCondensed[];
+
+    return new Promise((resolve) => resolve({ data: sessionData, meta }));
+  }, [data]) as TrackSessionCardsData;
+
   if (!data) {
     return <div>No session data available.</div>;
   }
 
+  /*
   return (
     <section>
       <div className='container mx-auto px-4 py-8'>
@@ -33,6 +67,19 @@ export function SectionSessionTrack({ sessions }: SectionSessionTrackProps) {
           </div>
         </div>
       </div>
+    </section>
+  );
+  */
+
+  if (!data) {
+    return <div>No session data available.</div>;
+  }
+
+  return (
+    <section className='container mx-auto px-4 py-8'>
+      <AppBreadcrumb {...breadcrumbLinks} />
+      <h1 className='text-3xl font-bold mb-4'>Sessions @ {data.name}</h1>
+      <TrackSessionCards sessions={sessionMemo} />
     </section>
   );
 }

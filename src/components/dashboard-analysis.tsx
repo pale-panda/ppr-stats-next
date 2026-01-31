@@ -99,6 +99,8 @@ export function DashboardAnalysis({ trackSession }: DashboardAnalysisProps) {
             lap1={selectedLap}
             lap2={comparisonLap}
             laps={session.laps}
+            telemetry1={telemetryData}
+            telemetry2={telemetryComparisonData}
           />
         ) : (
           <TelemetryChart

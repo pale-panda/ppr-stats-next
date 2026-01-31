@@ -102,7 +102,7 @@ export function DashboardOverview({ trackSession }: DashboardOverviewProps) {
       </div>
 
       {/* Charts Row */}
-      <div className='grid lg:grid-cols-2 gap-6'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
         <LapTimeChart
           sessionId={session.id}
           bestLap={formatLapTime(session.bestLapTimeSeconds)}

@@ -1,7 +1,7 @@
 'use client';
 
 import { Separator } from '@/components/ui/separator';
-import { type NavItems } from '@/lib/data/nav-links';
+import { type NavItems, type NavItem } from '@/lib/data/nav-links';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -12,6 +12,20 @@ interface NavigationProps {
 
 export function Navigation({ navLinks }: NavigationProps) {
   const pathname = usePathname();
+
+  const isCurrentPage = (link: NavItem) => {
+    if (link.href === '/') {
+      return pathname === link.href;
+    }
+    if (link.altHref) {
+      return (
+        pathname.startsWith(link.href) ||
+        pathname.startsWith(link.altHref || '')
+      );
+    }
+    return pathname.startsWith(link.href);
+  };
+
   return (
     <nav
       role='navigation'
@@ -22,11 +36,11 @@ export function Navigation({ navLinks }: NavigationProps) {
           href={link.href}
           className={cn(
             'flex flex-col group h-16 px-2 lg:px-4 py-5.5 text-sm font-medium hover:text-foreground transition-colors hover:bg-linear-to-b hover:from-transparent hover:to-muted/30',
-            pathname.startsWith(link.href)
+            isCurrentPage(link)
               ? 'bg-linear-to-b from-transparent to-muted/30 text-foreground transition-colors'
-              : 'text-muted-foreground'
+              : 'text-muted-foreground',
           )}
-          aria-current={pathname.startsWith(link.href) ? 'page' : undefined}>
+          aria-current={isCurrentPage(link) ? 'page' : undefined}>
           {link.label}
           <Separator className='w-max mt-5 h-px opacity-0 transition-opacity group-hover:opacity-100 group-hover:bg-radial group-hover:from-primary/80 group-hover:to-transparent' />
         </Link>

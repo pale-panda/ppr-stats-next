@@ -1,9 +1,10 @@
 'use client';
 
 import { Card } from '@/components/ui/card';
-import { formatLapTime, formatSpeed } from '@/lib/format-utils';
-import type { Lap } from '@/types';
+import { formatLapTime, formatSpeed, formatTime } from '@/lib/format-utils';
+import type { Lap, TelemetryPointApp } from '@/types';
 import { Minus, TrendingDown, TrendingUp } from 'lucide-react';
+import { useMemo } from 'react';
 import {
   CartesianGrid,
   Line,
@@ -19,34 +20,92 @@ interface LapComparisonProps {
   lap1: number;
   lap2: number;
   laps: Lap[];
+  telemetry1?: TelemetryPointApp[];
+  telemetry2?: TelemetryPointApp[];
 }
 
-export function LapComparison({ lap1, lap2, laps }: LapComparisonProps) {
+export function LapComparison({
+  lap1,
+  lap2,
+  laps,
+  telemetry1,
+  telemetry2,
+}: LapComparisonProps) {
   const lap1Data = laps[lap1 - 1];
   const lap2Data = laps[lap2 - 1];
 
-  const telemetry1 = [
-    {
-      time: lap1Data.lapTimeSeconds,
-      speed: lap1Data.maxSpeedKmh,
-      accBrkG: lap1Data.maxGForceX,
-    },
-  ];
-  const telemetry2 = [
-    {
-      time: lap2Data.lapTimeSeconds,
-      speed: lap2Data.maxSpeedKmh,
-      accBrkG: lap2Data.maxGForceX,
-    },
-  ];
+  const downsampledTelemetryLap1 = useMemo(() => {
+    if (!telemetry1) {
+      return [] as TelemetryPointApp[];
+    }
+    let telemetryFiltered = telemetry1.filter(
+      (point) => point.lapNumber === lap1,
+    ) as TelemetryPointApp[];
+    const maxRows = 200;
+    const step = Math.ceil(telemetryFiltered.length / maxRows);
 
-  // Merge telemetry data for comparison chart
-  const mergedTelemetry = telemetry1.map((t1, i) => ({
-    time: t1.time,
-    speed1: t1.speed,
-    speed2: telemetry2[i]?.speed || 0,
-    accBrkG1: t1.accBrkG,
-    accBrkG2: telemetry2[i]?.accBrkG || 0,
+    telemetryFiltered = telemetryFiltered.filter(
+      (_, index) => index % step === 0,
+    );
+
+    const formatedTelemetry = telemetryFiltered.map((dataPoint) => {
+      const ts = dataPoint.timestamp;
+      const timestamp = formatTime(
+        (new Date(ts).getTime() -
+          new Date(telemetryFiltered[0]?.timestamp).getTime()) /
+          1000,
+      );
+      // support both camelCase (app) and snake_case (db) shapes
+      return {
+        timestamp,
+        speedKmh: dataPoint.speedKmh,
+        gForceX: dataPoint.gForceX,
+        leanAngle: dataPoint.leanAngle,
+      };
+    });
+
+    return formatedTelemetry;
+  }, [lap1, telemetry1]);
+
+  const downsampledTelemetryLap2 = useMemo(() => {
+    if (!telemetry2) {
+      return [] as TelemetryPointApp[];
+    }
+    let telemetryFiltered = telemetry2.filter(
+      (point) => point.lapNumber === lap2,
+    ) as TelemetryPointApp[];
+    const maxRows = 200;
+    const step = Math.ceil(telemetryFiltered.length / maxRows);
+
+    telemetryFiltered = telemetryFiltered.filter(
+      (_, index) => index % step === 0,
+    );
+
+    const formatedTelemetry = telemetryFiltered.map((dataPoint) => {
+      const ts = dataPoint.timestamp;
+      const timestamp = formatTime(
+        (new Date(ts).getTime() -
+          new Date(telemetryFiltered[0]?.timestamp).getTime()) /
+          1000,
+      );
+      // support both camelCase (app) and snake_case (db) shapes
+      return {
+        timestamp,
+        speedKmh: dataPoint.speedKmh,
+        gForceX: dataPoint.gForceX,
+        leanAngle: dataPoint.leanAngle,
+      };
+    });
+
+    return formatedTelemetry;
+  }, [lap2, telemetry2]);
+
+  const mergedTelemetry = downsampledTelemetryLap1.map((t1, i) => ({
+    time: t1.timestamp,
+    speed1: t1.speedKmh || 0,
+    speed2: downsampledTelemetryLap2[i]?.speedKmh || 0,
+    accBrkG1: t1.gForceX || 0,
+    accBrkG2: downsampledTelemetryLap2[i]?.gForceX || 0,
   }));
 
   const getDelta = (val1: number, val2: number, inverse = false) => {
@@ -163,8 +222,8 @@ export function LapComparison({ lap1, lap2, laps }: LapComparisonProps) {
                           ? '+'
                           : ''
                         : delta > 0
-                        ? '+'
-                        : ''}
+                          ? '+'
+                          : ''}
                       {delta.toFixed(2)}
                     </div>
                   )}
@@ -174,99 +233,101 @@ export function LapComparison({ lap1, lap2, laps }: LapComparisonProps) {
           })}
         </div>
 
-        <div className='h-[250px] lg:h-[300px]'>
-          <ResponsiveContainer width='100%' height='100%'>
-            <LineChart
-              data={mergedTelemetry}
-              margin={{ top: 10, right: 50, left: 10, bottom: 10 }}>
-              <CartesianGrid strokeDasharray='3 3' stroke='#374151' />
-              <XAxis
-                dataKey='time'
-                stroke='#6b7280'
-                tick={{ fill: '#9ca3af', fontSize: 11 }}
-                interval={19}
-              />
-              <YAxis
-                yAxisId='speed'
-                stroke='#6b7280'
-                tick={{ fill: '#9ca3af', fontSize: 11 }}
-                domain={[0, 250]}
-                label={{
-                  value: 'Speed',
-                  angle: -90,
-                  position: 'insideLeft',
-                  fill: '#9ca3af',
-                  fontSize: 11,
-                }}
-              />
-              <YAxis
-                yAxisId='g-force'
-                orientation='right'
-                stroke='#6b7280'
-                tick={{ fill: '#9ca3af', fontSize: 11 }}
-                domain={[-1.5, 1.5]}
-                label={{
-                  value: 'G-Force',
-                  angle: 90,
-                  position: 'insideRight',
-                  fill: '#9ca3af',
-                  fontSize: 11,
-                }}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
-                  borderRadius: '6px',
-                }}
-                labelStyle={{ color: '#f3f4f6' }}
-              />
-              <ReferenceLine
-                yAxisId='g-force'
-                y={0}
-                stroke='#4b5563'
-                strokeDasharray='3 3'
-              />
-              <Line
-                yAxisId='speed'
-                type='monotone'
-                dataKey='speed1'
-                stroke='#ef4444'
-                dot={false}
-                strokeWidth={2}
-                name={`Lap ${lap1} Speed`}
-              />
-              <Line
-                yAxisId='speed'
-                type='monotone'
-                dataKey='speed2'
-                stroke='#3b82f6'
-                dot={false}
-                strokeWidth={2}
-                name={`Lap ${lap2} Speed`}
-              />
-              <Line
-                yAxisId='g-force'
-                type='monotone'
-                dataKey='accBrkG1'
-                stroke='#f87171'
-                dot={false}
-                strokeWidth={1}
-                strokeDasharray='4 2'
-                name={`Lap ${lap1} Acc/Brk G`}
-              />
-              <Line
-                yAxisId='g-force'
-                type='monotone'
-                dataKey='accBrkG2'
-                stroke='#60a5fa'
-                dot={false}
-                strokeWidth={1}
-                strokeDasharray='4 2'
-                name={`Lap ${lap2} Acc/Brk G`}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+        <div className='overflow-x-scroll sm:overflow-auto'>
+          <div className='h-[250px] lg:h-[300px] w-dvh sm:w-full'>
+            <ResponsiveContainer width='100%' height='100%'>
+              <LineChart
+                data={mergedTelemetry}
+                margin={{ top: 10, right: 50, left: 10, bottom: 10 }}>
+                <CartesianGrid strokeDasharray='3 3' stroke='#374151' />
+                <XAxis
+                  dataKey='time'
+                  stroke='#6b7280'
+                  tick={{ fill: '#9ca3af', fontSize: 11 }}
+                  interval={19}
+                />
+                <YAxis
+                  yAxisId='speed'
+                  stroke='#6b7280'
+                  tick={{ fill: '#9ca3af', fontSize: 11 }}
+                  domain={[0, 250]}
+                  label={{
+                    value: 'Speed',
+                    angle: -90,
+                    position: 'insideLeft',
+                    fill: '#9ca3af',
+                    fontSize: 11,
+                  }}
+                />
+                <YAxis
+                  yAxisId='g-force'
+                  orientation='right'
+                  stroke='#6b7280'
+                  tick={{ fill: '#9ca3af', fontSize: 11 }}
+                  domain={[-1.5, 1.5]}
+                  label={{
+                    value: 'G-Force',
+                    angle: 90,
+                    position: 'insideRight',
+                    fill: '#9ca3af',
+                    fontSize: 11,
+                  }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1f2937',
+                    border: '1px solid #374151',
+                    borderRadius: '6px',
+                  }}
+                  labelStyle={{ color: '#f3f4f6' }}
+                />
+                <ReferenceLine
+                  yAxisId='g-force'
+                  y={0}
+                  stroke='#4b5563'
+                  strokeDasharray='3 3'
+                />
+                <Line
+                  yAxisId='speed'
+                  type='monotone'
+                  dataKey='speed1'
+                  stroke='#ef4444'
+                  dot={false}
+                  strokeWidth={2}
+                  name={`Lap ${lap1} Speed`}
+                />
+                <Line
+                  yAxisId='speed'
+                  type='monotone'
+                  dataKey='speed2'
+                  stroke='#3b82f6'
+                  dot={false}
+                  strokeWidth={2}
+                  name={`Lap ${lap2} Speed`}
+                />
+                <Line
+                  yAxisId='g-force'
+                  type='monotone'
+                  dataKey='accBrkG1'
+                  stroke='#f87171'
+                  dot={false}
+                  strokeWidth={1}
+                  strokeDasharray='4 2'
+                  name={`Lap ${lap1} Acc/Brk G`}
+                />
+                <Line
+                  yAxisId='g-force'
+                  type='monotone'
+                  dataKey='accBrkG2'
+                  stroke='#60a5fa'
+                  dot={false}
+                  strokeWidth={1}
+                  strokeDasharray='4 2'
+                  name={`Lap ${lap2} Acc/Brk G`}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </Card>
     </div>
