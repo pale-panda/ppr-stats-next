@@ -23,7 +23,7 @@ export function NavigationMobile({
     isNavOpen && (
       <nav
         role='navigation'
-        className='md:hidden backdrop-blur-md bg-background/70 absolute top-16 w-dvw h-dvh max-h-dvh z-40 shadow-md'>
+        className='md:hidden backdrop-blur-md bg-background/70 fixed top-16 w-dvw h-dvh max-h-dvh z-40 shadow-md'>
         <div className='backdrop-blur-md bg-background/70 rounded-b-md gap-0 w-full h-full p-6'>
           {navLinks.map((link) => (
             <Link
