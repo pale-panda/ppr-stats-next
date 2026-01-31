@@ -23,8 +23,10 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 
+export const dynamic = 'force-static';
+
 export async function generateMetadata(
-  props: PageProps<'/sessions/[[...slugs]]'>
+  props: PageProps<'/sessions/[[...slugs]]'>,
 ): Promise<Metadata> {
   const { slugs } = await props.params;
   const state = parseSlug(slugs);
@@ -90,7 +92,7 @@ function parseSlug(params?: string[]): RouteState {
 }
 
 export default async function SessionPage(
-  props: PageProps<'/sessions/[[...slugs]]'>
+  props: PageProps<'/sessions/[[...slugs]]'>,
 ) {
   const { slugs } = await props.params;
   const params = await props.searchParams;
