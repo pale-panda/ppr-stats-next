@@ -3,23 +3,32 @@ import { PageSizeSelector } from '@/components/page-size-selector';
 import { SessionCard } from '@/components/session-card';
 import { TrackSessionPagination } from '@/components/track-session-pagination';
 import type { QueryOptions } from '@/db/types/db.types';
-import { formatLapTime, formatSessionDate } from '@/lib/format-utils';
-import type { Session } from '@/types';
-import { usePathname, useSearchParams } from 'next/navigation';
+import {
+  formatDuration,
+  formatLapTime,
+  formatSessionDate,
+} from '@/lib/format-utils';
+import type { Session, SessionCondensed } from '@/types';
+import { useSearchParams } from 'next/navigation';
 import { use } from 'react';
 
 interface TrackSessionCardsProps {
   sessions: Promise<{
-    data?: Session[];
+    data?: Session[] | SessionCondensed[];
     meta: QueryOptions;
   }>;
+}
+
+function createSessionUrl(
+  session: Session | SessionCondensed,
+  pathname: string | undefined = '',
+) {
+  return `${pathname}${session.tracks?.slug}/${new Date(session.sessionDate).getFullYear()}/${session.id}`;
 }
 
 export function TrackSessionCards({ sessions }: TrackSessionCardsProps) {
   const { data, meta } = use(sessions);
   const searchParams = useSearchParams();
-  const pathname = usePathname();
-  console.log(pathname);
 
   return (
     <>
@@ -41,9 +50,8 @@ export function TrackSessionCards({ sessions }: TrackSessionCardsProps) {
               bestLap={formatLapTime(session.bestLapTimeSeconds)}
               status='completed'
               imageUrl={session.tracks?.imageUrl ?? null}
-              url={`${session.tracks?.slug}/${new Date(
-                session.sessionDate
-              ).getFullYear()}/${session.id}`}
+              url={createSessionUrl(session)}
+              duration={formatDuration(session.durationSeconds || 0)}
             />
           ))
         )}

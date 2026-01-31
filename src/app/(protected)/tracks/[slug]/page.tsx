@@ -14,6 +14,7 @@ import {
   formatSessionDate,
   formatTrackLength,
 } from '@/lib/format-utils';
+import { createSessionUrl } from '@/lib/url-utils';
 import { getSessionsByTrackSlug } from '@/services/sessions.service';
 import { getTrackBySlug } from '@/services/tracks.service';
 import { type Lap, type SessionFull, type Track } from '@/types';
@@ -65,7 +66,7 @@ export default async function TrackDetailPage({
     allLaps.length > 0
       ? Math.round(
           allLaps.reduce((sum, l) => sum + (l.maxSpeedKmh || 0), 0) /
-            allLaps.length
+            allLaps.length,
         )
       : 0;
 
@@ -82,7 +83,7 @@ export default async function TrackDetailPage({
     .sort(
       (a, b) =>
         (a.lapTimeSeconds ? a.lapTimeSeconds : +0) -
-        (b.lapTimeSeconds ? b.lapTimeSeconds : +0)
+        (b.lapTimeSeconds ? b.lapTimeSeconds : +0),
     )
     .slice(0, 10);
 
@@ -333,7 +334,15 @@ export default async function TrackDetailPage({
                                 size='sm'
                                 className='text-primary hover:text-primary'
                                 asChild>
-                                <Link href={`/session/${session.id}/dashboard`}>
+                                <Link
+                                  href={createSessionUrl(
+                                    {
+                                      slug: session.tracks.slug,
+                                      year: session.sessionDate.slice(0, 4),
+                                      id: session.id,
+                                    },
+                                    '/sessions',
+                                  )}>
                                   View
                                 </Link>
                               </Button>

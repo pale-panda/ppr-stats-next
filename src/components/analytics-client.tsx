@@ -63,7 +63,7 @@ type Props = {
   initialData: AnalyticsData;
 };
 
-export default function AnalyticsPageClient({ initialData }: Props) {
+export function AnalyticsClient({ initialData }: Props) {
   const data = initialData;
 
   const [selectedSession1, setSelectedSession1] = useState<string>('');
@@ -116,16 +116,16 @@ export default function AnalyticsPageClient({ initialData }: Props) {
       totalLaps: data.totalLaps || 0,
       topSpeed: data.topSpeed || 0,
     }),
-    [data]
+    [data],
   );
 
   const session1 = useMemo(
     () => sessions.find((s) => s.id === selectedSession1),
-    [sessions, selectedSession1]
+    [sessions, selectedSession1],
   );
   const session2 = useMemo(
     () => sessions.find((s) => s.id === selectedSession2),
-    [sessions, selectedSession2]
+    [sessions, selectedSession2],
   );
   const laps1 = useMemo(() => session1?.laps || [], [session1]);
   const laps2 = useMemo(() => session2?.laps || [], [session2]);
@@ -245,7 +245,7 @@ export default function AnalyticsPageClient({ initialData }: Props) {
         bestLap: s.bestLapTimeSeconds,
         date: new Date(s.sessionDate).toLocaleDateString(),
       })),
-    [sessions]
+    [sessions],
   );
 
   if (sessions.length === 0) {
@@ -675,16 +675,16 @@ export default function AnalyticsPageClient({ initialData }: Props) {
                         {session1 &&
                           formatSpeed(
                             Math.max(
-                              ...session1.laps.map((l) => l.maxSpeedKmh ?? 0)
-                            )
+                              ...session1.laps.map((l) => l.maxSpeedKmh ?? 0),
+                            ),
                           )}
                       </TableCell>
                       <TableCell className='font-mono text-foreground'>
                         {session2 &&
                           formatSpeed(
                             Math.max(
-                              ...session2.laps.map((l) => l.maxSpeedKmh ?? 0)
-                            )
+                              ...session2.laps.map((l) => l.maxSpeedKmh ?? 0),
+                            ),
                           )}
                       </TableCell>
                       <TableCell>
@@ -692,13 +692,13 @@ export default function AnalyticsPageClient({ initialData }: Props) {
                           <Badge variant='secondary'>
                             {formatSpeed(
                               Math.max(
-                                ...session1.laps.map((l) => l.maxSpeedKmh ?? 0)
+                                ...session1.laps.map((l) => l.maxSpeedKmh ?? 0),
                               ) -
                                 Math.max(
                                   ...session2.laps.map(
-                                    (l) => l.maxSpeedKmh ?? 0
-                                  )
-                                )
+                                    (l) => l.maxSpeedKmh ?? 0,
+                                  ),
+                                ),
                             )}
                           </Badge>
                         )}
@@ -1167,8 +1167,8 @@ export default function AnalyticsPageClient({ initialData }: Props) {
                         <TableCell className='font-mono text-foreground'>
                           {formatSpeed(
                             Math.max(
-                              ...session.laps.map((l) => l.maxSpeedKmh ?? 0)
-                            )
+                              ...session.laps.map((l) => l.maxSpeedKmh ?? 0),
+                            ),
                           )}
                         </TableCell>
                       </TableRow>

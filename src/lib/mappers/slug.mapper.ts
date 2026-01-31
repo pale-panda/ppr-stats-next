@@ -61,7 +61,7 @@ type TrackSessionsBySlugRow = {
 } | null;
 
 export function mapTrackSessionsBySlugToApp(
-  r: TrackSessionsBySlugRow
+  r: TrackSessionsBySlugRow,
 ): TrackSessionsBySlug | null {
   if (!r) return null;
   return {

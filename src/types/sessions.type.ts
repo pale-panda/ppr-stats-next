@@ -28,6 +28,19 @@ export type Session = {
   };
 };
 
+export type SessionCondensed = {
+  id: string;
+  sessionDate: string;
+  bestLapTimeSeconds: number;
+  totalLaps: number;
+  durationSeconds?: number | null;
+  tracks?: {
+    name: string;
+    slug: string;
+    imageUrl: string | null;
+  };
+};
+
 export type SessionExtras = {
   tracks: Track;
   profiles: Profile;
