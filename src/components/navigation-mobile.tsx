@@ -4,35 +4,21 @@ import { Separator } from '@/components/ui/separator';
 import { NavItem, type NavItems } from '@/lib/data/nav-links';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import type React from 'react';
 
 interface NavigationMobileProps {
   navLinks: NavItems;
   isNavOpen: boolean;
   setIsNavOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isCurrentPage: (link: NavItem) => boolean;
 }
 
 export function NavigationMobile({
   navLinks,
   isNavOpen,
   setIsNavOpen,
+  isCurrentPage,
 }: NavigationMobileProps) {
-  const pathname = usePathname();
-
-  const isCurrentPage = (link: NavItem) => {
-    if (link.href === '/') {
-      return pathname === link.href;
-    }
-    if (link.altHref) {
-      return (
-        pathname.startsWith(link.href) ||
-        pathname.startsWith(link.altHref || '')
-      );
-    }
-    return pathname.startsWith(link.href);
-  };
-
   return (
     isNavOpen && (
       <nav

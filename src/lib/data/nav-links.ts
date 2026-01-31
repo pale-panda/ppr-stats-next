@@ -28,7 +28,7 @@ export const navLinksPublic: NavItems = [
 ];
 
 export const navLinksProtected: NavItems = [
-  { href: '/home', label: 'Home', title: 'Home', icon: HomeIcon },
+  { href: '/home', label: 'Home', title: 'Home', icon: HomeIcon, altHref: '/' },
   {
     href: '/sessions',
     label: 'Sessions',

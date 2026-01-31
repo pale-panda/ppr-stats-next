@@ -136,7 +136,7 @@ export const getSessionByIdFull = cache(async (id: string) => {
 
   const minSpeed = await TelemetryPointsDAL.getTelemetryMinSpeedBySessionId(
     db,
-    id
+    id,
   );
   const laps = await LapsDAL.getLapsBySessionId(db, id);
   const session = await SessionsDAL.getSessionByIdFull(db, id);

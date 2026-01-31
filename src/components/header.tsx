@@ -6,15 +6,37 @@ import { Navigation } from '@/components/navigation';
 import { NavigationMobile } from '@/components/navigation-mobile';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { navLinksProtected, navLinksPublic } from '@/lib/data/nav-links';
+import {
+  NavItem,
+  navLinksProtected,
+  navLinksPublic,
+} from '@/lib/data/nav-links';
 import { Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 export function Header() {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const user = useAuth();
   const navLinks = user?.isAuthenticated ? navLinksProtected : navLinksPublic;
+  const pathname = usePathname();
+
+  const isCurrentPage = (link: NavItem) => {
+    if (link.href === '/') {
+      return pathname === link.href;
+    }
+    if (link.altHref === '/') {
+      return pathname === link.altHref || pathname === '/home';
+    }
+    if (link.altHref) {
+      return (
+        pathname.startsWith(link.href) ||
+        pathname.startsWith(link.altHref || '')
+      );
+    }
+    return pathname.startsWith(link.href);
+  };
 
   return (
     <>
@@ -33,7 +55,7 @@ export function Header() {
               </Link>
 
               {/* Desktop Nav */}
-              <Navigation navLinks={navLinks} />
+              <Navigation navLinks={navLinks} isCurrentPage={isCurrentPage} />
             </div>
 
             {/* Actions */}
@@ -61,6 +83,7 @@ export function Header() {
         navLinks={navLinks}
         isNavOpen={isNavOpen}
         setIsNavOpen={setIsNavOpen}
+        isCurrentPage={isCurrentPage}
       />
     </>
   );
