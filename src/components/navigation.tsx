@@ -14,13 +14,16 @@ export function Navigation({ navLinks }: NavigationProps) {
   const pathname = usePathname();
 
   const isCurrentPage = (link: NavItem) => {
-    if (link.altHref === undefined) {
-      return pathname.startsWith(link.href);
+    if (link.href === '/') {
+      return pathname === link.href;
     }
-
-    return (
-      pathname.startsWith(link.href) || pathname.startsWith(link.altHref || '')
-    );
+    if (link.altHref) {
+      return (
+        pathname.startsWith(link.href) ||
+        pathname.startsWith(link.altHref || '')
+      );
+    }
+    return pathname.startsWith(link.href);
   };
 
   return (
