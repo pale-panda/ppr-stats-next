@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 const createThreadSchema = z.object({
-  recipientId: z.string().uuid(),
+  recipientId: z.uuid(),
 });
 
 export async function GET() {
@@ -24,7 +24,7 @@ export async function GET() {
   if (participantError) {
     return NextResponse.json(
       { error: 'Failed to fetch threads', details: participantError.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -43,13 +43,15 @@ export async function GET() {
   if (threadsError) {
     return NextResponse.json(
       { error: 'Failed to fetch threads', details: threadsError.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
   const { data: participants, error: participantsError } = await supabase
     .from('dm_participants')
-    .select('thread_id, user_id, profiles ( id, first_name, last_name, avatar_url, role )')
+    .select(
+      'thread_id, user_id, profiles ( id, first_name, last_name, avatar_url, role )',
+    )
     .in('thread_id', threadIds);
 
   if (participantsError) {
@@ -58,7 +60,7 @@ export async function GET() {
         error: 'Failed to fetch participants',
         details: participantsError.message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -71,7 +73,7 @@ export async function GET() {
   if (messagesError) {
     return NextResponse.json(
       { error: 'Failed to fetch messages', details: messagesError.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -111,8 +113,11 @@ export async function POST(req: Request) {
 
   if (!parsed.success) {
     return NextResponse.json(
-      { error: 'Invalid form data', issues: parsed.error.flatten().fieldErrors },
-      { status: 400 }
+      {
+        error: 'Invalid form data',
+        issues: parsed.error.flatten().fieldErrors,
+      },
+      { status: 400 },
     );
   }
 
@@ -128,20 +133,21 @@ export async function POST(req: Request) {
   if (parsed.data.recipientId === user.id) {
     return NextResponse.json(
       { error: 'Cannot create thread with yourself' },
-      { status: 400 }
+      { status: 400 },
     );
   }
-
+  console.log(parsed);
   const { data: thread, error: threadError } = await supabase
     .from('dm_threads')
     .insert({ created_by: user.id })
     .select('id, created_at, created_by')
     .single();
 
+  console.log(thread, threadError);
   if (threadError || !thread) {
     return NextResponse.json(
       { error: 'Failed to create thread', details: threadError?.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -158,7 +164,7 @@ export async function POST(req: Request) {
         error: 'Failed to add participants',
         details: participantsError.message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
