@@ -74,12 +74,60 @@ CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
     SET "search_path" TO ''
     AS $$begin
   insert into public.profiles (id, email, first_name, last_name, avatar_url)
-  values (new.id, new.raw_user_meta_data->>'email', new.raw_user_meta_data->>'first_name', new.raw_user_meta_data->>'last_name', new.raw_user_meta_data->>'avatar_url');
+  values (new.id, new.email, new.raw_user_meta_data->>'first_name', new.raw_user_meta_data->>'last_name', new.raw_user_meta_data->>'avatar_url');
   return new;
 end;$$;
 
 
 ALTER FUNCTION "public"."handle_new_user"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."is_admin"("_user_id" "uuid") RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+  select exists (
+    select 1
+    from public.profiles p
+    where p.id = _user_id
+      and p.role = 'admin'::public.app_role
+  );
+$$;
+
+
+ALTER FUNCTION "public"."is_admin"("_user_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."is_team_or_admin"("_user_id" "uuid") RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+  select exists (
+    select 1
+    from public.profiles p
+    where p.id = _user_id
+      and p.role = any (array['admin'::public.app_role, 'team'::public.app_role])
+  );
+$$;
+
+
+ALTER FUNCTION "public"."is_team_or_admin"("_user_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."is_thread_participant"("_thread_id" "uuid", "_user_id" "uuid") RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+  select exists (
+    select 1
+    from public.dm_participants dp
+    where dp.thread_id = _thread_id
+      and dp.user_id = _user_id
+  );
+$$;
+
+
+ALTER FUNCTION "public"."is_thread_participant"("_thread_id" "uuid", "_user_id" "uuid") OWNER TO "postgres";
 
 SET default_tablespace = '';
 
@@ -240,7 +288,8 @@ CREATE TABLE IF NOT EXISTS "public"."sessions" (
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT "now"(),
     "session_source" "text",
-    "theoretical_best_lap_time_seconds" numeric DEFAULT '0'::numeric NOT NULL
+    "theoretical_best_lap_time_seconds" numeric DEFAULT '0'::numeric NOT NULL,
+    "track_slug" character varying NOT NULL
 );
 
 
@@ -495,6 +544,11 @@ ALTER TABLE ONLY "public"."sessions"
 
 
 ALTER TABLE ONLY "public"."sessions"
+    ADD CONSTRAINT "sessions_track_slug_fkey" FOREIGN KEY ("track_slug") REFERENCES "public"."tracks"("slug");
+
+
+
+ALTER TABLE ONLY "public"."sessions"
     ADD CONSTRAINT "sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON UPDATE CASCADE;
 
 
@@ -509,219 +563,203 @@ ALTER TABLE ONLY "public"."telemetry_points"
 
 
 
-CREATE POLICY "Admins update tracks" ON "public"."tracks" FOR UPDATE USING ((EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = 'admin'::"public"."app_role")))));
+CREATE POLICY "App stats delete admin" ON "public"."app_stats" FOR DELETE TO "authenticated" USING ("public"."is_admin"(( SELECT "auth"."uid"() AS "uid")));
 
 
 
-CREATE POLICY "Authenticated read comment reactions" ON "public"."comment_reactions" FOR SELECT USING (("auth"."role"() = 'authenticated'::"text"));
+CREATE POLICY "App stats insert admin" ON "public"."app_stats" FOR INSERT TO "authenticated" WITH CHECK ("public"."is_admin"(( SELECT "auth"."uid"() AS "uid")));
 
 
 
-CREATE POLICY "Authenticated read laps" ON "public"."laps" FOR SELECT USING (("auth"."role"() = 'authenticated'::"text"));
+CREATE POLICY "App stats read public" ON "public"."app_stats" FOR SELECT USING (true);
 
 
 
-CREATE POLICY "Authenticated read session comments" ON "public"."session_comments" FOR SELECT USING (("auth"."role"() = 'authenticated'::"text"));
+CREATE POLICY "App stats update admin" ON "public"."app_stats" FOR UPDATE TO "authenticated" USING ("public"."is_admin"(( SELECT "auth"."uid"() AS "uid")));
 
 
 
-CREATE POLICY "Authenticated read sessions" ON "public"."sessions" FOR SELECT USING (("auth"."role"() = 'authenticated'::"text"));
+CREATE POLICY "Comment reactions delete own or admin" ON "public"."comment_reactions" FOR DELETE TO "authenticated" USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"(( SELECT "auth"."uid"() AS "uid"))));
 
 
 
-CREATE POLICY "Authenticated read telemetry" ON "public"."telemetry_points" FOR SELECT USING (("auth"."role"() = 'authenticated'::"text"));
+CREATE POLICY "Comment reactions insert own" ON "public"."comment_reactions" FOR INSERT TO "authenticated" WITH CHECK (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
 
 
 
-CREATE POLICY "Authenticated read tracks" ON "public"."tracks" FOR SELECT USING (("auth"."role"() = 'authenticated'::"text"));
+CREATE POLICY "Comment reactions read" ON "public"."comment_reactions" FOR SELECT TO "authenticated" USING (true);
 
 
 
-CREATE POLICY "Enable read access for all users" ON "public"."app_stats" FOR SELECT USING (true);
+CREATE POLICY "Comment reactions update admin" ON "public"."comment_reactions" FOR UPDATE TO "authenticated" USING ("public"."is_admin"(( SELECT "auth"."uid"() AS "uid")));
 
 
 
-CREATE POLICY "Public profiles are viewable by everyone." ON "public"."profiles" FOR SELECT USING (true);
+CREATE POLICY "Laps delete own or admin" ON "public"."laps" FOR DELETE TO "authenticated" USING (("public"."is_admin"(( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."sessions" "s"
+  WHERE (("s"."id" = "laps"."session_id") AND ("s"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
 
 
 
-CREATE POLICY "Public read news posts" ON "public"."news_posts" FOR SELECT USING (true);
+CREATE POLICY "Laps insert own or admin" ON "public"."laps" FOR INSERT TO "authenticated" WITH CHECK (("public"."is_admin"(( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."sessions" "s"
+  WHERE (("s"."id" = "laps"."session_id") AND ("s"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
 
 
 
-CREATE POLICY "Team and admin manage news posts" ON "public"."news_posts" USING ((EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = ANY (ARRAY['admin'::"public"."app_role", 'team'::"public"."app_role"])))))) WITH CHECK ((EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = ANY (ARRAY['admin'::"public"."app_role", 'team'::"public"."app_role"]))))));
+CREATE POLICY "Laps read" ON "public"."laps" FOR SELECT TO "authenticated" USING (true);
 
 
 
-CREATE POLICY "Users add dm participants" ON "public"."dm_participants" FOR INSERT WITH CHECK ((("auth"."uid"() = "user_id") OR (EXISTS ( SELECT 1
+CREATE POLICY "Laps update own or admin" ON "public"."laps" FOR UPDATE TO "authenticated" USING (("public"."is_admin"(( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."sessions" "s"
+  WHERE (("s"."id" = "laps"."session_id") AND ("s"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
+
+
+
+CREATE POLICY "News posts delete team or admin" ON "public"."news_posts" FOR DELETE TO "authenticated" USING ("public"."is_team_or_admin"(( SELECT "auth"."uid"() AS "uid")));
+
+
+
+CREATE POLICY "News posts insert team or admin" ON "public"."news_posts" FOR INSERT TO "authenticated" WITH CHECK ("public"."is_team_or_admin"(( SELECT "auth"."uid"() AS "uid")));
+
+
+
+CREATE POLICY "News posts read public" ON "public"."news_posts" FOR SELECT USING (true);
+
+
+
+CREATE POLICY "News posts update team or admin" ON "public"."news_posts" FOR UPDATE TO "authenticated" USING ("public"."is_team_or_admin"(( SELECT "auth"."uid"() AS "uid")));
+
+
+
+CREATE POLICY "Profiles delete admin" ON "public"."profiles" FOR DELETE TO "authenticated" USING ("public"."is_admin"(( SELECT "auth"."uid"() AS "uid")));
+
+
+
+CREATE POLICY "Profiles insert own" ON "public"."profiles" FOR INSERT TO "authenticated" WITH CHECK (("id" = ( SELECT "auth"."uid"() AS "uid")));
+
+
+
+CREATE POLICY "Profiles read" ON "public"."profiles" FOR SELECT TO "authenticated" USING (true);
+
+
+
+CREATE POLICY "Profiles update own or admin" ON "public"."profiles" FOR UPDATE TO "authenticated" USING ((("id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"(( SELECT "auth"."uid"() AS "uid"))));
+
+
+
+CREATE POLICY "Session comments delete own or admin" ON "public"."session_comments" FOR DELETE TO "authenticated" USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"(( SELECT "auth"."uid"() AS "uid"))));
+
+
+
+CREATE POLICY "Session comments insert own" ON "public"."session_comments" FOR INSERT TO "authenticated" WITH CHECK (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
+
+
+
+CREATE POLICY "Session comments read" ON "public"."session_comments" FOR SELECT TO "authenticated" USING (true);
+
+
+
+CREATE POLICY "Session comments update own or admin" ON "public"."session_comments" FOR UPDATE TO "authenticated" USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"(( SELECT "auth"."uid"() AS "uid"))));
+
+
+
+CREATE POLICY "Sessions delete own or admin" ON "public"."sessions" FOR DELETE TO "authenticated" USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"(( SELECT "auth"."uid"() AS "uid"))));
+
+
+
+CREATE POLICY "Sessions insert own or admin" ON "public"."sessions" FOR INSERT TO "authenticated" WITH CHECK ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"(( SELECT "auth"."uid"() AS "uid"))));
+
+
+
+CREATE POLICY "Sessions read" ON "public"."sessions" FOR SELECT TO "authenticated" USING (true);
+
+
+
+CREATE POLICY "Sessions update own or admin" ON "public"."sessions" FOR UPDATE TO "authenticated" USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"(( SELECT "auth"."uid"() AS "uid"))));
+
+
+
+CREATE POLICY "Telemetry delete own session or admin" ON "public"."telemetry_points" FOR DELETE TO "authenticated" USING (("public"."is_admin"(( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."sessions" "s"
+  WHERE (("s"."id" = "telemetry_points"."session_id") AND ("s"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
+
+
+
+CREATE POLICY "Telemetry insert own session or admin" ON "public"."telemetry_points" FOR INSERT TO "authenticated" WITH CHECK (("public"."is_admin"(( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."sessions" "s"
+  WHERE (("s"."id" = "telemetry_points"."session_id") AND ("s"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
+
+
+
+CREATE POLICY "Telemetry read" ON "public"."telemetry_points" FOR SELECT TO "authenticated" USING (true);
+
+
+
+CREATE POLICY "Telemetry update own session or admin" ON "public"."telemetry_points" FOR UPDATE TO "authenticated" USING (("public"."is_admin"(( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."sessions" "s"
+  WHERE (("s"."id" = "telemetry_points"."session_id") AND ("s"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
+
+
+
+CREATE POLICY "Tracks delete admin" ON "public"."tracks" FOR DELETE TO "authenticated" USING ("public"."is_admin"(( SELECT "auth"."uid"() AS "uid")));
+
+
+
+CREATE POLICY "Tracks insert" ON "public"."tracks" FOR INSERT TO "authenticated" WITH CHECK ("public"."is_admin"(( SELECT "auth"."uid"() AS "uid")));
+
+
+
+CREATE POLICY "Tracks read" ON "public"."tracks" FOR SELECT TO "authenticated" USING (true);
+
+
+
+CREATE POLICY "Tracks update admin" ON "public"."tracks" FOR UPDATE TO "authenticated" USING ("public"."is_admin"(( SELECT "auth"."uid"() AS "uid")));
+
+
+
+CREATE POLICY "Users add dm participants" ON "public"."dm_participants" FOR INSERT TO "authenticated" WITH CHECK (((( SELECT "auth"."uid"() AS "uid") IS NOT NULL) AND (("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
    FROM "public"."dm_threads" "t"
-  WHERE (("t"."id" = "dm_participants"."thread_id") AND ("t"."created_by" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = 'admin'::"public"."app_role"))))));
+  WHERE (("t"."id" = "dm_participants"."thread_id") AND ("t"."created_by" = ( SELECT "auth"."uid"() AS "uid"))))) OR "public"."is_admin"(( SELECT "auth"."uid"() AS "uid")))));
 
 
 
-CREATE POLICY "Users can insert their own profile." ON "public"."profiles" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "id"));
+CREATE POLICY "Users create dm threads" ON "public"."dm_threads" FOR INSERT TO "authenticated" WITH CHECK (("created_by" = ( SELECT "auth"."uid"() AS "uid")));
 
 
 
-CREATE POLICY "Users can update own profile." ON "public"."profiles" FOR UPDATE USING ((( SELECT "auth"."uid"() AS "uid") = "id"));
+CREATE POLICY "Users delete own dm messages" ON "public"."dm_messages" FOR DELETE TO "authenticated" USING ((("sender_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"(( SELECT "auth"."uid"() AS "uid"))));
 
 
 
-CREATE POLICY "Users create dm threads" ON "public"."dm_threads" FOR INSERT WITH CHECK (("auth"."uid"() = "created_by"));
+CREATE POLICY "Users delete own dm threads" ON "public"."dm_threads" FOR DELETE TO "authenticated" USING ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"(( SELECT "auth"."uid"() AS "uid"))));
 
 
 
-CREATE POLICY "Users delete own dm messages" ON "public"."dm_messages" FOR DELETE USING ((("auth"."uid"() = "sender_id") OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = 'admin'::"public"."app_role"))))));
+CREATE POLICY "Users edit own dm messages" ON "public"."dm_messages" FOR UPDATE TO "authenticated" USING ((("sender_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"(( SELECT "auth"."uid"() AS "uid"))));
 
 
 
-CREATE POLICY "Users delete own dm threads" ON "public"."dm_threads" FOR DELETE USING ((("auth"."uid"() = "created_by") OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = 'admin'::"public"."app_role"))))));
+CREATE POLICY "Users read dm messages" ON "public"."dm_messages" FOR SELECT TO "authenticated" USING (("public"."is_thread_participant"("thread_id", ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"(( SELECT "auth"."uid"() AS "uid"))));
 
 
 
-CREATE POLICY "Users delete own laps" ON "public"."laps" FOR DELETE USING ((("auth"."role"() = 'authenticated'::"text") AND ((EXISTS ( SELECT 1
-   FROM "public"."sessions" "s"
-  WHERE (("s"."id" = "laps"."session_id") AND ("s"."user_id" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = 'admin'::"public"."app_role")))))));
+CREATE POLICY "Users read dm participants" ON "public"."dm_participants" FOR SELECT TO "authenticated" USING (("public"."is_thread_participant"("thread_id", ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"(( SELECT "auth"."uid"() AS "uid"))));
 
 
 
-CREATE POLICY "Users delete own session comments" ON "public"."session_comments" FOR DELETE USING ((("auth"."role"() = 'authenticated'::"text") AND (("auth"."uid"() = "user_id") OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = 'admin'::"public"."app_role")))))));
+CREATE POLICY "Users read dm threads" ON "public"."dm_threads" FOR SELECT TO "authenticated" USING ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_thread_participant"("id", ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"(( SELECT "auth"."uid"() AS "uid"))));
 
 
 
-CREATE POLICY "Users delete own sessions" ON "public"."sessions" FOR DELETE USING ((("auth"."role"() = 'authenticated'::"text") AND (("auth"."uid"() = "user_id") OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = 'admin'::"public"."app_role")))))));
-
-
-
-CREATE POLICY "Users delete own telemetry" ON "public"."telemetry_points" FOR DELETE USING ((("auth"."role"() = 'authenticated'::"text") AND ((EXISTS ( SELECT 1
-   FROM "public"."sessions" "s"
-  WHERE (("s"."id" = "telemetry_points"."session_id") AND ("s"."user_id" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = 'admin'::"public"."app_role")))))));
-
-
-
-CREATE POLICY "Users edit own dm messages" ON "public"."dm_messages" FOR UPDATE USING ((("auth"."uid"() = "sender_id") OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = 'admin'::"public"."app_role"))))));
-
-
-
-CREATE POLICY "Users insert own laps" ON "public"."laps" FOR INSERT WITH CHECK ((("auth"."role"() = 'authenticated'::"text") AND ((EXISTS ( SELECT 1
-   FROM "public"."sessions" "s"
-  WHERE (("s"."id" = "laps"."session_id") AND ("s"."user_id" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = 'admin'::"public"."app_role")))))));
-
-
-
-CREATE POLICY "Users insert own session comments" ON "public"."session_comments" FOR INSERT WITH CHECK ((("auth"."role"() = 'authenticated'::"text") AND ("auth"."uid"() = "user_id")));
-
-
-
-CREATE POLICY "Users insert own sessions" ON "public"."sessions" FOR INSERT WITH CHECK ((("auth"."role"() = 'authenticated'::"text") AND (("auth"."uid"() = "user_id") OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = 'admin'::"public"."app_role")))))));
-
-
-
-CREATE POLICY "Users insert own telemetry" ON "public"."telemetry_points" FOR INSERT WITH CHECK ((("auth"."role"() = 'authenticated'::"text") AND ((EXISTS ( SELECT 1
-   FROM "public"."sessions" "s"
-  WHERE (("s"."id" = "telemetry_points"."session_id") AND ("s"."user_id" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = 'admin'::"public"."app_role")))))));
-
-
-
-CREATE POLICY "Users insert tracks" ON "public"."tracks" FOR INSERT WITH CHECK (("auth"."role"() = 'authenticated'::"text"));
-
-
-
-CREATE POLICY "Users react" ON "public"."comment_reactions" FOR INSERT WITH CHECK ((("auth"."role"() = 'authenticated'::"text") AND ("auth"."uid"() = "user_id")));
-
-
-
-CREATE POLICY "Users read dm messages" ON "public"."dm_messages" FOR SELECT USING ((EXISTS ( SELECT 1
-   FROM "public"."dm_participants" "p"
-  WHERE (("p"."thread_id" = "p"."thread_id") AND ("p"."user_id" = "auth"."uid"())))));
-
-
-
-CREATE POLICY "Users read dm participants" ON "public"."dm_participants" FOR SELECT USING ((EXISTS ( SELECT 1
-   FROM "public"."dm_participants" "p"
-  WHERE (("p"."thread_id" = "p"."thread_id") AND ("p"."user_id" = "auth"."uid"())))));
-
-
-
-CREATE POLICY "Users read dm threads" ON "public"."dm_threads" FOR SELECT USING ((EXISTS ( SELECT 1
-   FROM "public"."dm_participants" "p"
-  WHERE (("p"."thread_id" = "dm_threads"."id") AND ("p"."user_id" = "auth"."uid"())))));
-
-
-
-CREATE POLICY "Users remove dm participants" ON "public"."dm_participants" FOR DELETE USING ((("auth"."uid"() = "user_id") OR (EXISTS ( SELECT 1
+CREATE POLICY "Users remove dm participants" ON "public"."dm_participants" FOR DELETE TO "authenticated" USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
    FROM "public"."dm_threads" "t"
-  WHERE (("t"."id" = "dm_participants"."thread_id") AND ("t"."created_by" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = 'admin'::"public"."app_role"))))));
+  WHERE (("t"."id" = "dm_participants"."thread_id") AND ("t"."created_by" = ( SELECT "auth"."uid"() AS "uid"))))) OR "public"."is_admin"(( SELECT "auth"."uid"() AS "uid"))));
 
 
 
-CREATE POLICY "Users remove own reactions" ON "public"."comment_reactions" FOR DELETE USING ((("auth"."role"() = 'authenticated'::"text") AND (("auth"."uid"() = "user_id") OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = 'admin'::"public"."app_role")))))));
-
-
-
-CREATE POLICY "Users send dm messages" ON "public"."dm_messages" FOR INSERT WITH CHECK ((("auth"."uid"() = "sender_id") AND (EXISTS ( SELECT 1
-   FROM "public"."dm_participants" "p"
-  WHERE (("p"."thread_id" = "p"."thread_id") AND ("p"."user_id" = "auth"."uid"()))))));
-
-
-
-CREATE POLICY "Users update own laps" ON "public"."laps" FOR UPDATE USING ((("auth"."role"() = 'authenticated'::"text") AND ((EXISTS ( SELECT 1
-   FROM "public"."sessions" "s"
-  WHERE (("s"."id" = "laps"."session_id") AND ("s"."user_id" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = 'admin'::"public"."app_role")))))));
-
-
-
-CREATE POLICY "Users update own session comments" ON "public"."session_comments" FOR UPDATE USING ((("auth"."role"() = 'authenticated'::"text") AND (("auth"."uid"() = "user_id") OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = 'admin'::"public"."app_role")))))));
-
-
-
-CREATE POLICY "Users update own sessions" ON "public"."sessions" FOR UPDATE USING ((("auth"."role"() = 'authenticated'::"text") AND (("auth"."uid"() = "user_id") OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = 'admin'::"public"."app_role")))))));
-
-
-
-CREATE POLICY "Users update own telemetry" ON "public"."telemetry_points" FOR UPDATE USING ((("auth"."role"() = 'authenticated'::"text") AND ((EXISTS ( SELECT 1
-   FROM "public"."sessions" "s"
-  WHERE (("s"."id" = "telemetry_points"."session_id") AND ("s"."user_id" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."id" = "auth"."uid"()) AND ("p"."role" = 'admin'::"public"."app_role")))))));
+CREATE POLICY "Users send dm messages" ON "public"."dm_messages" FOR INSERT TO "authenticated" WITH CHECK ((("sender_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("public"."is_thread_participant"("thread_id", ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"(( SELECT "auth"."uid"() AS "uid")))));
 
 
 
@@ -935,6 +973,24 @@ GRANT USAGE ON SCHEMA "public" TO "service_role";
 GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "anon";
 GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."is_admin"("_user_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."is_admin"("_user_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."is_admin"("_user_id" "uuid") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."is_team_or_admin"("_user_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."is_team_or_admin"("_user_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."is_team_or_admin"("_user_id" "uuid") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."is_thread_participant"("_thread_id" "uuid", "_user_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."is_thread_participant"("_thread_id" "uuid", "_user_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."is_thread_participant"("_thread_id" "uuid", "_user_id" "uuid") TO "service_role";
 
 
 
