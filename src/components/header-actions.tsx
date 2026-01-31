@@ -107,7 +107,7 @@ export function HeaderActions({ user }: HeaderActionsProps) {
               <DropdownMenuItem
                 className='dark:focus:bg-primary/50 cursor-pointer'
                 asChild>
-                <Link href='/auth/login'>
+                <Link href='/login'>
                   <LogIn />
                   Login
                 </Link>
@@ -115,7 +115,7 @@ export function HeaderActions({ user }: HeaderActionsProps) {
               <DropdownMenuItem
                 className='dark:focus:bg-primary/50 cursor-pointer'
                 asChild>
-                <Link href='/auth/signup'>
+                <Link href='/signup'>
                   <UserRoundPlus />
                   Sign up
                 </Link>

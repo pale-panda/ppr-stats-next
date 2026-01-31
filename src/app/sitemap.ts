@@ -30,20 +30,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
       },
     },
     {
-      url: 'https://ppr-stats-next.vercel.app/auth/login',
+      url: 'https://ppr-stats-next.vercel.app/login',
       lastModified: new Date(),
       alternates: {
         languages: {
-          en: 'https://ppr-stats-next.vercel.app/auth/login',
+          en: 'https://ppr-stats-next.vercel.app/login',
         },
       },
     },
     {
-      url: 'https://ppr-stats-next.vercel.app/auth/register',
+      url: 'https://ppr-stats-next.vercel.app/signup',
       lastModified: new Date(),
       alternates: {
         languages: {
-          en: 'https://ppr-stats-next.vercel.app/auth/register',
+          en: 'https://ppr-stats-next.vercel.app/signup',
         },
       },
     },

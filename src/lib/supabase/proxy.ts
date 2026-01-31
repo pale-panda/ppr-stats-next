@@ -1,7 +1,14 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-const publicRoutes = ['/auth', '/about', '/contact', '/legal', '/news'];
+const publicRoutes = [
+  '/login',
+  '/signup',
+  '/about',
+  '/contact',
+  '/legal',
+  '/news',
+];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -44,7 +51,7 @@ export async function updateSession(request: NextRequest) {
     !publicRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
   ) {
     const url = request.nextUrl.clone();
-    url.pathname = '/auth/login';
+    url.pathname = '/login';
     return NextResponse.redirect(url);
   }
 
