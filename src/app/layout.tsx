@@ -78,7 +78,7 @@ export default async function RootLayout({
           disableTransitionOnChange>
           <ReduxWrapper>
             <Header />
-            <Toaster />
+            <Toaster position='top-center' />
             <main role='main' className='flex-1 w-full'>
               {children}
             </main>

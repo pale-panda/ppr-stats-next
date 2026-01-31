@@ -13,7 +13,7 @@ export async function getCurrentUser() {
     data: { user },
   } = await db.auth.getUser();
   if (!user) {
-    redirect('/auth/login');
+    redirect('/login');
   }
   return user;
 }

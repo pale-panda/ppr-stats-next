@@ -72,7 +72,7 @@ export function SignupForm({
     try {
       const emailHash = sha256(values.email);
       const avatarUrl = `https://www.gravatar.com/avatar/${emailHash}?s=400&d=initials&name=${encodeURIComponent(
-        values.firstName + ' ' + values.lastName
+        values.firstName + ' ' + values.lastName,
       )}`;
 
       const { error } = await supabase.auth.signUp({
@@ -92,7 +92,7 @@ export function SignupForm({
         description:
           'Welcome aboard! Your account has been created. Please verify your email to get started.',
       });
-      router.push('/login');
+      router.push('/login?msg=check-your-email');
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {

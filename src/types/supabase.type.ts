@@ -603,7 +603,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_team_or_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_thread_participant: {
+        Args: { _thread_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "team" | "user"

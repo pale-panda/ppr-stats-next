@@ -8,7 +8,7 @@ export const requireUser = cache(async () => {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    redirect('/auth/login');
+    redirect('/login');
   }
   return user;
 });

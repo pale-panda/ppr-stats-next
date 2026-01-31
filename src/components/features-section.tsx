@@ -54,7 +54,7 @@ export function FeaturesSection() {
         </div>
         <div className='mt-6 flex flex-col sm:flex-row gap-3'>
           <Button asChild>
-            <Link href='/auth/signup'>Register account</Link>
+            <Link href='/signup'>Register account</Link>
           </Button>
           <Button asChild variant='outline'>
             <Link href='/contact'>Contact support</Link>
