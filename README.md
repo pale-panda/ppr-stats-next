@@ -1,36 +1,108 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PPR Stats (Next.js)
 
-## Getting Started
+Telemetry and session analytics for the Pale Panda Racing Team. Upload RaceBox CSVs, explore sessions and laps, compare performance, and visualize telemetry with charts and track maps.
 
-First, run the development server:
+## Features
+
+- RaceBox CSV upload pipeline (sessions, laps, telemetry points)
+- Session and lap analysis with charts and comparisons
+- Track pages with stats and maps
+- Authenticated dashboards and user profiles
+- Supabase-backed auth, database, storage, and realtime channels
+
+## Tech stack
+
+- Next.js App Router + React 19
+- Tailwind CSS v4 + shadcn/ui (Radix)
+- Supabase (Auth/DB/Storage)
+- Redux Toolkit + RTK Query
+- Recharts + Google Maps integrations
+
+## Project structure
+
+- src/app: routes, layouts, route groups (public/protected), and API routes
+- src/components: UI and feature components
+- src/lib/data: server-side data helpers
+- src/services: data access services for app features
+- src/state: Redux store and RTK Query services
+- supabase: migrations, seeds, and local config
+
+## Local development
+
+### Prerequisites
+
+- Node.js 18+ (20+ recommended)
+- Docker (for Supabase local)
+- Supabase CLI (npx or global)
+
+### Install dependencies
+
+```bash
+npm install
+```
+
+### Start Supabase locally
+
+```bash
+npx supabase start
+```
+
+Default local ports (from supabase/config.toml):
+
+- API: http://127.0.0.1:55321
+- DB: 55322
+- Studio: http://127.0.0.1:55323
+
+### Environment variables
+
+Create a .env.local file at the repo root and include:
+
+```bash
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=''
+NEXT_PUBLIC_SUPABASE_URL=''
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=''
+VERCEL_OIDC_TOKEN=''
+```
+
+For local Supabase, set:
+
+- NEXT_PUBLIC_SUPABASE_URL to http://127.0.0.1:55321
+- NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to the local anon/publishable key (see npx supabase status)
+
+### Run the app
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Database workflows
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Apply migrations and reseed locally:
 
-## Learn More
+```bash
+npx supabase db reset
+```
 
-To learn more about Next.js, take a look at the following resources:
+Generate TypeScript types:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run supabase:types
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Upload workflow
 
-## Deploy on Vercel
+Use the Upload page to submit RaceBox CSV files. The server will parse, aggregate laps, and store telemetry points in batches.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- dev: start Next.js dev server
+- build: production build
+- start: run production server
+- lint: run ESLint
+- supabase:types: generate Supabase types
+
+## License
+
+Proprietary – internal use only.
