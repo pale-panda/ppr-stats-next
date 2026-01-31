@@ -9,6 +9,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import type React from 'react';
 import './globals.css';
+import { ToasterProps } from 'sonner';
 
 const _geist = Geist({
   variable: '--font-geist-sans',
@@ -67,6 +68,19 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const toastProps: ToasterProps = {
+    duration: 4000,
+    closeButton: true,
+    visibleToasts: 3,
+    position: 'top-center',
+    icons: {
+      success: '✅',
+      error: '❌',
+      info: '💡',
+      warning: '⚠️',
+    },
+  };
+
   return (
     <html lang='en' className='dark' suppressHydrationWarning>
       <body
@@ -78,7 +92,7 @@ export default async function RootLayout({
           disableTransitionOnChange>
           <ReduxWrapper>
             <Header />
-            <Toaster position='top-center' />
+            <Toaster {...toastProps} />
             <main role='main' className='flex-1 w-full'>
               {children}
             </main>

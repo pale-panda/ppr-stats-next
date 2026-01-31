@@ -24,8 +24,8 @@ import { setUser } from '@/state/reducers/user/user.reducer';
 import { AppDispatch } from '@/state/store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';
@@ -48,14 +48,6 @@ export function LoginForm({
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const params = useSearchParams();
-
-  useEffect(() => {
-    const message = params.get('msg');
-    if (message === 'check-your-email') {
-      toast.info('Please check your email to verify your account.');
-    }
-  }, [params]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(logibFormSchema),

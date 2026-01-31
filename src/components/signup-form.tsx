@@ -92,7 +92,7 @@ export function SignupForm({
         description:
           'Welcome aboard! Your account has been created. Please verify your email to get started.',
       });
-      router.push('/login?msg=check-your-email');
+      router.push('/login');
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
