@@ -10,5 +10,6 @@ export function mapProfileRowToApp(r: ProfileRow): Profile {
     firstName: r.first_name ?? '',
     lastName: r.last_name ?? '',
     email: r.email ?? '',
+    role: r.role ?? 'user',
   };
 }

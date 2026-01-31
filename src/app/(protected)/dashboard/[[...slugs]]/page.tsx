@@ -11,7 +11,7 @@ import { notFound, redirect } from 'next/navigation';
 import { Suspense } from 'react';
 
 export async function generateMetadata(
-  props: PageProps<'/dashboard/[[...slugs]]'>
+  props: PageProps<'/dashboard/[[...slugs]]'>,
 ): Promise<Metadata> {
   const { slugs } = await props.params;
   const state = parseSlug(slugs);
@@ -76,7 +76,7 @@ function parseSlug(params?: string[]): RouteState {
 }
 
 export default async function DashboardPage(
-  props: PageProps<'/dashboard/[[...slugs]]'>
+  props: PageProps<'/dashboard/[[...slugs]]'>,
 ) {
   const { slugs } = await props.params;
   const state = parseSlug(slugs);

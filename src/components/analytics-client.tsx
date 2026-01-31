@@ -958,38 +958,40 @@ export function AnalyticsClient({ initialData }: Props) {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {laps1.map((lap) => (
-                          <TableRow
-                            key={lap.id}
-                            className={`border-border ${
-                              lap.lapTimeSeconds ===
-                              Math.min(...laps1.map((l) => l.lapTimeSeconds))
-                                ? 'bg-primary/5'
-                                : ''
-                            }`}>
-                            <TableCell className='font-medium text-foreground'>
-                              {lap.lapNumber}
-                            </TableCell>
-                            <TableCell className='font-mono text-foreground'>
-                              {formatTime(lap.lapTimeSeconds)}
-                            </TableCell>
-                            <TableCell className='font-mono text-muted-foreground text-sm'>
-                              {lap.sectors[0] > 0
-                                ? lap.sectors[0].toFixed(3)
-                                : '-'}
-                            </TableCell>
-                            <TableCell className='font-mono text-muted-foreground text-sm'>
-                              {lap.sectors[1] > 0
-                                ? lap.sectors[1].toFixed(3)
-                                : '-'}
-                            </TableCell>
-                            <TableCell className='font-mono text-muted-foreground text-sm'>
-                              {lap.sectors[2] > 0
-                                ? lap.sectors[2].toFixed(3)
-                                : '-'}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {laps1
+                          .sort((a, b) => a.lapNumber - b.lapNumber)
+                          .map((lap) => (
+                            <TableRow
+                              key={lap.id}
+                              className={`border-border ${
+                                lap.lapTimeSeconds ===
+                                Math.min(...laps1.map((l) => l.lapTimeSeconds))
+                                  ? 'bg-primary/5'
+                                  : ''
+                              }`}>
+                              <TableCell className='font-medium text-foreground'>
+                                {lap.lapNumber}
+                              </TableCell>
+                              <TableCell className='font-mono text-foreground'>
+                                {formatTime(lap.lapTimeSeconds)}
+                              </TableCell>
+                              <TableCell className='font-mono text-muted-foreground text-sm'>
+                                {lap.sectors[0] > 0
+                                  ? lap.sectors[0].toFixed(3)
+                                  : '-'}
+                              </TableCell>
+                              <TableCell className='font-mono text-muted-foreground text-sm'>
+                                {lap.sectors[1] > 0
+                                  ? lap.sectors[1].toFixed(3)
+                                  : '-'}
+                              </TableCell>
+                              <TableCell className='font-mono text-muted-foreground text-sm'>
+                                {lap.sectors[2] > 0
+                                  ? lap.sectors[2].toFixed(3)
+                                  : '-'}
+                              </TableCell>
+                            </TableRow>
+                          ))}
                       </TableBody>
                     </Table>
                   </div>

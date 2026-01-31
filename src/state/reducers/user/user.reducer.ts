@@ -29,9 +29,14 @@ const userSlice = createSlice({
       const user = mapUserRowToApp(action.payload);
       state.user = { ...state.user, ...user } as User;
     },
+    setUserRole: (state, action: PayloadAction<User['role']>) => {
+      if (!('id' in state.user)) return;
+      state.user = { ...state.user, role: action.payload } as User;
+    },
   },
 });
 
-export const { setUser, clearUser, updateUserProfile } = userSlice.actions;
+export const { setUser, clearUser, updateUserProfile, setUserRole } =
+  userSlice.actions;
 
 export default userSlice.reducer;

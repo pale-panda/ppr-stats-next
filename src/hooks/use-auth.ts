@@ -1,5 +1,9 @@
 import { createClient } from '@/lib/supabase/client';
-import { clearUser, setUser } from '@/state/reducers/user/user.reducer';
+import {
+  clearUser,
+  setUser,
+  setUserRole,
+} from '@/state/reducers/user/user.reducer';
 import { AppDispatch, RootState } from '@/state/store';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -10,6 +14,16 @@ export const useAuth = () => {
 
   useEffect(() => {
     const supabase = createClient();
+    const loadRole = async (userId: string) => {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+      if (profile?.role) {
+        dispatch(setUserRole(profile.role));
+      }
+    };
     const fetchAuthStatus = async () => {
       const {
         data: { user },
@@ -22,6 +36,7 @@ export const useAuth = () => {
       }
 
       dispatch(setUser(user));
+      await loadRole(user.id);
     };
 
     fetchAuthStatus();
@@ -33,6 +48,7 @@ export const useAuth = () => {
           return;
         }
         dispatch(setUser(session.user));
+        void loadRole(session.user.id);
       }
     );
 

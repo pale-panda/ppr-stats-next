@@ -31,7 +31,7 @@ export const getTrackById = cache(async (id: string) => {
 export const getTrackBySlug = cache(async (slug: string) => {
   const db: SupabaseClient = await createClient();
   const data = await TracksDAL.getTrackBySlug(db, slug);
-  console.log(data.id);
+
   return data ? mapTrackRowToApp(data) : null;
 });
 
@@ -91,5 +91,5 @@ export const getTrackDashboardStats = cache(
     ];
 
     return statsList;
-  }
+  },
 );

@@ -7,6 +7,7 @@ import {
 import { StatsBar } from '@/components/stats-bar';
 import { TrackSessionCards } from '@/components/track-session-cards';
 import { TrackSessionFilter } from '@/components/track-session-filter';
+import { PresenceList } from '@/components/presence-list';
 import { getDashboardStats } from '@/services/dashboard-stats.service';
 import { getSessions } from '@/services/sessions.service';
 import { getTracks } from '@/services/tracks.service';
@@ -36,6 +37,10 @@ export default async function HomePage({
       <Suspense fallback={<StatsBarSkeleton />}>
         <StatsBar statItems={stats} type='dashboard' />
       </Suspense>
+
+      <section className='container mx-auto px-4 py-6'>
+        <PresenceList />
+      </section>
 
       {/* Sessions Section */}
       <section className='container mx-auto px-4 py-8'>

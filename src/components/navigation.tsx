@@ -4,28 +4,13 @@ import { Separator } from '@/components/ui/separator';
 import { type NavItems, type NavItem } from '@/lib/data/nav-links';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 
 interface NavigationProps {
   navLinks: NavItems;
+  isCurrentPage: (link: NavItem) => boolean;
 }
 
-export function Navigation({ navLinks }: NavigationProps) {
-  const pathname = usePathname();
-
-  const isCurrentPage = (link: NavItem) => {
-    if (link.href === '/') {
-      return pathname === link.href;
-    }
-    if (link.altHref) {
-      return (
-        pathname.startsWith(link.href) ||
-        pathname.startsWith(link.altHref || '')
-      );
-    }
-    return pathname.startsWith(link.href);
-  };
-
+export function Navigation({ navLinks, isCurrentPage }: NavigationProps) {
   return (
     <nav
       role='navigation'

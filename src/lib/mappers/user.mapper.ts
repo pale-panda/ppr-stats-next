@@ -9,6 +9,11 @@ export const mapUserRowToApp = (user: UserRow): User => {
     lastName: user.user_metadata.last_name,
     fullName: user.user_metadata.full_name,
     avatarUrl: user.user_metadata.avatar_url ?? null,
+    role: (user.user_metadata as { role?: string } | undefined)?.role as
+      | 'admin'
+      | 'team'
+      | 'user'
+      | undefined,
     emailVerified: user.user_metadata.email_verified ?? false,
     lastSignInAt: user.last_sign_in_at ?? null,
     isAuthenticated: user !== null,
