@@ -80,7 +80,7 @@ export function FeaturesCarousel({
                     <CardContent className='px-0'>
                       <div className='w-full h-auto aspect-video relative'>
                         <Image
-                          src={`${process.env.NEXT_PUBLIC_STORAGE_SUPABASE_URL}/storage/v1/object/public/assets/app-preview/${f.image}`}
+                          src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/assets/app-preview/${f.image}`}
                           alt={f.title}
                           fill
                           className='object-contain'
