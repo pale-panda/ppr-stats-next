@@ -42,5 +42,6 @@ next-env.d.ts
 _tmp
 .vercel
 .env*.local
+!.env.example
 
 /src/generated/prisma
