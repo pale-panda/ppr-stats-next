@@ -23,8 +23,6 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 
-export const dynamic = 'force-static';
-
 export async function generateMetadata(
   props: PageProps<'/sessions/[[...slugs]]'>,
 ): Promise<Metadata> {

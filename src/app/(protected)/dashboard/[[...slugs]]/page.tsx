@@ -10,8 +10,6 @@ import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { Suspense } from 'react';
 
-export const dynamic = 'force-static';
-
 export async function generateMetadata(
   props: PageProps<'/dashboard/[[...slugs]]'>,
 ): Promise<Metadata> {
