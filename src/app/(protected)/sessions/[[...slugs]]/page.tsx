@@ -1,5 +1,4 @@
 import { HeroSection } from '@/components/hero-section';
-import { SectionSessionTrack } from '@/components/section-session-track';
 import {
   StatsBarSkeleton,
   TrackSessionCardSkeleton,
@@ -16,9 +15,12 @@ import TrackSessionTopSection from '@/components/track-session-top-section';
 import { SessionComments } from '@/components/session-comments';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getDashboardStats } from '@/services/dashboard-stats.service';
-import { getSessionByIdFull, getSessions } from '@/services/sessions.service';
-import { getTrackSessionsBySlug } from '@/services/slug.service';
-import { getTrackBySlug, getTracks } from '@/services/tracks.service';
+import {
+  getSessionByIdFull,
+  getSessions,
+  getSessionsByTrackSlugList,
+} from '@/services/sessions.service';
+import { getAllTracks, getTrackBySlug } from '@/services/tracks.service';
 import type { RouteState } from '@/types/slug.type';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -102,7 +104,7 @@ export default async function SessionPage(
 
   const stats = getDashboardStats(params);
   const sessions = getSessions(params);
-  const tracks = getTracks({});
+  const tracks = getAllTracks();
 
   switch (state.kind) {
     case 'index':
@@ -135,20 +137,20 @@ export default async function SessionPage(
         </>
       );
     case 'track':
-      const sessionsBySlug = getTrackSessionsBySlug(state);
+      const sessionsBySlug = getSessionsByTrackSlugList(state, params);
 
       return (
         <section className='container mx-auto px-4 py-8'>
           <AppBreadcrumb {...breadcrumbLinks} />
           <h1 className='text-3xl font-bold mb-4'>Sessions @ {state.slug}</h1>
           <Suspense fallback={<TrackSessionCardSkeleton />}>
-            <SectionSessionTrack sessions={sessionsBySlug} />
+            <TrackSessionCards sessions={sessionsBySlug} />
           </Suspense>
         </section>
       );
 
     case 'year':
-      const sessionsBySlugYear = getTrackSessionsBySlug(state);
+      const sessionsBySlugYear = getSessionsByTrackSlugList(state, params);
       return (
         <section className='container mx-auto px-4 py-8'>
           <AppBreadcrumb {...breadcrumbLinks} />
@@ -156,7 +158,7 @@ export default async function SessionPage(
             Sessions @ {state.slug} – {state.year}
           </h1>
           <Suspense fallback={<TrackSessionCardSkeleton />}>
-            <SectionSessionTrack sessions={sessionsBySlugYear} />
+            <TrackSessionCards sessions={sessionsBySlugYear} />
           </Suspense>
         </section>
       );

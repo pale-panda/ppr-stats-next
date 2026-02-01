@@ -1,5 +1,7 @@
 'use server';
+import 'server-only';
 
+import { AnalyticsDAL } from '@/db/analytics.dal';
 import {
   mapAnalyticsSessionRowsToDomain,
   type AnalyticsSessionRow,
@@ -13,43 +15,13 @@ export const getAnalyticsData = cache(
   async (slug?: string): Promise<AnalyticsData> => {
     const supabase: SupabaseClient = await createClient();
 
-    let q = supabase.from('sessions').select(
-      `
-      id,
-      session_type,
-      session_date,
-      total_laps,
-      best_lap_time_seconds,
-      track:tracks!track_id(
-        id,
-        name,
-        country
-      ),
-      laps(
-        id,
-        lap_number,
-        lap_time_seconds,
-        max_speed_kmh,
-        sectors
-      ),
-      speed_stats:telemetry_points(avg_speed_kmh:speed_kmh.avg())
-    `
+    const sessionsRaw = await AnalyticsDAL.listAnalyticsSessions(
+      supabase,
+      slug,
     );
 
-    if (slug) {
-      q = q.eq('track_slug', slug);
-    }
-
-    q = q.order('session_date', { ascending: false });
-
-    const { data: sessionsRaw, error } = await q;
-
-    if (error) {
-      throw error;
-    }
-
     const sessions = mapAnalyticsSessionRowsToDomain(
-      (sessionsRaw ?? []) as unknown as AnalyticsSessionRow[]
+      (sessionsRaw ?? []) as unknown as AnalyticsSessionRow[],
     );
 
     const allLaps = sessions.flatMap((s) => s.laps);
@@ -69,5 +41,5 @@ export const getAnalyticsData = cache(
       totalLaps,
       topSpeed,
     };
-  }
+  },
 );

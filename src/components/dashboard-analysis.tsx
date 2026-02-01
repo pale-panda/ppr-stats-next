@@ -5,6 +5,7 @@ import { LapSelector } from '@/components/lap-selector';
 import { SessionKPIs } from '@/components/session-kpis';
 import { TelemetryChart } from '@/components/telemetry-chart';
 import TrackMap from '@/components/track-map';
+import { DashboardAnalysisSkeleton } from '@/components/skeletons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFetchLapTelemetryQuery } from '@/state/services/track-session';
 import { type LatLngLiteral, type SessionFull } from '@/types';
@@ -63,7 +64,7 @@ export function DashboardAnalysis({ trackSession }: DashboardAnalysisProps) {
   }
 
   if (error || comparisonError || isLoading || comparisonLoading) {
-    return <div>Session is loading...</div>;
+    return <DashboardAnalysisSkeleton />;
   }
 
   return (

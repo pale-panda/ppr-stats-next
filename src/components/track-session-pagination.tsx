@@ -2,99 +2,34 @@
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
-  PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import type { MetaOptions, QueryOptions } from '@/db/types/db.types';
-import { DEFAULT_PAGINATION_VISIBLE_PAGES } from '@/lib/data/constants';
 import { cn } from '@/lib/utils';
 import { type ReadonlyURLSearchParams } from 'next/navigation';
 
-interface PageItemsProps {
-  pages: number[];
-  currentPage: number;
-  newParams: (page: number) => string;
-}
-
-function getVisiblePages(meta: MetaOptions) {
-  const maxPagesToShow = Math.min(
-    DEFAULT_PAGINATION_VISIBLE_PAGES,
-    Math.ceil(meta.count / meta.limit)
-  );
-  const pages: number[] = [];
-
-  if (Math.ceil(meta.count / meta.limit) <= maxPagesToShow) {
-    for (let page = 1; page <= Math.ceil(meta.count / meta.limit); page++) {
-      pages.push(page);
-    }
-    return pages;
-  }
-
-  const halfWindow = Math.floor(maxPagesToShow / 2);
-  let startPage = meta.page - halfWindow;
-  let endPage = meta.page + halfWindow;
-
-  if (maxPagesToShow % 2 === 0) {
-    startPage += 1;
-  }
-
-  if (startPage < 1) {
-    startPage = 1;
-    endPage = maxPagesToShow;
-  }
-
-  if (endPage > Math.ceil(meta.count / meta.limit)) {
-    endPage = Math.ceil(meta.count / meta.limit);
-    startPage = Math.ceil(meta.count / meta.limit) - maxPagesToShow + 1;
-  }
-
-  for (let page = startPage; page <= endPage; page++) {
-    pages.push(page);
-  }
-
-  return pages;
-}
-
-function PageItems({ pages, currentPage, newParams }: PageItemsProps) {
-  return pages.map((page) => (
-    <PaginationItem key={page} value={page}>
-      <PaginationLink
-        href={newParams(page)}
-        isActive={page === currentPage}
-        scroll={false}>
-        {page}
-      </PaginationLink>
-    </PaginationItem>
-  ));
-}
-
 interface PaginationLinkProps {
-  meta: QueryOptions;
+  nextCursor: string | null;
   searchParams: ReadonlyURLSearchParams;
   className?: string;
 }
 
 export function TrackSessionPagination({
   className,
-  meta,
+  nextCursor,
   searchParams,
 }: PaginationLinkProps) {
-  const visiblePages = getVisiblePages(meta);
-  const firstVisiblePage = visiblePages[0];
-  const lastVisiblePage = visiblePages[visiblePages.length - 1];
-  const hasHiddenLeadingPages = firstVisiblePage > 1;
-  const hasHiddenTrailingPages =
-    lastVisiblePage < Math.ceil(meta.count / meta.limit);
-  const shouldShowLeadingEllipsis = firstVisiblePage > 2;
-  const shouldShowTrailingEllipsis =
-    lastVisiblePage < Math.ceil(meta.count / meta.limit) - 1;
+  const hasCursor = Boolean(searchParams.get('cursor'));
 
-  const newParams = (page: number) => {
+  const newParams = (cursor?: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set('page', page.toString());
+    params.delete('page');
+    if (cursor) {
+      params.set('cursor', cursor);
+    } else {
+      params.delete('cursor');
+    }
     params.sort();
     const qs = params.toString();
     return `?${qs}`;
@@ -102,64 +37,17 @@ export function TrackSessionPagination({
 
   return (
     <div className={cn('flex grow justify-center md:flex-1', className)}>
-      {meta && Math.ceil(meta.count / meta.limit) > 1 && (
+      {(hasCursor || nextCursor) && (
         <Pagination className='w-auto'>
           <PaginationContent>
-            {meta.page !== 1 && (
-              <PaginationItem value={meta.page - 1}>
-                <PaginationPrevious
-                  href={newParams(meta.page - 1)}
-                  scroll={false}
-                />
+            {hasCursor && (
+              <PaginationItem>
+                <PaginationPrevious href={newParams(null)} scroll={false} />
               </PaginationItem>
             )}
-            {hasHiddenLeadingPages && (
-              <>
-                <PaginationItem value={1}>
-                  <PaginationLink href={newParams(1)} scroll={false}>
-                    1
-                  </PaginationLink>
-                </PaginationItem>
-                {shouldShowLeadingEllipsis && (
-                  <PaginationLink
-                    href={newParams(firstVisiblePage - 1)}
-                    scroll={false}>
-                    <PaginationEllipsis />
-                  </PaginationLink>
-                )}
-              </>
-            )}
-            <PageItems
-              pages={visiblePages}
-              currentPage={meta.page}
-              newParams={newParams}
-            />
-            {hasHiddenTrailingPages && (
-              <>
-                {shouldShowTrailingEllipsis && (
-                  <PaginationItem>
-                    <PaginationLink
-                      href={newParams(lastVisiblePage + 1)}
-                      scroll={false}>
-                      <PaginationEllipsis />
-                    </PaginationLink>
-                  </PaginationItem>
-                )}
-                <PaginationItem value={Math.ceil(meta.count / meta.limit)}>
-                  <PaginationLink
-                    href={newParams(Math.ceil(meta.count / meta.limit))}
-                    scroll={false}>
-                    {Math.ceil(meta.count / meta.limit)}
-                  </PaginationLink>
-                </PaginationItem>
-              </>
-            )}
-            {meta.page < Math.ceil(meta.count / meta.limit) && (
-              <PaginationItem value={meta.page + 1}>
-                <PaginationNext
-                  href={newParams(meta.page + 1)}
-                  scroll={false}
-                />
+            {nextCursor && (
+              <PaginationItem>
+                <PaginationNext href={newParams(nextCursor)} scroll={false} />
               </PaginationItem>
             )}
           </PaginationContent>

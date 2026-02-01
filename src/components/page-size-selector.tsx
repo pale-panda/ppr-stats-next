@@ -5,7 +5,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { QueryOptions } from '@/db/types/db.types';
+import {
+  DEFAULT_PAGE_LIMIT,
+  TRACK_SESSION_LIMIT_CARDS,
+} from '@/lib/data/constants';
 import { cn } from '@/lib/utils';
 import {
   usePathname,
@@ -15,7 +18,7 @@ import {
 import { useEffect, useState } from 'react';
 
 interface PageSizeSelectorProps {
-  meta: QueryOptions;
+  pageSize: number;
   searchParams: ReadonlyURLSearchParams;
   className?: string;
 }
@@ -68,12 +71,12 @@ function generateLimits(start: number, max: number, currentLimit: number) {
 }
 
 export function PageSizeSelector({
-  meta,
+  pageSize,
   searchParams,
   className,
 }: PageSizeSelectorProps) {
   const [limit, setLimit] = useState<number | null>(() =>
-    readLimitFromBrowser()
+    readLimitFromBrowser(),
   );
 
   const { replace } = useRouter();
@@ -91,20 +94,20 @@ export function PageSizeSelector({
 
   const currentLimit =
     limit ??
-    (searchParams.get('limit')
-      ? Number(searchParams.get('limit'))
-      : meta.limit);
+    (searchParams.get('limit') ? Number(searchParams.get('limit')) : pageSize);
 
+  const maxLimit = Math.max(TRACK_SESSION_LIMIT_CARDS * 4, currentLimit);
   const limits = generateLimits(
-    Math.min(meta.limit, 2),
-    Math.max(meta.count, meta.limit <= meta.count ? meta.limit : meta.count),
-    meta.limit
+    Math.min(pageSize, DEFAULT_PAGE_LIMIT),
+    maxLimit,
+    pageSize,
   );
 
   function handleSizeChange(newLimit: number) {
     const params = new URLSearchParams(searchParams.toString());
     params.delete('limit');
     params.delete('page');
+    params.delete('cursor');
     params.set('limit', newLimit.toString());
     params.sort();
 
@@ -120,7 +123,7 @@ export function PageSizeSelector({
     <div
       className={cn(
         'ml-auto flex flex-none items-center gap-2 justify-center w-full md:w-50 md:justify-end',
-        className
+        className,
       )}>
       <p className='text-sm font-medium text-nowrap'>Items per page</p>
       <Select

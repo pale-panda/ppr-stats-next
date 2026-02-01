@@ -1,7 +1,9 @@
 import 'server-only';
 
+import { SESSIONS_SELECT } from '@/db/_select';
 import { TracksDAL } from '@/db/tracks.dal';
 import { applyInFilters, normalizeQuery } from '@/db/utils/helpers';
+import { decodeCursor, encodeCursor } from '@/lib/pagination/cursor';
 import type { SearchParams } from '@/types';
 import type { Database } from '@/types/supabase.type';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -11,29 +13,21 @@ type DB = SupabaseClient<Database>;
 export const SessionsDAL = {
   async listSessions(db: DB, searchParams: SearchParams) {
     const { filters, options } = normalizeQuery(searchParams);
-    const offset = (options.page - 1) * options.limit;
-    const to = offset + options.limit - 1;
+    const cursor = decodeCursor(searchParams.cursor as string);
+    const sortDir = options.dir === 'asc' ? 'asc' : 'desc';
+    const limit = options.limit;
 
-    const trackIds = await TracksDAL.getTrackIDByFilters(db, searchParams);
+    const shouldResolveTrackIds = Boolean(
+      filters.name?.length || filters.country?.length || filters.slug?.length,
+    );
+    const trackIds = shouldResolveTrackIds
+      ? await TracksDAL.getTrackIDByFilters(db, searchParams)
+      : undefined;
 
-    let q = db.from('sessions').select(`id,
-        track_id,
-        updated_at,
-        user_id,
-        created_at,
-        theoretical_best_lap_time_seconds,
-        data_source,
-        session_date,
-        session_type,
-        total_laps,
-        best_lap_time_seconds,
-        vehicle,
-        duration_seconds,
-        session_source,
-        track_slug,
-        tracks!track_id(name, country, image_url, slug)`);
+    let q = db.from('sessions').select(SESSIONS_SELECT.list);
     q = applyInFilters(q, [
-      { column: 'track_id', values: filters.track_id || trackIds },
+      { column: 'track_id', values: filters.track_id ?? trackIds },
+      { column: 'track_slug', values: filters.track_slug },
       { column: 'user_id', values: filters.user_id },
       { column: 'vehicle', values: filters.vehicle },
     ]);
@@ -48,39 +42,39 @@ export const SessionsDAL = {
       q = q.lte('session_date', filters.to);
     }
 
+    if (cursor) {
+      const op = sortDir === 'asc' ? 'gt' : 'lt';
+      q = q.or(
+        `session_date.${op}.${cursor.t},and(session_date.eq.${cursor.t},id.${op}.${cursor.id})`,
+      );
+    }
+
     q = q
-      .order(options.sort || 'session_date', {
-        ascending: options.dir === 'asc',
-      })
-      .range(offset, to);
+      .order('session_date', { ascending: sortDir === 'asc' })
+      .order('id', { ascending: sortDir === 'asc' })
+      .limit(limit + 1);
 
     const { data, error } = await q;
     if (error) throw error;
 
-    const count = await this.countSessions(db, { ...filters } as SearchParams);
+    const rows = data ?? [];
+    const hasNext = rows.length > limit;
+    const items = hasNext ? rows.slice(0, limit) : rows;
+    const last = items[items.length - 1];
+
     return {
-      data: data ?? [],
-      meta: {
-        page: options.page,
-        limit: options.limit,
-        sort: options.sort,
-        dir: options.dir,
-        count: count ?? 0,
-        filters,
-      },
+      items,
+      nextCursor:
+        hasNext && last?.session_date && last?.id
+          ? encodeCursor({ t: last.session_date, id: last.id })
+          : null,
     };
   },
 
   async getSessionById(db: DB, id: string) {
     const { data, error } = await db
       .from('sessions')
-      .select(
-        `*,
-        telemetry_points(*),
-        tracks!track_id(*),
-        profiles(*),
-        laps(*)`
-      )
+      .select(SESSIONS_SELECT.detail)
       .eq('id', id)
       .single();
     if (error) throw error;
@@ -90,13 +84,7 @@ export const SessionsDAL = {
   async getSessionsByUserId(db: DB, userId: string) {
     const { data, error } = await db
       .from('sessions')
-      .select(
-        `*,
-        telemetry_points(*),
-        tracks!track_id(*),
-        profiles(*),
-        laps(*)`
-      )
+      .select(SESSIONS_SELECT.detail)
       .eq('user_id', userId);
     if (error) throw error;
     return data ?? [];
@@ -105,13 +93,7 @@ export const SessionsDAL = {
   async getSessionsByTrackId(db: DB, trackId: string) {
     const { data, error } = await db
       .from('sessions')
-      .select(
-        `*,
-        telemetry_points(*),
-        tracks!track_id(*),
-        profiles(*),
-        laps(*)`
-      )
+      .select(SESSIONS_SELECT.detail)
       .eq('track_id', trackId);
     if (error) throw error;
     return data ?? [];
@@ -120,13 +102,7 @@ export const SessionsDAL = {
   async getSessionsByTrackSlug(db: DB, slug: string) {
     const { data, error } = await db
       .from('sessions')
-      .select(
-        `*,
-        telemetry_points(*),
-        tracks!track_slug(*),
-        profiles(*),
-        laps(*)`
-      )
+      .select(SESSIONS_SELECT.detailByTrackSlug)
       .eq('track_slug', slug);
     if (error) throw error;
     return data ?? [];
@@ -134,26 +110,24 @@ export const SessionsDAL = {
 
   async listSessionsFull(db: DB, searchParams: SearchParams) {
     const { filters, options } = normalizeQuery(searchParams);
-    const offset = (options.page - 1) * options.limit;
-    const to = offset + options.limit - 1;
+    const cursor = decodeCursor(searchParams.cursor as string);
+    const sortDir = options.dir === 'asc' ? 'asc' : 'desc';
+    const limit = options.limit;
 
-    options.sort = options.sort ?? 'session_date';
-    options.dir = options.dir ?? 'desc';
-
-    const trackIds = await TracksDAL.getTrackIDByFilters(db, searchParams);
-
-    let q = db.from('sessions').select(
-      `*,
-        telemetry_points(*),
-        tracks!track_id(*),
-        profiles(*),
-        laps(*)`
+    const shouldResolveTrackIds = Boolean(
+      filters.name?.length || filters.country?.length || filters.slug?.length,
     );
+    const trackIds = shouldResolveTrackIds
+      ? await TracksDAL.getTrackIDByFilters(db, searchParams)
+      : undefined;
+
+    let q = db.from('sessions').select(SESSIONS_SELECT.detail);
     q = applyInFilters(q, [
       {
         column: 'track_id',
-        values: filters.track_id || trackIds,
+        values: filters.track_id ?? trackIds,
       },
+      { column: 'track_slug', values: filters.track_slug },
       { column: 'user_id', values: filters.user_id },
       { column: 'vehicle', values: filters.vehicle },
     ]);
@@ -168,39 +142,39 @@ export const SessionsDAL = {
       q = q.lte('session_date', filters.to);
     }
 
+    if (cursor) {
+      const op = sortDir === 'asc' ? 'gt' : 'lt';
+      q = q.or(
+        `session_date.${op}.${cursor.t},and(session_date.eq.${cursor.t},id.${op}.${cursor.id})`,
+      );
+    }
+
     q = q
-      .order(options.sort, {
-        ascending: options.dir !== 'desc',
-      })
-      .range(offset, to);
+      .order('session_date', { ascending: sortDir === 'asc' })
+      .order('id', { ascending: sortDir === 'asc' })
+      .limit(limit + 1);
 
     const { data, error } = await q;
     if (error) throw error;
 
-    const count = await this.countSessions(db, { ...filters } as SearchParams);
+    const rows = data ?? [];
+    const hasNext = rows.length > limit;
+    const items = hasNext ? rows.slice(0, limit) : rows;
+    const last = items[items.length - 1];
+
     return {
-      data: data ?? [],
-      meta: {
-        page: options.page,
-        limit: options.limit,
-        sort: options.sort,
-        dir: options.dir,
-        count: count ?? 0,
-        filters,
-      },
+      items,
+      nextCursor:
+        hasNext && last?.session_date && last?.id
+          ? encodeCursor({ t: last.session_date, id: last.id })
+          : null,
     };
   },
 
   async getSessionByIdFull(db: DB, id: string) {
     const { data, error } = await db
       .from('sessions')
-      .select(
-        `*,
-        telemetry_points(*),
-        tracks!track_id(*),
-        profiles(*),
-        laps(*)`
-      )
+      .select(SESSIONS_SELECT.detail)
       .eq('id', id)
       .single();
 
@@ -210,15 +184,21 @@ export const SessionsDAL = {
 
   async countSessions(db: DB, searchParams: SearchParams) {
     const { filters } = normalizeQuery(searchParams);
-    const trackIds = await TracksDAL.getTrackIDByFilters(db, searchParams);
+    const shouldResolveTrackIds = Boolean(
+      filters.name?.length || filters.country?.length || filters.slug?.length,
+    );
+    const trackIds = shouldResolveTrackIds
+      ? await TracksDAL.getTrackIDByFilters(db, searchParams)
+      : undefined;
 
-    let q = db.from('sessions').select('*', {
+    let q = db.from('sessions').select('id', {
       count: 'exact',
       head: true,
     });
 
     q = applyInFilters(q, [
-      { column: 'track_id', values: filters.track_id || trackIds },
+      { column: 'track_id', values: filters.track_id ?? trackIds },
+      { column: 'track_slug', values: filters.track_slug },
       { column: 'user_id', values: filters.user_id },
       { column: 'vehicle', values: filters.vehicle },
     ]);
@@ -241,7 +221,7 @@ export const SessionsDAL = {
 
   async createSession(
     db: DB,
-    sessionData: Database['public']['Tables']['sessions']['Insert']
+    sessionData: Database['public']['Tables']['sessions']['Insert'],
   ) {
     const { data, error } = await db
       .from('sessions')
