@@ -87,7 +87,7 @@ export const TRACKS_SELECT = {
     updated_at,
     gps_point,
     slug`,
-  stats: `id, name, country, length_meters, turns, image_url, slug,
+  stats: `id, name, country, length_meters, turns, image_url, slug, created_at,
     lap_stats:laps(best_lap_time:lap_time_seconds.min(), total_laps:id.count(), avg_top_speed:max_speed_kmh.avg()),
     session_stats:sessions!track_id(total_sessions:id.count())`,
 } as const;
