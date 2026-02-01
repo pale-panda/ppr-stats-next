@@ -49,13 +49,19 @@ npx supabase start
 
 Default local ports (from supabase/config.toml):
 
-- API: http://127.0.0.1:55321
-- DB: 55322
-- Studio: http://127.0.0.1:55323
+- API: http://127.0.0.1:54321
+- DB: 54322
+- Studio: http://127.0.0.1:54323
 
 ### Environment variables
 
-Create a .env.local file at the repo root and include:
+Create a .env.local file at the repo root
+
+```bash
+cp .env.example .env.local
+```
+
+Open .env.local and include:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=''
@@ -66,7 +72,7 @@ VERCEL_OIDC_TOKEN=''
 
 For local Supabase, set:
 
-- NEXT_PUBLIC_SUPABASE_URL to http://127.0.0.1:55321
+- NEXT_PUBLIC_SUPABASE_URL to http://127.0.0.1:54321
 - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to the local anon/publishable key (see npx supabase status)
 
 ### Run the app
