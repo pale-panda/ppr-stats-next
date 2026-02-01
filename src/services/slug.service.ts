@@ -1,4 +1,5 @@
 'use server';
+import 'server-only';
 
 import { SlugDAL } from '@/db/slug.dal';
 import {

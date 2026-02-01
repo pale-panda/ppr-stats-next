@@ -139,3 +139,76 @@ export function TrackCardSkeleton() {
     </div>
   );
 }
+
+export function DashboardHeaderSkeleton() {
+  return (
+    <div className='border-b border-border bg-card/50'>
+      <div className='container mx-auto px-4 py-6'>
+        <div className='flex flex-col gap-3'>
+          <Skeleton className='h-4 w-32 rounded' />
+          <Skeleton className='h-8 w-64 rounded' />
+          <div className='flex gap-4'>
+            <Skeleton className='h-5 w-24 rounded' />
+            <Skeleton className='h-5 w-24 rounded' />
+            <Skeleton className='h-5 w-24 rounded' />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function DashboardOverviewSkeleton() {
+  return (
+    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+      {[...Array(4)].map((_, index) => (
+        <Card className='bg-card border-border/50' key={index}>
+          <CardContent className='p-6'>
+            <Skeleton className='h-4 w-24 rounded mb-3' />
+            <Skeleton className='h-8 w-28 rounded' />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+export function TelemetryPanelSkeleton() {
+  return (
+    <Card className='bg-card border-border/50'>
+      <CardContent className='p-6'>
+        <Skeleton className='h-5 w-40 rounded mb-4' />
+        <Skeleton className='h-64 w-full rounded' />
+      </CardContent>
+    </Card>
+  );
+}
+
+export function DashboardAnalysisSkeleton() {
+  return (
+    <div className='flex flex-col gap-6'>
+      <div className='grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6'>
+        <Card className='lg:col-span-3 bg-card border-border/50'>
+          <CardContent className='p-4'>
+            <Skeleton className='h-6 w-32 rounded mb-4' />
+            {[...Array(6)].map((_, index) => (
+              <Skeleton className='h-4 w-full rounded mb-2' key={index} />
+            ))}
+          </CardContent>
+        </Card>
+        <Card className='lg:col-span-9 bg-card border-border/50'>
+          <CardContent className='p-4'>
+            <Skeleton className='h-64 w-full rounded' />
+          </CardContent>
+        </Card>
+      </div>
+      <Card className='bg-card border-border/50'>
+        <CardContent className='p-6'>
+          <Skeleton className='h-5 w-40 rounded mb-3' />
+          <Skeleton className='h-4 w-full rounded mb-2' />
+          <Skeleton className='h-4 w-5/6 rounded' />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

@@ -8,7 +8,7 @@ import { TrackSessionFilter } from '@/components/track-session-filter';
 import { TrackStatsCards } from '@/components/track-stats-cards';
 import {
   getTrackDashboardStats,
-  getTracks,
+  getAllTracks,
   getTracksWithStats,
 } from '@/services/tracks.service';
 import type { SearchParams } from '@/types';
@@ -29,7 +29,7 @@ export default async function TracksPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const tracks = getTracks({});
+  const tracks = getAllTracks();
   const tracksWithStats = getTracksWithStats(params);
   const stats = getTrackDashboardStats(params);
 

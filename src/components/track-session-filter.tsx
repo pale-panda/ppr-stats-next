@@ -14,7 +14,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { MetaOptions } from '@/db/types/db.types';
 import { cn } from '@/lib/utils';
 import type { Track } from '@/types';
 import { type DropdownMenuCheckboxItemProps } from '@radix-ui/react-dropdown-menu';
@@ -37,11 +36,11 @@ function serializeSelected(params: URLSearchParams) {
 }
 
 interface TrackSessionFilterProps {
-  tracks: Promise<{ data?: Track[]; meta: MetaOptions }>;
+  tracks: Promise<Track[]>;
 }
 
 export function TrackSessionFilter({ tracks }: TrackSessionFilterProps) {
-  const { data } = use(tracks);
+  const data = use(tracks);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { replace } = useRouter();
@@ -74,7 +73,7 @@ export function TrackSessionFilter({ tracks }: TrackSessionFilterProps) {
         country: countrySet,
       };
     },
-    [data]
+    [data],
   );
 
   const availableFilterValues = useMemo(() => {
@@ -103,7 +102,7 @@ export function TrackSessionFilter({ tracks }: TrackSessionFilterProps) {
 
       replace(`${pathname}${qs ? `?${qs}` : ''}`, { scroll: false });
     },
-    [pathname, replace]
+    [pathname, replace],
   );
 
   const updateFilterQuery = useCallback(
@@ -137,12 +136,13 @@ export function TrackSessionFilter({ tracks }: TrackSessionFilterProps) {
 
       const afterSig = serializeSelected(params);
       if (afterSig !== beforeSig) {
-        params.set('page', '1');
+        params.delete('page');
+        params.delete('cursor');
       }
 
       navigateWithParams(params);
     },
-    [computeAvailableFilterValues, navigateWithParams, searchParams]
+    [computeAvailableFilterValues, navigateWithParams, searchParams],
   );
 
   const handleResetFilter = useCallback(() => {
@@ -150,6 +150,7 @@ export function TrackSessionFilter({ tracks }: TrackSessionFilterProps) {
     params.delete('name');
     params.delete('country');
     params.delete('page');
+    params.delete('cursor');
     navigateWithParams(params);
   }, [navigateWithParams, searchParams]);
 
@@ -210,7 +211,7 @@ export function TrackSessionFilter({ tracks }: TrackSessionFilterProps) {
             const allTracks = data ?? [];
             const selectedNamesSet = new Set(selected.name);
             return allTracks.filter(
-              (t) => t.country === item && selectedNamesSet.has(t.name)
+              (t) => t.country === item && selectedNamesSet.has(t.name),
             ).length;
           },
         })),
@@ -269,19 +270,19 @@ export function TrackSessionFilter({ tracks }: TrackSessionFilterProps) {
                             updateFilterQuery(
                               queryObject.key,
                               item.value,
-                              checked
+                              checked,
                             )
                           }
                           disabled={item.disabled}
                           className={cn(
                             'group cursor-pointer focus:bg-primary/30!',
-                            countryMismatch && 'text-muted-foreground'
+                            countryMismatch && 'text-muted-foreground',
                           )}
                           checked={item.active}>
                           <span
                             className={cn(
                               'flex w-full items-center gap-2',
-                              item.disabled && 'text-muted-foreground'
+                              item.disabled && 'text-muted-foreground',
                             )}>
                             <span
                               className={cn(countryMatch && 'text-foreground')}>

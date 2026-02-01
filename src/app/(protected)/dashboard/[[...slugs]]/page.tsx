@@ -2,6 +2,12 @@ import { DashboardAnalysis } from '@/components/dashboard-analysis';
 import { DashboardHeader } from '@/components/dashboard-header';
 import { DashboardOverview } from '@/components/dashboard-overview';
 import { TelemetryPanel } from '@/components/telemetry-panel';
+import {
+  DashboardAnalysisSkeleton,
+  DashboardHeaderSkeleton,
+  DashboardOverviewSkeleton,
+  TelemetryPanelSkeleton,
+} from '@/components/skeletons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getSessionByIdFull } from '@/services/sessions.service';
 import { getTrackBySlug } from '@/services/tracks.service';
@@ -94,8 +100,7 @@ export default async function DashboardPage(
       return (
         <>
           {/* Dashboard Header */}
-          <Suspense
-            fallback={<div>{/** TODO: Implement skeleton! */}Loading...</div>}>
+          <Suspense fallback={<DashboardHeaderSkeleton />}>
             <DashboardHeader trackSession={session} />
           </Suspense>
           <div className='container mx-auto px-4 py-6'>
@@ -107,28 +112,19 @@ export default async function DashboardPage(
               </TabsList>
 
               <TabsContent value='overview' className='space-y-6'>
-                <Suspense
-                  fallback={
-                    <div>{/** TODO: Implement skeleton! */}Loading...</div>
-                  }>
+                <Suspense fallback={<DashboardOverviewSkeleton />}>
                   <DashboardOverview trackSession={session} />
                 </Suspense>
               </TabsContent>
 
               <TabsContent value='telemetry'>
-                <Suspense
-                  fallback={
-                    <div>{/** TODO: Implement skeleton! */}Loading...</div>
-                  }>
+                <Suspense fallback={<TelemetryPanelSkeleton />}>
                   <TelemetryPanel trackSession={session} />
                 </Suspense>
               </TabsContent>
 
               <TabsContent value='analysis'>
-                <Suspense
-                  fallback={
-                    <div>{/** TODO: Implement skeleton! */}Loading...</div>
-                  }>
+                <Suspense fallback={<DashboardAnalysisSkeleton />}>
                   <DashboardAnalysis trackSession={session} />
                 </Suspense>
               </TabsContent>
@@ -140,33 +136,3 @@ export default async function DashboardPage(
       notFound();
   }
 }
-
-/*
-        <>
-          <HeroSection />
-          <Suspense fallback={<StatsBarSkeleton />}>
-            <StatsBar statItems={stats} type='dashboard' />
-          </Suspense>
-
-          {/* Sessions Section * / }
-
-          <section className='container mx-auto px-4 py-8'>
-            <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-8'>
-              <div>
-                <h2 className='text-2xl md:text-3xl font-bold text-foreground'>
-                  Your Sessions - {state.slug}
-                </h2>
-                <p className='text-muted-foreground mt-1'>
-                  Select a session to view detailed analytics
-                </p>
-              </div>
-              <Suspense fallback={<TrackSessionFilterSkeleton />}>
-                <TrackSessionFilter tracks={tracks} />
-              </Suspense>
-            </div>
-            <Suspense fallback={<TrackSessionCardSkeleton />}>
-              <TrackSessionCards sessions={sessions} />
-            </Suspense>
-          </section>
-        </>
-         */

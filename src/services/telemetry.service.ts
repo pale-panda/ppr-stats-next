@@ -1,4 +1,5 @@
 'use server';
+import 'server-only';
 import { TelemetryPointsDAL } from '@/db/telemetry-points.dal';
 import { createClient } from '@/lib/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -10,7 +11,7 @@ export const getTelemetryBySessionId = cache(async (sessionId: string) => {
 
   const data = await TelemetryPointsDAL.getTelemetryPointsBySessionId(
     db,
-    sessionId
+    sessionId,
   );
   return mapTelemetryRowsToApp(data);
 });
@@ -23,9 +24,9 @@ export const getTelemetryBySessionIdAndLapNumber = cache(
       await TelemetryPointsDAL.getTelemetryPointsBySessionIdAndLapNumber(
         db,
         sessionId,
-        lapNumber || 1
+        lapNumber || 1,
       );
 
     return mapTelemetryRowsToApp(data);
-  }
+  },
 );

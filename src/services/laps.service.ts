@@ -1,4 +1,5 @@
 'use server';
+import 'server-only';
 import { LapsDAL } from '@/db/laps.dal';
 import { createClient } from '@/lib/supabase/server';
 import type { SearchParams } from '@/types';

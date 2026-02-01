@@ -4,7 +4,6 @@ import { PageSizeSelector } from '@/components/page-size-selector';
 import { TrackSessionPagination } from '@/components/track-session-pagination';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import type { MetaOptions } from '@/db/types/db.types';
 import { formatLapTime, formatSpeed } from '@/lib/format-utils';
 import type { TrackStats } from '@/types';
 import {
@@ -25,14 +24,18 @@ import { use } from 'react';
 export function TrackStatsCards({
   trackStats,
 }: {
-  trackStats: Promise<{ data?: TrackStats[]; meta: MetaOptions }>;
+  trackStats: Promise<{
+    items?: TrackStats[];
+    nextCursor: string | null;
+    pageSize: number;
+  }>;
 }) {
-  const { data, meta } = use(trackStats);
+  const { items, nextCursor, pageSize } = use(trackStats);
   const searchParams = useSearchParams();
 
   return (
     <div className='container mx-auto'>
-      {!data || data.length === 0 ? (
+      {!items || items.length === 0 ? (
         <div className='text-center py-12'>
           <p className='text-muted-foreground'>
             No tracks found. Upload sessions to see tracks!
@@ -40,7 +43,7 @@ export function TrackStatsCards({
         </div>
       ) : (
         <div className='grid gap-6'>
-          {data.map((track) => (
+          {items.map((track) => (
             <Card
               key={track.id}
               className='overflow-hidden bg-card border-border py-0 hover:border-primary/50 transition-colors'>
@@ -180,8 +183,11 @@ export function TrackStatsCards({
       )}
       <div className='flex flex-col gap-4 md:flex-row py-6'>
         <div className={'w-50 flex-none hidden md:block'} />
-        <TrackSessionPagination meta={meta} searchParams={searchParams} />
-        <PageSizeSelector meta={meta} searchParams={searchParams} />
+        <TrackSessionPagination
+          nextCursor={nextCursor}
+          searchParams={searchParams}
+        />
+        <PageSizeSelector pageSize={pageSize} searchParams={searchParams} />
       </div>
     </div>
   );

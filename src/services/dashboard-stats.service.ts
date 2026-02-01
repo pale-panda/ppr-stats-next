@@ -1,4 +1,5 @@
 'use server';
+import 'server-only';
 import { LapsDAL } from '@/db/laps.dal';
 import { SessionsDAL } from '@/db/sessions.dal';
 import { formatLapTime, formatSpeed } from '@/lib/format-utils';

@@ -1,6 +1,8 @@
 import 'server-only';
 
+import { TRACKS_SELECT } from '@/db/_select';
 import { applyInFilters, normalizeQuery } from '@/db/utils/helpers';
+import { decodeCursor, encodeCursor } from '@/lib/pagination/cursor';
 import type { SearchParams } from '@/types';
 import type { Database } from '@/types/supabase.type';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -10,11 +12,11 @@ type DB = SupabaseClient<Database>;
 export const TracksDAL = {
   async listTracks(db: DB, searchParams: SearchParams) {
     const { filters, options } = normalizeQuery(searchParams);
+    const cursor = decodeCursor(searchParams.cursor as string);
+    const sortDir = options.dir === 'asc' ? 'asc' : 'desc';
+    const limit = options.limit;
 
-    const offset = (options.page - 1) * options.limit;
-    const to = offset + options.limit - 1;
-
-    let q = db.from('tracks').select('*');
+    let q = db.from('tracks').select(TRACKS_SELECT.list);
 
     q = applyInFilters(q, [
       { column: 'name', values: filters.name },
@@ -26,39 +28,41 @@ export const TracksDAL = {
       q = q.ilike('name', `%${filters.search}%`);
     }
 
+    if (cursor) {
+      const op = sortDir === 'asc' ? 'gt' : 'lt';
+      q = q.or(
+        `created_at.${op}.${cursor.t},and(created_at.eq.${cursor.t},id.${op}.${cursor.id})`,
+      );
+    }
+
     q = q
-      .order(options.sort, { ascending: options.dir === 'asc' })
-      .range(offset, to);
+      .order('created_at', { ascending: sortDir === 'asc' })
+      .order('id', { ascending: sortDir === 'asc' })
+      .limit(limit + 1);
 
     const { data, error } = await q;
     if (error) throw error;
-    const count = await this.countTracks(db, { ...filters } as SearchParams);
+    const rows = data ?? [];
+    const hasNext = rows.length > limit;
+    const items = hasNext ? rows.slice(0, limit) : rows;
+    const last = items[items.length - 1];
 
     return {
-      data: data ?? [],
-      meta: {
-        page: options.page,
-        limit: options.limit,
-        sort: options.sort,
-        dir: options.dir,
-        count,
-        filters,
-      },
+      items,
+      nextCursor:
+        hasNext && last?.created_at && last?.id
+          ? encodeCursor({ t: last.created_at, id: last.id })
+          : null,
     };
   },
 
   async getTracksWithStats(db: DB, searchParams: SearchParams) {
     const { options, filters } = normalizeQuery(searchParams);
-    const offset = (options.page - 1) * options.limit;
-    const to = offset + options.limit - 1;
+    const cursor = decodeCursor(searchParams.cursor as string);
+    const sortDir = options.dir === 'asc' ? 'asc' : 'desc';
+    const limit = options.limit;
 
-    options.sort = options.sort ?? 'session_date';
-    options.dir = options.dir ?? 'desc';
-
-    let q = db.from('tracks')
-      .select(`id, name, country, length_meters, turns, image_url, slug,
-        lap_stats:laps(best_lap_time:lap_time_seconds.min(), total_laps:id.count(), avg_top_speed:max_speed_kmh.avg()),
-        session_stats:sessions!track_id(total_sessions:id.count())`);
+    let q = db.from('tracks').select(TRACKS_SELECT.stats);
 
     q = applyInFilters(q, [
       { column: 'name', values: filters.name },
@@ -66,34 +70,39 @@ export const TracksDAL = {
       { column: 'slug', values: filters.slug },
     ]);
 
+    if (cursor) {
+      const op = sortDir === 'asc' ? 'gt' : 'lt';
+      q = q.or(
+        `created_at.${op}.${cursor.t},and(created_at.eq.${cursor.t},id.${op}.${cursor.id})`,
+      );
+    }
+
     q = q
-      .order(options.sort, {
-        ascending: options.dir !== 'desc',
-      })
-      .range(offset, to);
+      .order('created_at', { ascending: sortDir === 'asc' })
+      .order('id', { ascending: sortDir === 'asc' })
+      .limit(limit + 1);
 
     const { data, error } = await q;
     if (error) throw error;
 
-    const count = await this.countTracks(db, { ...filters } as SearchParams);
+    const rows = data ?? [];
+    const hasNext = rows.length > limit;
+    const items = hasNext ? rows.slice(0, limit) : rows;
+    const last = items[items.length - 1];
 
     return {
-      data: data ?? [],
-      meta: {
-        page: options.page,
-        limit: options.limit,
-        count: count ?? 0,
-        sort: options.sort,
-        dir: options.dir,
-        filters,
-      },
+      items,
+      nextCursor:
+        hasNext && last?.created_at && last?.id
+          ? encodeCursor({ t: last.created_at, id: last.id })
+          : null,
     };
   },
 
   async getTrackById(db: DB, id: string) {
     const { data, error } = await db
       .from('tracks')
-      .select('*')
+      .select(TRACKS_SELECT.detail)
       .eq('id', id)
       .single();
     if (error) throw error;
@@ -103,7 +112,7 @@ export const TracksDAL = {
   async getTrackBySlug(db: DB, slug: string) {
     const { data, error } = await db
       .from('tracks')
-      .select('*')
+      .select(TRACKS_SELECT.detail)
       .eq('slug', slug)
       .single();
     if (error) throw error;
@@ -140,7 +149,10 @@ export const TracksDAL = {
   },
 
   async getAllTracks(db: DB) {
-    const { data, error } = await db.from('tracks').select('*').order('name');
+    const { data, error } = await db
+      .from('tracks')
+      .select(TRACKS_SELECT.list)
+      .order('name');
     if (error) throw error;
     return data ?? [];
   },

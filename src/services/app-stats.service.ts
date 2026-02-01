@@ -1,4 +1,5 @@
 'use server';
+import 'server-only';
 import { AppStatsDAL } from '@/db/app-stats.dal';
 import { createClient } from '@/lib/supabase/server';
 import type { StatItem } from '@/types';
